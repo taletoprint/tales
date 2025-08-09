@@ -1,0 +1,102 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --background: #F9F7F1;
+  --foreground: #333333;
+  --terracotta: #E15935;
+  --sage: #7F9A88;
+  --warm-grey: #B7B7B7;
+  --cream: #F9F7F1;
+  --charcoal: #333333;
+}
+
+/* Base styles with brand typography */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Desktop typography scaling */
+@media (min-width: 768px) {
+  body {
+    font-size: 18px;
+  }
+}
+
+/* Heading styles with serif font */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'EB Garamond', 'Libre Baskerville', Georgia, 'Times New Roman', serif;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--charcoal);
+}
+
+/* Button hover animations */
+.btn-terracotta {
+  background-color: var(--terracotta);
+  color: var(--cream);
+  transition: all 250ms ease;
+}
+
+.btn-terracotta:hover {
+  background-color: var(--charcoal);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(225, 89, 53, 0.3);
+}
+
+/* Form focus states */
+input:focus, textarea:focus, select:focus {
+  outline: 2px solid var(--terracotta);
+  outline-offset: 2px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--cream);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--warm-grey);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--sage);
+}
+
+/* Animation utilities */
+.animate-fade-in {
+  animation: fadeIn 250ms ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-slide-up {
+  animation: slideUp 300ms ease-out;
+}
+
+@keyframes slideUp {
+  from { 
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to { 
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

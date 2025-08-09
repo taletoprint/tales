@@ -1,0 +1,20 @@
+{
+  "name": "@taletoprint/rate-limiter",
+  "version": "1.0.0",
+  "description": "Rate limiting for TaleToPrint",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": ["rate-limit", "redis"],
+  "author": "TaleToPrint",
+  "license": "ISC",
+  "dependencies": {
+    "ioredis": "^5.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "typescript": "^5"
+  }
+}

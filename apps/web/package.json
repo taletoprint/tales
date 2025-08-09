@@ -1,0 +1,38 @@
+{
+  "name": "@taletoprint/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.864.0",
+    "@aws-sdk/s3-request-presigner": "^3.864.0",
+    "@hookform/resolvers": "^5.2.0",
+    "@taletoprint/ai-pipeline": "*",
+    "@taletoprint/database": "*",
+    "@taletoprint/rate-limiter": "*",
+    "@taletoprint/shared": "*",
+    "autoprefixer": "^10.4.21",
+    "ioredis": "^5.7.0",
+    "next": "15.4.4",
+    "openai": "^5.12.2",
+    "postcss": "^8.5.6",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-hook-form": "^7.61.1",
+    "sharp": "^0.34.3",
+    "stripe": "^18.4.0",
+    "tailwindcss": "^3.4.17",
+    "zod": "^4.0.10"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5"
+  }
+}

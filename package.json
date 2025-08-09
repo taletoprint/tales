@@ -1,0 +1,31 @@
+{
+  "name": "taletoprint",
+  "version": "1.0.0",
+  "description": "Transform customer stories into AI-generated art prints",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/web",
+    "build": "npm run build --workspace=apps/web",
+    "test": "npm test --workspaces",
+    "type-check": "npm run type-check --workspaces",
+    "db:push": "npm run db:push --workspace=packages/database",
+    "db:studio": "npm run db:studio --workspace=packages/database",
+    "db:migrate": "npm run db:migrate --workspace=packages/database"
+  },
+  "keywords": [
+    "print-on-demand",
+    "ai",
+    "art",
+    "story"
+  ],
+  "author": "TaleToPrint",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}

@@ -1,0 +1,126 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String?   @unique
+  ipAddress     String?
+  createdAt     DateTime  @default(now())
+  
+  previews      Preview[]
+  orders        Order[]
+  
+  @@index([email])
+  @@index([ipAddress])
+}
+
+model Preview {
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+  expiresAt     DateTime  // 7 days from creation
+  
+  // User association
+  userId        String?
+  user          User?     @relation(fields: [userId], references: [id])
+  ipAddress     String    // For anonymous users
+  
+  // Content
+  story         String    @db.Text
+  style         String
+  prompt        String    @db.Text  // AI-refined prompt
+  imageUrl      String    // S3 URL
+  
+  // Usage
+  selected      Boolean   @default(false)
+  order         Order?
+  
+  @@index([userId])
+  @@index([ipAddress, createdAt])
+  @@index([expiresAt])
+}
+
+model Order {
+  id                String    @id @default(cuid())
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Customer
+  email             String
+  userId            String?
+  user              User?     @relation(fields: [userId], references: [id])
+  
+  // Source
+  previewId         String    @unique
+  preview           Preview   @relation(fields: [previewId], references: [id])
+  
+  // Order details
+  size              String    // 'A3', 'A2', 'A4' - DEPRECATED, use printSize
+  printSize         String?   // 'A4', 'A3' - New standardized sizes
+  price             Int       // In pence
+  currency          String    @default("GBP")
+  
+  // Payment
+  stripeSessionId   String    @unique
+  stripePaymentId   String?
+  paymentStatus     String    @default("pending")
+  
+  // Fulfillment
+  status            OrderStatus @default(PENDING)
+  hdImageUrl        String?   // Full resolution image
+  printFileUrl      String?   // Print-ready file with border (S3 URL)
+  printAssetUrl     String?   // Final asset URL for Prodigi
+  
+  // POD Integration
+  prodigiOrderId    String?
+  prodigiSku        String    @default("GLOBAL-FAP-16x20")
+  trackingNumber    String?
+  shippingAddress   Json
+  
+  // Metadata
+  metadata          Json?
+  
+  @@index([status])
+  @@index([email])
+  @@index([stripeSessionId])
+}
+
+model RateLimit {
+  id            String    @id @default(cuid())
+  identifier    String    // IP or email
+  window        String    // Date string (YYYY-MM-DD)
+  count         Int       @default(0)
+  
+  @@unique([identifier, window])
+  @@index([identifier])
+  @@index([window])
+}
+
+enum OrderStatus {
+  PENDING           // Payment processing
+  PAID             // Payment confirmed
+  GENERATING       // Creating HD artwork
+  PRINT_READY      // HD complete, sending to POD
+  PRINTING         // POD confirmed, printing
+  SHIPPED          // Tracking number received
+  DELIVERED        // Confirmed delivery
+  FAILED           // Generation or print failed
+  REFUNDED         // Order refunded
+}
+
+enum ArtStyle {
+  WATERCOLOR
+  OIL_PAINTING  
+  PENCIL_SKETCH
+  VINTAGE_POSTER
+  DIGITAL_ART
+  IMPRESSIONIST
+}
