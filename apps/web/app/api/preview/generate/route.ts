@@ -141,9 +141,9 @@ export async function POST(request: NextRequest) {
       remainingAttempts: rateLimitResult.remaining,
       requiresEmail: rateLimitResult.remaining <= 0,
       metadata: {
-        generationTime: preview.metadata.generationTime,
-        cost: preview.metadata.cost,
-        styleKeywords: preview.metadata.styleKeywords,
+        generationTime: preview.metadata?.generationTime || 0,
+        cost: preview.metadata?.cost || 0,
+        styleKeywords: preview.metadata?.styleKeywords || [],
       },
     });
     
