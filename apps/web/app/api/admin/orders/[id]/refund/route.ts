@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/admin-auth';
-import { PrismaClient, OrderStatus } from '@taletoprint/database';
+import { PrismaClient } from '@taletoprint/database';
+import { OrderStatus } from '@prisma/client';
 import Stripe from 'stripe';
 
 const prisma = new PrismaClient();

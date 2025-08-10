@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { SimpleAIGenerator } from '@/lib/ai-services';
-import { PrismaClient, OrderStatus } from '@taletoprint/database';
+import { PrismaClient } from '@taletoprint/database';
+import { OrderStatus } from '@prisma/client';
 import { getProductSpec, PrintSize } from '@/lib/prodigi-client';
 import { PrintFileGenerator } from '@/lib/print-file-generator';
 import { S3PrintAssetUploader } from '@/lib/s3-uploader';
