@@ -1,3 +1,7 @@
+// Import and re-export types from shared package
+export type { PreviewResult, UserIdentity, PrintSize, Address, Aspect } from '@taletoprint/shared';
+export { ImageOrientation } from '@taletoprint/shared';
+
 // Art style enum - matches new prompt builder
 export enum ArtStyle {
   WATERCOLOUR = 'watercolour',
@@ -7,7 +11,6 @@ export enum ArtStyle {
   FINE_ART_PHOTO = 'fine_art_photo',
   IMPRESSIONIST = 'impressionist'
 }
-
 
 export type PromptBundle = {
   positive: string;
@@ -30,7 +33,3 @@ export type PromptBundle = {
     aspect: Aspect;
   };
 };
-
-// Re-export types from shared package
-export type { PreviewResult, UserIdentity, PrintSize, Address, Aspect } from '@taletoprint/shared';
-export { ImageOrientation } from '@taletoprint/shared';
