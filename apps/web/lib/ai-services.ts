@@ -103,14 +103,7 @@ export class SimpleAIGenerator {
           dimensions: {
             width: promptBundle.params.width,
             height: promptBundle.params.height
-          },
-          sdxlParameters: {
-            steps: promptBundle.params.steps,
-            cfg: promptBundle.params.cfg,
-            sampler: promptBundle.params.sampler,
-            seed: promptBundle.params.seed
-          },
-          promptBundle
+          }
         }
       };
 
