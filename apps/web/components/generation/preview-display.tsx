@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { PreviewResult } from '@/lib/types';
+import { PreviewResult, PrintSize } from '@/lib/types';
 import { getProductSpec } from '@/lib/prodigi-client';
 
 interface PreviewDisplayProps {
@@ -17,6 +17,7 @@ export const PreviewDisplay: React.FC<PreviewDisplayProps> = ({
   const [testingUpscale, setTestingUpscale] = useState(false);
   const [upscaleResult, setUpscaleResult] = useState<{url: string, pipeline: string} | null>(null);
   const [purchaseLoading, setPurchaseLoading] = useState(false);
+  const [selectedPrintSize, setSelectedPrintSize] = useState<PrintSize>('A3');
 
   const handleTestUpscale = async () => {
     setTestingUpscale(true);
@@ -51,8 +52,8 @@ export const PreviewDisplay: React.FC<PreviewDisplayProps> = ({
     setPurchaseLoading(true);
     
     try {
-      // Get print size from preview metadata
-      const printSize = (preview.metadata as any)?.printSize || 'A3';
+      // Use selected print size
+      const printSize = selectedPrintSize;
       
       // Create Stripe checkout session
       const response = await fetch('/api/checkout', {
@@ -116,13 +117,44 @@ export const PreviewDisplay: React.FC<PreviewDisplayProps> = ({
             </p>
           </div>
           
+          {/* Print Size Selector */}
+          <div className="mb-8">
+            <h4 className="font-serif font-semibold text-lg text-charcoal mb-4">Choose your print size:</h4>
+            <div className="grid gap-3">
+              {(['A4', 'A3'] as PrintSize[]).map((size) => {
+                const spec = getProductSpec(size);
+                const price = (spec.retailPrice / 100).toFixed(2);
+                return (
+                  <button
+                    key={size}
+                    onClick={() => setSelectedPrintSize(size)}
+                    className={`p-4 border-2 rounded-xl text-left transition-all ${
+                      selectedPrintSize === size
+                        ? 'border-terracotta bg-terracotta/5 shadow-md'
+                        : 'border-warm-grey/30 hover:border-sage hover:shadow-md'
+                    }`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="font-serif font-medium text-charcoal">{spec.name}</div>
+                        <div className="text-sm text-charcoal/70">{spec.description}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-charcoal">£{price}</div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="bg-cream/50 rounded-2xl p-6 mb-8">
             <h4 className="font-serif font-semibold text-lg text-charcoal mb-4">What you'll receive:</h4>
             <ul className="space-y-3">
               {[
                 { icon: '🎨', text: 'HD quality artwork (8K resolution)' },
                 { icon: '📜', text: 'Printed on premium archival paper' },
-                { icon: '📏', text: 'A3 size (42 x 30cm) - perfect for framing' },
                 { icon: '🇬🇧', text: 'Printed in the UK within 48 hours' },
                 { icon: '🚚', text: 'Free UK delivery (3-5 days)' },
                 { icon: '✅', text: '100% satisfaction guarantee' },
@@ -150,8 +182,7 @@ export const PreviewDisplay: React.FC<PreviewDisplayProps> = ({
                 </span>
               ) : (
                 (() => {
-                  const printSize = (preview.metadata as any)?.printSize || 'A3';
-                  const productSpec = getProductSpec(printSize);
+                  const productSpec = getProductSpec(selectedPrintSize);
                   const price = (productSpec.retailPrice / 100).toFixed(2);
                   return `Purchase ${productSpec.name} - £${price}`;
                 })()

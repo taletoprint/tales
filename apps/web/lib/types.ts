@@ -11,7 +11,7 @@ export enum ArtStyle {
   OIL_PAINTING = 'oil_painting',
   PASTEL = 'pastel',
   PENCIL_INK = 'pencil_ink',
-  FINE_ART_PHOTO = 'fine_art_photo',
+  STORYBOOK = 'storybook',
   IMPRESSIONIST = 'impressionist'
 }
 

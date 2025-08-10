@@ -12,13 +12,14 @@ export default function Home() {
   const previewSectionRef = useRef<HTMLDivElement>(null);
   const [showCancelMessage, setShowCancelMessage] = useState(false);
   
-  // Load saved previews on mount
+  // Load saved previews and attempt count on mount
   useEffect(() => {
     const savedPreviews = localStorage.getItem('taletoprint_previews');
     if (savedPreviews) {
       try {
         const parsed = JSON.parse(savedPreviews);
         setAllPreviews(parsed);
+        setAttemptCount(parsed.length); // Set attempt count based on saved previews
         if (parsed.length > 0) {
           setSelectedPreview(parsed[parsed.length - 1]); // Select most recent
         }
@@ -127,8 +128,8 @@ export default function Home() {
             <span className="text-terracotta"> beautiful art</span>
           </h2>
           <p className="text-lg sm:text-xl text-charcoal/80 mb-8 max-w-2xl mx-auto">
-            Transform your most treasured memories into stunning, high-quality prints. 
-            Perfect for your home or as thoughtful gifts.
+            Transform your most treasured memories into stunning, museum-quality prints. 
+            Available in A4 and A3 sizes, perfect for framing or as thoughtful gifts.
           </p>
           
           {/* Trust indicators */}
@@ -281,6 +282,7 @@ export default function Home() {
                     onClick={() => {
                       setAllPreviews([]);
                       setSelectedPreview(null);
+                      setAttemptCount(0);
                       localStorage.removeItem('taletoprint_previews');
                     }}
                     className="mt-4 text-sm text-charcoal/60 hover:text-charcoal transition-colors"

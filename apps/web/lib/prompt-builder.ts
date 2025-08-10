@@ -109,15 +109,15 @@ function stylePreset(style: ArtStyle) {
         negatives:
           "text, watermark, logo, heavy shading blotches, smudging artefacts, comic halftone dots, warped anatomy",
       };
-    case ArtStyle.FINE_ART_PHOTO:
+    case ArtStyle.STORYBOOK:
       return {
         styleLock:
-          "fine art photographic rendering, soft depth of field, natural window light, gentle colour grading, realistic yet painterly finish",
-        steps: 26,
-        cfg: 5.8,
-        sampler: "K_EULER",
+          "charming storybook illustration, whimsical children's book art, warm and inviting, soft textures, gentle narrative quality, enchanting atmosphere",
+        steps: 28,
+        cfg: 6.5,
+        sampler: "DPMSolverMultistep",
         negatives:
-          "text, watermark, logo, over-sharpening, HDR halos, heavy bokeh balls, motion blur, uncanny valley faces",
+          "text, watermark, logo, scary imagery, dark themes, harsh shadows, photorealistic, anime style, 3D rendering",
       };
     case ArtStyle.IMPRESSIONIST:
       return {
@@ -133,17 +133,9 @@ function stylePreset(style: ArtStyle) {
 }
 
 function seeded(style: ArtStyle): number {
-  // Deterministic seed per style for consistent generation
-  const styleSeeds: Record<ArtStyle, number> = {
-    [ArtStyle.WATERCOLOUR]: 42,
-    [ArtStyle.OIL_PAINTING]: 123,
-    [ArtStyle.PASTEL]: 456,
-    [ArtStyle.PENCIL_INK]: 789,
-    [ArtStyle.FINE_ART_PHOTO]: 101112,
-    [ArtStyle.IMPRESSIONIST]: 131415
-  };
-  
-  return styleSeeds[style] || 42;
+  // Generate random seed for varied outputs
+  // Each generation should produce different results
+  return Math.floor(Math.random() * 1000000) + Date.now();
 }
 
 /** Main builder */
