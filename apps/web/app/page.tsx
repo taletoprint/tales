@@ -237,53 +237,57 @@ export default function Home() {
           
           {allPreviews.length > 0 && (
             <div ref={previewSectionRef} className="mt-16 animate-fade-in">
-              {/* Preview Gallery */}
-              <div className="mb-8">
-                <h4 className="text-xl font-serif font-semibold text-charcoal mb-4">Your Generated Images</h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {allPreviews.map((preview, index) => (
-                    <div 
-                      key={preview.id} 
-                      className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
-                        selectedPreview?.id === preview.id 
-                          ? 'border-terracotta ring-2 ring-terracotta ring-offset-2' 
-                          : 'border-transparent hover:border-warm-grey/30'
-                      }`}
-                      onClick={() => setSelectedPreview(preview)}
-                    >
-                      <img 
-                        src={preview.imageUrl} 
-                        alt={`Preview ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                      {selectedPreview?.id === preview.id && (
-                        <div className="absolute top-2 right-2 bg-terracotta text-cream rounded-full p-1">
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <button 
-                  onClick={() => {
-                    setAllPreviews([]);
-                    setSelectedPreview(null);
-                    localStorage.removeItem('taletoprint_previews');
-                  }}
-                  className="mt-4 text-sm text-charcoal/60 hover:text-charcoal transition-colors"
-                >
-                  Clear all previews
-                </button>
-              </div>
-              
               {/* Selected Preview Display */}
               {selectedPreview && (
                 <PreviewDisplay 
                   preview={selectedPreview}
                   onSelectForPurchase={handleSelectForPurchase}
                 />
+              )}
+              
+              {/* Preview Gallery - Below the main preview */}
+              {allPreviews.length > 1 && (
+                <div className="mt-12 pt-12 border-t border-warm-grey/20">
+                  <h4 className="text-lg font-serif font-semibold text-charcoal mb-4">Other versions you've created</h4>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+                    {allPreviews.map((preview, index) => (
+                      <div 
+                        key={preview.id} 
+                        className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
+                          selectedPreview?.id === preview.id 
+                            ? 'border-terracotta ring-2 ring-terracotta ring-offset-2' 
+                            : 'border-transparent hover:border-warm-grey/30'
+                        }`}
+                        onClick={() => setSelectedPreview(preview)}
+                      >
+                        <div className="aspect-square">
+                          <img 
+                            src={preview.imageUrl} 
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        {selectedPreview?.id === preview.id && (
+                          <div className="absolute top-1 right-1 bg-terracotta text-cream rounded-full p-0.5">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setAllPreviews([]);
+                      setSelectedPreview(null);
+                      localStorage.removeItem('taletoprint_previews');
+                    }}
+                    className="mt-4 text-sm text-charcoal/60 hover:text-charcoal transition-colors"
+                  >
+                    Clear all previews
+                  </button>
+                </div>
               )}
             </div>
           )}

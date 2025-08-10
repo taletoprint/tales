@@ -75,8 +75,12 @@ export async function GET(request: NextRequest) {
         style: session.metadata?.style || 'watercolour',
         aspect: session.metadata?.aspect || 'A3_landscape',
         story: session.metadata?.story || 'Custom artwork',
+        imageUrl: session.metadata?.previewUrl || '',
+        printSize: session.metadata?.printSize || 'A3',
       },
       estimatedDelivery,
+      amount: session.amount_total ? (session.amount_total / 100).toFixed(2) : '59.99',
+      currency: session.currency?.toUpperCase() || 'GBP',
     };
 
     console.log('Order details retrieved for session:', sessionId);

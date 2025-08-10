@@ -3,8 +3,9 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { PrintReceipt } from '@/components/receipt/print-receipt';
 
-interface OrderDetails {
+export interface OrderDetails {
   id: string;
   customerName: string;
   customerEmail: string;
@@ -19,8 +20,12 @@ interface OrderDetails {
     style: string;
     aspect: string;
     story: string;
+    imageUrl: string;
+    printSize: string;
   };
   estimatedDelivery: string;
+  amount: string;
+  currency: string;
 }
 
 function SuccessContent() {
@@ -122,44 +127,66 @@ function SuccessContent() {
             </p>
 
             {orderDetails && (
-              <div className="bg-cream/50 rounded-xl p-6 text-left mb-8">
-                <h3 className="font-serif font-semibold text-lg text-charcoal mb-4">Order Details</h3>
+              <>
+                {/* Order Image Preview */}
+                {orderDetails.artworkDetails.imageUrl && (
+                  <div className="mb-8">
+                    <img 
+                      src={orderDetails.artworkDetails.imageUrl} 
+                      alt="Your ordered artwork"
+                      className="w-full max-w-md mx-auto rounded-xl shadow-lg"
+                    />
+                  </div>
+                )}
                 
-                <div className="space-y-3 text-sm">
-                  <div>
-                    <span className="font-medium text-charcoal">Order ID:</span>
-                    <span className="ml-2 text-charcoal/70">{orderDetails.id}</span>
-                  </div>
+                <div className="bg-cream/50 rounded-xl p-6 text-left mb-8">
+                  <h3 className="font-serif font-semibold text-lg text-charcoal mb-4">Order Summary</h3>
                   
-                  <div>
-                    <span className="font-medium text-charcoal">Art Style:</span>
-                    <span className="ml-2 text-charcoal/70 capitalize">{orderDetails.artworkDetails.style.replace('_', ' ')}</span>
-                  </div>
-                  
-                  <div>
-                    <span className="font-medium text-charcoal">Format:</span>
-                    <span className="ml-2 text-charcoal/70">{orderDetails.artworkDetails.aspect.replace('_', ' ')}</span>
-                  </div>
-                  
-                  <div>
-                    <span className="font-medium text-charcoal">Delivery to:</span>
-                    <div className="ml-2 text-charcoal/70">
-                      {orderDetails.customerName}<br />
-                      {orderDetails.shippingAddress.line1}<br />
-                      {orderDetails.shippingAddress.line2 && (
-                        <>{orderDetails.shippingAddress.line2}<br /></>
-                      )}
-                      {orderDetails.shippingAddress.city}, {orderDetails.shippingAddress.postal_code}<br />
-                      {orderDetails.shippingAddress.country}
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="font-medium text-charcoal">Order ID:</span>
+                      <span className="text-charcoal/70">{orderDetails.id}</span>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <span className="font-medium text-charcoal">Print Size:</span>
+                      <span className="text-charcoal/70">{orderDetails.artworkDetails.printSize}</span>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <span className="font-medium text-charcoal">Art Style:</span>
+                      <span className="text-charcoal/70 capitalize">{orderDetails.artworkDetails.style.replace('_', ' ')}</span>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <span className="font-medium text-charcoal">Total Paid:</span>
+                      <span className="text-charcoal/70 font-semibold">
+                        {orderDetails.currency === 'GBP' ? '£' : orderDetails.currency} {orderDetails.amount}
+                      </span>
+                    </div>
+                    
+                    <div className="pt-3 border-t border-warm-grey/20">
+                      <div className="font-medium text-charcoal mb-1">Delivery Address:</div>
+                      <div className="text-charcoal/70">
+                        {orderDetails.customerName}<br />
+                        {orderDetails.shippingAddress.line1}<br />
+                        {orderDetails.shippingAddress.line2 && (
+                          <>{orderDetails.shippingAddress.line2}<br /></>
+                        )}
+                        {orderDetails.shippingAddress.city}, {orderDetails.shippingAddress.postal_code}<br />
+                        {orderDetails.shippingAddress.country}
+                      </div>
+                    </div>
+                    
+                    <div className="pt-3 border-t border-warm-grey/20">
+                      <div className="flex justify-between">
+                        <span className="font-medium text-charcoal">Estimated Delivery:</span>
+                        <span className="text-charcoal/70">{orderDetails.estimatedDelivery}</span>
+                      </div>
                     </div>
                   </div>
-                  
-                  <div>
-                    <span className="font-medium text-charcoal">Estimated Delivery:</span>
-                    <span className="ml-2 text-charcoal/70">{orderDetails.estimatedDelivery}</span>
-                  </div>
                 </div>
-              </div>
+              </>
             )}
 
             <div className="grid md:grid-cols-2 gap-4">
@@ -170,12 +197,7 @@ function SuccessContent() {
                 Create Another Print
               </Link>
               
-              <button
-                onClick={() => window.print()}
-                className="px-6 py-3 bg-warm-grey/20 text-charcoal rounded-xl hover:bg-warm-grey/30 transition-colors font-medium"
-              >
-                Print Receipt
-              </button>
+              {orderDetails && <PrintReceipt order={orderDetails} />}
             </div>
           </div>
 
