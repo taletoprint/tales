@@ -136,7 +136,7 @@ export default function Home() {
               <a href="#how-it-works" className="text-sage hover:text-terracotta transition-colors">
                 How it works
               </a>
-              <a href="#examples" className="text-sage hover:text-terracotta transition-colors">
+              <a href="/examples" className="text-sage hover:text-terracotta transition-colors">
                 Examples
               </a>
             </div>
@@ -150,100 +150,63 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="pt-12 pb-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-semibold text-charcoal mb-6 leading-tight">
-            Turn your story into 
-            <span className="text-terracotta"> beautiful art</span>
-          </h2>
-          <p className="text-lg sm:text-xl text-charcoal/80 mb-8 max-w-2xl mx-auto">
-            Transform your most treasured memories into stunning, museum-quality prints. 
-            Available in multiple sizes including A4, A3, and square formats - perfect for framing or as thoughtful gifts.
-          </p>
-          
-          {/* Trust indicators */}
-          <div className="flex flex-wrap justify-center items-center gap-6 mb-12 text-sm text-sage">
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              Printed in the UK within 48 hours
-            </div>
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-              </svg>
-              Secure checkout
-            </div>
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Money-back guarantee
-            </div>
-          </div>
-
-          <a
-            href="#create"
-            className="inline-flex items-center px-8 py-4 text-lg font-medium text-cream bg-terracotta rounded-lg hover:bg-charcoal transform hover:-translate-y-1 transition-all duration-250 shadow-lg hover:shadow-xl"
-          >
-            Create your print
-            <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
-          </a>
-        </div>
-      </section>
-
-      {/* How it Works */}
-      <section id="how-it-works" className="py-20 bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h3 className="text-3xl sm:text-4xl font-serif font-semibold text-charcoal mb-4">
-              How it works
-            </h3>
-            <p className="text-lg text-charcoal/80 max-w-2xl mx-auto">
-              Three simple steps to transform your memory into art
+      {/* Hero Section with Integrated How It Works */}
+      <section className="pt-8 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-cream to-white">
+        <div className="max-w-5xl mx-auto">
+          {/* Main Hero Content */}
+          <div className="text-center mb-12">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-semibold text-charcoal mb-4 leading-tight">
+              Turn your story into 
+              <span className="text-terracotta"> beautiful art</span>
+            </h2>
+            <p className="text-lg sm:text-xl text-charcoal/80 mb-8 max-w-2xl mx-auto">
+              Transform your treasured memories into stunning prints in just 3 steps
             </p>
           </div>
-          
-          <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
-            {[
-              {
-                step: "1",
-                title: "Tell your story",
-                description: "Share a special memory in just a few sentences. Our AI understands the emotion behind your words.",
-                icon: "✍️"
-              },
-              {
-                step: "2", 
-                title: "Choose your style",
-                description: "Select from watercolor, vintage poster, or line art styles to match your taste and décor.",
-                icon: "🎨"
-              },
-              {
-                step: "3",
-                title: "Receive your print",
-                description: "We'll create your artwork and deliver a premium A3 print to your door within 48 hours.",
-                icon: "📦"
-              }
-            ].map((item) => (
-              <div key={item.step} className="text-center">
-                <div className="w-16 h-16 bg-terracotta/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-2xl">{item.icon}</span>
+
+          {/* Compact How It Works Flow */}
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+            <div className="grid md:grid-cols-3 gap-6 text-center">
+              {[
+                { icon: "✍️", title: "Tell your story", desc: "Share your memory" },
+                { icon: "🎨", title: "AI creates art", desc: "Choose your style" }, 
+                { icon: "📦", title: "Premium print", desc: "Delivered in 48h" }
+              ].map((step, index) => (
+                <div key={index} className="flex flex-col items-center">
+                  <div className="w-12 h-12 bg-terracotta/10 rounded-full flex items-center justify-center mb-3">
+                    <span className="text-xl">{step.icon}</span>
+                  </div>
+                  <h4 className="font-serif font-semibold text-charcoal mb-1">{step.title}</h4>
+                  <p className="text-sm text-charcoal/70">{step.desc}</p>
+                  {index < 2 && (
+                    <div className="hidden md:block absolute transform translate-x-12 mt-6">
+                      <svg className="w-6 h-6 text-sage" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  )}
                 </div>
-                <div className="w-8 h-8 bg-terracotta text-cream rounded-full flex items-center justify-center mx-auto mb-4 font-semibold">
-                  {item.step}
-                </div>
-                <h4 className="text-xl font-serif font-semibold text-charcoal mb-3">
-                  {item.title}
-                </h4>
-                <p className="text-charcoal/70">
-                  {item.description}
-                </p>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+
+          {/* Trust indicators & CTA */}
+          <div className="text-center">
+            <div className="flex flex-wrap justify-center items-center gap-4 mb-6 text-sm text-sage">
+              <span className="flex items-center gap-1">🇬🇧 UK printed</span>
+              <span className="flex items-center gap-1">🔒 Secure checkout</span>
+              <span className="flex items-center gap-1">✅ Money-back guarantee</span>
+            </div>
+
+            <a
+              href="#create"
+              className="inline-flex items-center px-8 py-4 text-lg font-medium text-cream bg-terracotta rounded-xl hover:bg-charcoal transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl"
+            >
+              Start creating your artwork
+              <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+            </a>
           </div>
         </div>
       </section>

@@ -14,8 +14,6 @@ export const PreviewDisplay: React.FC<PreviewDisplayProps> = ({
   preview, 
   onSelectForPurchase 
 }) => {
-  const [testingUpscale, setTestingUpscale] = useState(false);
-  const [upscaleResult, setUpscaleResult] = useState<{url: string, pipeline: string} | null>(null);
   const [purchaseLoading, setPurchaseLoading] = useState(false);
   // Set default print size based on aspect ratio
   const getDefaultPrintSize = (): PrintSize => {
@@ -30,34 +28,6 @@ export const PreviewDisplay: React.FC<PreviewDisplayProps> = ({
     setSelectedPrintSize(getDefaultPrintSize());
   }, [preview.id]);
 
-  const handleTestUpscale = async () => {
-    setTestingUpscale(true);
-    setUpscaleResult(null);
-    
-    try {
-      const response = await fetch('/api/debug/test-upscale', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ previewData: preview })
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        const result = { url: data.hdImageUrl, pipeline: data.pipeline };
-        setUpscaleResult(result);
-        console.log('Upscale successful:', data.hdImageUrl, data.pipeline);
-      } else {
-        console.error('Upscale failed:', data.error);
-        alert(`Upscale failed: ${data.error}`);
-      }
-    } catch (error) {
-      console.error('Upscale request failed:', error);
-      alert('Upscale request failed');
-    } finally {
-      setTestingUpscale(false);
-    }
-  };
 
   const handlePurchase = async () => {
     setPurchaseLoading(true);
@@ -207,42 +177,6 @@ export const PreviewDisplay: React.FC<PreviewDisplayProps> = ({
                 })()
               )}
             </button>
-            
-            {/* Test Upscaling Button - Development Only */}
-            <button
-              onClick={handleTestUpscale}
-              disabled={testingUpscale}
-              className="w-full px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all font-medium"
-            >
-              {testingUpscale ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  Generating HD Print (2-3 minutes)...
-                </span>
-              ) : (
-                '🧪 Test HD Generation'
-              )}
-            </button>
-            
-            {/* Result Display */}
-            {upscaleResult && (
-              <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">
-                <h4 className="font-medium text-green-800 mb-2">HD Print Generated!</h4>
-                <p className="text-sm text-green-700 mb-3">
-                  Full resolution print-ready image (A3 @ 300dpi) - Zero composition drift
-                </p>
-                <a 
-                  href={upscaleResult.url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-block px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
-                >
-                  View HD Image
-                </a>
-              </div>
-            )}
             
             <div className="flex items-center justify-center gap-4 text-sm text-sage">
               <div className="flex items-center gap-1">

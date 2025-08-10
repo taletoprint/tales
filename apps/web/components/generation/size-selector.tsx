@@ -32,9 +32,9 @@ export const SizeSelector: React.FC<SizeSelectorProps> = ({ value, onChange, asp
   };
 
   const orientations = [
-    { value: 'A3_portrait' as Aspect, label: 'Portrait', icon: '📱' },
-    { value: 'A3_landscape' as Aspect, label: 'Landscape', icon: '🖥️' },
-    { value: 'square' as Aspect, label: 'Square', icon: '⬜' },
+    { value: 'A3_portrait' as Aspect, label: 'Portrait', shape: 'portrait' },
+    { value: 'A3_landscape' as Aspect, label: 'Landscape', shape: 'landscape' },
+    { value: 'square' as Aspect, label: 'Square', shape: 'square' },
   ];
 
   return (
@@ -111,8 +111,14 @@ export const SizeSelector: React.FC<SizeSelectorProps> = ({ value, onChange, asp
                   : 'border-warm-grey/30 hover:border-sage hover:shadow-sm'
               }`}
             >
-              <div className="flex flex-col items-center gap-2">
-                <span className="text-xl">{orientation.icon}</span>
+              <div className="flex flex-col items-center gap-3">
+                <div className={`border-2 ${
+                  aspect === orientation.value ? 'border-terracotta bg-terracotta/10' : 'border-charcoal/30'
+                } ${
+                  orientation.shape === 'portrait' ? 'w-4 h-6' :
+                  orientation.shape === 'landscape' ? 'w-6 h-4' :
+                  'w-5 h-5'
+                } rounded-sm`}></div>
                 <div className="font-medium text-charcoal font-serif text-sm">{orientation.label}</div>
               </div>
             </button>

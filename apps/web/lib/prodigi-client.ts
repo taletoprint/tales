@@ -188,7 +188,7 @@ export const PRODUCT_CATALOG: Record<PrintSize, ProductSpec> = {
     size: 'A4',
     dimensions: { width: 210, height: 297, unit: 'mm' },
     printPixels: { width: 2480, height: 3508 }, // 300 DPI + border
-    prodigiSku: 'GLOBAL-FAP-A4', // To be validated
+    prodigiSku: 'GLOBAL-FAP-A4', // £5.00 EMA paper, 200gsm
     retailPrice: 3999, // £39.99
     description: 'Premium matte fine art print on archival paper (≥200gsm)'
   },
@@ -198,7 +198,7 @@ export const PRODUCT_CATALOG: Record<PrintSize, ProductSpec> = {
     size: 'A3',
     dimensions: { width: 297, height: 420, unit: 'mm' },
     printPixels: { width: 3508, height: 4960 }, // 300 DPI + border
-    prodigiSku: 'GLOBAL-FAP-A3', // To be validated
+    prodigiSku: 'GLOBAL-FAP-A3', // £7.00 EMA paper, 200gsm
     retailPrice: 5999, // £59.99
     description: 'Premium matte fine art print on archival paper (≥200gsm)'
   },
@@ -206,9 +206,9 @@ export const PRODUCT_CATALOG: Record<PrintSize, ProductSpec> = {
     id: 'poster_square_8x8_matte',
     name: '8×8" Square Print',
     size: 'SQUARE_8X8',
-    dimensions: { width: 203, height: 203, unit: 'mm' }, // 8×8 inches
-    printPixels: { width: 2400, height: 2400 }, // 300 DPI + border
-    prodigiSku: 'GLOBAL-FAP-8X8', // To be validated
+    dimensions: { width: 200, height: 200, unit: 'mm' }, // 20x20cm actual size
+    printPixels: { width: 2362, height: 2362 }, // 300 DPI
+    prodigiSku: 'GLOBAL-FAP-8X8', // £4.00 EMA paper, 200gsm
     retailPrice: 3499, // £34.99
     description: 'Premium square matte print on archival paper (≥200gsm)'
   },
@@ -218,7 +218,7 @@ export const PRODUCT_CATALOG: Record<PrintSize, ProductSpec> = {
     size: 'SQUARE_10X10', 
     dimensions: { width: 254, height: 254, unit: 'mm' }, // 10×10 inches
     printPixels: { width: 3000, height: 3000 }, // 300 DPI + border
-    prodigiSku: 'GLOBAL-FAP-10X10', // To be validated
+    prodigiSku: 'GLOBAL-FAP-10X10', // £5.00 EMA paper, 200gsm
     retailPrice: 4499, // £44.99
     description: 'Premium large square matte print on archival paper (≥200gsm)'
   }
