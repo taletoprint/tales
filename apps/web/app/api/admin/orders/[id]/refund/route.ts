@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAdminAuth } from '@/lib/admin-auth';
+import { requireAdminAuth } from '@/lib/admin-auth';
 import { PrismaClient, OrderStatus } from '@taletoprint/database';
 import Stripe from 'stripe';
 
@@ -8,7 +8,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-07-30.basil',
 });
 
-async function handleRefundPost(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+  // Check admin authentication
+  const authError = requireAdminAuth(request);
+  if (authError) return authError;
   try {
     const orderId = params.id;
     
@@ -73,4 +76,4 @@ async function handleRefundPost(request: NextRequest, { params }: { params: { id
   }
 }
 
-export const POST = withAdminAuth(handleRefundPost);
+}

@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAdminAuth } from '@/lib/admin-auth';
+import { requireAdminAuth } from '@/lib/admin-auth';
 import { PrismaClient, OrderStatus } from '@taletoprint/database';
 
 const prisma = new PrismaClient();
 
-async function handleRetryPost(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+  // Check admin authentication
+  const authError = requireAdminAuth(request);
+  if (authError) return authError;
   try {
     const orderId = params.id;
     
@@ -72,4 +75,4 @@ async function handleRetryPost(request: NextRequest, { params }: { params: { id:
   }
 }
 
-export const POST = withAdminAuth(handleRetryPost);
+}
