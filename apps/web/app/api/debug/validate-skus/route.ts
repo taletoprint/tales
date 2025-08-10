@@ -29,7 +29,10 @@ export async function GET(request: NextRequest) {
         );
       } catch (error) {
         console.error('Quote request failed:', error);
-        quoteResults = { error: 'Quote request failed', details: error.message };
+        quoteResults = { 
+          error: 'Quote request failed', 
+          details: error instanceof Error ? error.message : 'Unknown error' 
+        };
       }
     }
 
