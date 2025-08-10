@@ -6,19 +6,44 @@ import { PreviewDisplay } from '@/components/generation/preview-display';
 import { PreviewResult } from '@/lib/types';
 
 export default function Home() {
-  const [preview, setPreview] = useState<PreviewResult | null>(null);
+  const [selectedPreview, setSelectedPreview] = useState<PreviewResult | null>(null);
+  const [allPreviews, setAllPreviews] = useState<PreviewResult[]>([]);
   const [attemptCount, setAttemptCount] = useState(0);
   const previewSectionRef = useRef<HTMLDivElement>(null);
   const [showCancelMessage, setShowCancelMessage] = useState(false);
   
+  // Load saved previews on mount
+  useEffect(() => {
+    const savedPreviews = localStorage.getItem('taletoprint_previews');
+    if (savedPreviews) {
+      try {
+        const parsed = JSON.parse(savedPreviews);
+        setAllPreviews(parsed);
+        if (parsed.length > 0) {
+          setSelectedPreview(parsed[parsed.length - 1]); // Select most recent
+        }
+      } catch (e) {
+        console.error('Failed to load saved previews:', e);
+      }
+    }
+  }, []);
+  
+  // Save previews to localStorage whenever they change
+  useEffect(() => {
+    if (allPreviews.length > 0) {
+      localStorage.setItem('taletoprint_previews', JSON.stringify(allPreviews));
+    }
+  }, [allPreviews]);
+  
   const handlePreview = (newPreview: PreviewResult) => {
-    setPreview(newPreview);
+    setSelectedPreview(newPreview);
+    setAllPreviews(prev => [...prev, newPreview]);
     setAttemptCount(prev => prev + 1);
   };
 
   // Auto-scroll to preview when it's created
   useEffect(() => {
-    if (preview && previewSectionRef.current) {
+    if (selectedPreview && previewSectionRef.current) {
       // Small delay to ensure the preview is rendered
       setTimeout(() => {
         previewSectionRef.current?.scrollIntoView({ 
@@ -27,7 +52,7 @@ export default function Home() {
         });
       }, 100);
     }
-  }, [preview]);
+  }, [selectedPreview]);
 
   // Check for checkout cancellation
   useEffect(() => {
@@ -43,7 +68,7 @@ export default function Home() {
   
   const handleSelectForPurchase = () => {
     // TODO: Implement checkout flow
-    console.log('Starting checkout for preview:', preview?.id);
+    console.log('Starting checkout for preview:', selectedPreview?.id);
   };
   
   return (
@@ -207,15 +232,59 @@ export default function Home() {
           <StoryInput 
             onPreview={handlePreview}
             currentAttempts={attemptCount}
-            hasPreview={!!preview}
+            hasPreview={!!selectedPreview}
           />
           
-          {preview && (
+          {allPreviews.length > 0 && (
             <div ref={previewSectionRef} className="mt-16 animate-fade-in">
-              <PreviewDisplay 
-                preview={preview}
-                onSelectForPurchase={handleSelectForPurchase}
-              />
+              {/* Preview Gallery */}
+              <div className="mb-8">
+                <h4 className="text-xl font-serif font-semibold text-charcoal mb-4">Your Generated Images</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {allPreviews.map((preview, index) => (
+                    <div 
+                      key={preview.id} 
+                      className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
+                        selectedPreview?.id === preview.id 
+                          ? 'border-terracotta ring-2 ring-terracotta ring-offset-2' 
+                          : 'border-transparent hover:border-warm-grey/30'
+                      }`}
+                      onClick={() => setSelectedPreview(preview)}
+                    >
+                      <img 
+                        src={preview.imageUrl} 
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      {selectedPreview?.id === preview.id && (
+                        <div className="absolute top-2 right-2 bg-terracotta text-cream rounded-full p-1">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <button 
+                  onClick={() => {
+                    setAllPreviews([]);
+                    setSelectedPreview(null);
+                    localStorage.removeItem('taletoprint_previews');
+                  }}
+                  className="mt-4 text-sm text-charcoal/60 hover:text-charcoal transition-colors"
+                >
+                  Clear all previews
+                </button>
+              </div>
+              
+              {/* Selected Preview Display */}
+              {selectedPreview && (
+                <PreviewDisplay 
+                  preview={selectedPreview}
+                  onSelectForPurchase={handleSelectForPurchase}
+                />
+              )}
             </div>
           )}
         </div>
