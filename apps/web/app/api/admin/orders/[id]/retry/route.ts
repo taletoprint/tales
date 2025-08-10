@@ -47,7 +47,7 @@ export async function POST(
       amount_total: order.price,
       currency: order.currency.toLowerCase(),
       shipping_details: {
-        name: order.shippingAddress?.name,
+        name: (order.shippingAddress as any)?.name,
         address: order.shippingAddress,
       },
       metadata: {
