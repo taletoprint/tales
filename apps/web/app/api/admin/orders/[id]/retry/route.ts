@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/admin-auth';
 import { PrismaClient } from '@taletoprint/database';
-import { OrderStatus } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -33,7 +32,7 @@ export async function POST(
     await prisma.order.update({
       where: { id: orderId },
       data: {
-        status: OrderStatus.PAID,
+        status: 'PAID',
         hdImageUrl: null,
         printAssetUrl: null,
         prodigiOrderId: null,

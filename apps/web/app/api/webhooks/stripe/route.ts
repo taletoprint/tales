@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { SimpleAIGenerator } from '@/lib/ai-services';
 import { PrismaClient } from '@taletoprint/database';
-import { OrderStatus } from '@prisma/client';
 import { getProductSpec, PrintSize } from '@/lib/prodigi-client';
 import { PrintFileGenerator } from '@/lib/print-file-generator';
 import { S3PrintAssetUploader } from '@/lib/s3-uploader';
@@ -104,7 +103,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         currency: (session.currency || 'gbp').toUpperCase(),
         stripeSessionId: session.id,
         paymentStatus: 'paid',
-        status: OrderStatus.PAID,
+        status: 'PAID',
         prodigiSku: productSpec.prodigiSku, // Store the SKU to use
         shippingAddress: {
           name: shipping.name,
@@ -129,7 +128,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     // Update order status to GENERATING
     await prisma.order.update({
       where: { id: orderId },
-      data: { status: OrderStatus.GENERATING },
+      data: { status: 'GENERATING' },
     });
 
     // Generate HD print version
@@ -189,7 +188,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       data: { 
         hdImageUrl,
         printAssetUrl: s3Upload.signedUrl, // Signed URL for Prodigi
-        status: OrderStatus.PRINT_READY,
+        status: 'PRINT_READY',
       },
     });
 
@@ -210,7 +209,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       where: { id: orderId },
       data: { 
         prodigiOrderId,
-        status: OrderStatus.PRINTING,
+        status: 'PRINTING',
       },
     });
 
@@ -226,7 +225,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     try {
       await prisma.order.update({
         where: { id: orderId },
-        data: { status: OrderStatus.FAILED },
+        data: { status: 'FAILED' },
       });
       console.log(`Order ${orderId} marked as FAILED`);
     } catch (dbError) {

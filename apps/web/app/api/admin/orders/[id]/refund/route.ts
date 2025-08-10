@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/admin-auth';
 import { PrismaClient } from '@taletoprint/database';
-import { OrderStatus } from '@prisma/client';
 import Stripe from 'stripe';
 
 const prisma = new PrismaClient();
@@ -58,7 +57,7 @@ export async function POST(
     await prisma.order.update({
       where: { id: orderId },
       data: {
-        status: OrderStatus.REFUNDED,
+        status: 'REFUNDED',
         metadata: {
           ...order.metadata,
           refundId: refund.id,

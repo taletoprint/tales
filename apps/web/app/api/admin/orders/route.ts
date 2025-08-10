@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminAuth } from '@/lib/admin-auth';
 import { PrismaClient } from '@taletoprint/database';
-import { OrderStatus } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -10,7 +9,7 @@ async function handleOrdersGet(request: NextRequest) {
     const url = new URL(request.url);
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '20');
-    const status = url.searchParams.get('status') as OrderStatus | null;
+    const status = url.searchParams.get('status');
     const email = url.searchParams.get('email');
 
     const skip = (page - 1) * limit;
