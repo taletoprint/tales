@@ -131,7 +131,6 @@ export async function POST(request: NextRequest) {
       expiresAt: result.expiresAt,
       metadata: {
         ...result.metadata,
-        printSize, // Include print size in metadata
       },
     };
     
