@@ -9,6 +9,7 @@ interface Order {
   createdAt: string;
   email: string;
   printSize: string;
+  size?: string; // Legacy field for backward compatibility
   price: number;
   currency: string;
   status: string;
