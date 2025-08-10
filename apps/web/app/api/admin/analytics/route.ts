@@ -68,7 +68,7 @@ async function handleAnalyticsGet(request: NextRequest) {
       revenue: {
         total: totalRevenue._sum.price || 0,
         average: Math.round(averageOrderValue || 0),
-        byDay: revenueByDay.map(item => ({
+        byDay: revenueByDay.map((item: any) => ({
           date: item.createdAt.toISOString().split('T')[0],
           revenue: item._sum.price || 0,
           orders: item._count,
@@ -76,11 +76,11 @@ async function handleAnalyticsGet(request: NextRequest) {
       },
       orders: {
         total: totalOrders,
-        byStatus: statusBreakdown.map(item => ({
+        byStatus: statusBreakdown.map((item: any) => ({
           status: item.status,
           count: item._count,
         })),
-        bySize: sizeBreakdown.map(item => ({
+        bySize: sizeBreakdown.map((item: any) => ({
           size: item.printSize || 'Unknown',
           count: item._count,
         })),
