@@ -76,7 +76,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
     // Retrieve customer and shipping details
     const customer = session.customer as Stripe.Customer;
-    const shipping = session.shipping_details;
+    const shipping = (session as any).shipping_details;
     
     if (!shipping?.address) {
       throw new Error('Missing shipping address');
