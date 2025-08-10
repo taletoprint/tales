@@ -2,6 +2,9 @@
 export type { PreviewResult, UserIdentity, PrintSize, Address, Aspect } from '@taletoprint/shared';
 export { ImageOrientation } from '@taletoprint/shared';
 
+// Import Aspect type directly for use in PromptBundle
+import type { Aspect } from '@taletoprint/shared';
+
 // Art style enum - matches new prompt builder
 export enum ArtStyle {
   WATERCOLOUR = 'watercolour',
