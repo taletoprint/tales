@@ -53,13 +53,13 @@ export function requireAdminAuth(request: NextRequest): Response | null {
 }
 
 // Helper for API routes
-export function withAdminAuth(
-  handler: (request: NextRequest) => Promise<Response>
+export function withAdminAuth<T extends any[]>(
+  handler: (request: NextRequest, ...args: T) => Promise<Response>
 ) {
-  return async (request: NextRequest) => {
+  return async (request: NextRequest, ...args: T) => {
     const authError = requireAdminAuth(request);
     if (authError) return authError;
     
-    return handler(request);
+    return handler(request, ...args);
   };
 }
