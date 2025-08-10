@@ -82,7 +82,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       expand: ['customer', 'shipping_details']
     });
     
-    const shipping = fullSession.shipping_details || (fullSession as any).shipping;
+    const shipping = (fullSession as any).shipping_details || (fullSession as any).shipping;
     
     if (!shipping?.address) {
       console.error('Missing shipping address in session:', JSON.stringify(fullSession, null, 2));
