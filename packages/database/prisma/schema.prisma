@@ -108,7 +108,8 @@ enum OrderStatus {
   PENDING           // Payment processing
   PAID             // Payment confirmed
   GENERATING       // Creating HD artwork
-  PRINT_READY      // HD complete, sending to POD
+  AWAITING_APPROVAL // HD complete, awaiting manual approval
+  PRINT_READY      // Approved and ready to send to POD
   PRINTING         // POD confirmed, printing
   SHIPPED          // Tracking number received
   DELIVERED        // Confirmed delivery

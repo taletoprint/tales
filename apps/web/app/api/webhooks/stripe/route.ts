@@ -188,38 +188,19 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       orderId
     );
 
-    // Update order with HD image URL and S3 asset URL, mark as PRINT_READY
+    // Update order with HD image URL and S3 asset URL, mark as AWAITING_APPROVAL
     await prisma.order.update({
       where: { id: orderId },
       data: { 
         hdImageUrl,
         printAssetUrl: s3Upload.signedUrl, // Signed URL for Prodigi
-        status: 'PRINT_READY',
+        status: 'AWAITING_APPROVAL', // Manual approval required
       },
     });
 
-    // Get the full order for Prodigi submission
-    const fullOrder = await prisma.order.findUnique({
-      where: { id: orderId },
-    });
-
-    if (!fullOrder) {
-      throw new Error(`Order ${orderId} not found after creation`);
-    }
-
-    // Send to Prodigi for fulfillment using the print-ready asset
-    const prodigiOrderId = await submitToProdigiForFulfillment(fullOrder, s3Upload.signedUrl);
-
-    // Update order with Prodigi order ID and mark as PRINTING
-    await prisma.order.update({
-      where: { id: orderId },
-      data: { 
-        prodigiOrderId,
-        status: 'PRINTING',
-      },
-    });
-
-    console.log(`Order ${orderId} processed successfully and sent to Prodigi (${prodigiOrderId})`);
+    console.log(`Order ${orderId} processed successfully and is awaiting manual approval`);
+    
+    // TODO: Send notification to admin about new order requiring approval
 
     // TODO: Send confirmation email to customer
 
