@@ -59,7 +59,7 @@ export async function POST(
       data: {
         status: 'REFUNDED',
         metadata: {
-          ...order.metadata,
+          ...(order.metadata || {}),
           refundId: refund.id,
           refundedAt: new Date().toISOString(),
         },
