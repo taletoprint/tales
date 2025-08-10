@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -23,7 +23,7 @@ interface OrderDetails {
   estimatedDelivery: string;
 }
 
-export default function SuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
@@ -227,5 +227,22 @@ export default function SuccessPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-cream flex items-center justify-center">
+        <div className="max-w-md w-full mx-4">
+          <div className="bg-white rounded-2xl shadow-lg border border-warm-grey/10 p-8 text-center">
+            <div className="animate-spin w-8 h-8 border-2 border-sage border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-charcoal">Loading...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   );
 }
