@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     // Retrieve the checkout session from Stripe
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ['customer', 'shipping_details', 'line_items'],
+      expand: ['customer', 'line_items'],
     });
 
     if (!session || session.payment_status !== 'paid') {
@@ -58,18 +58,18 @@ export async function GET(request: NextRequest) {
 
     // Extract customer and shipping details
     const customer = session.customer as Stripe.Customer;
-    const shipping = session.shipping_details!;
+    const shipping = (session as any).shipping_details;
     
     const orderDetails = {
       id: session.id.replace('cs_', 'TTP-').toUpperCase(),
-      customerName: shipping.name || customer?.name || 'Customer',
+      customerName: shipping?.name || customer?.name || 'Customer',
       customerEmail: customer?.email || session.customer_email,
       shippingAddress: {
-        line1: shipping.address?.line1 || '',
-        line2: shipping.address?.line2 || '',
-        city: shipping.address?.city || '',
-        postal_code: shipping.address?.postal_code || '',
-        country: shipping.address?.country || 'GB',
+        line1: shipping?.address?.line1 || '',
+        line2: shipping?.address?.line2 || '',
+        city: shipping?.address?.city || '',
+        postal_code: shipping?.address?.postal_code || '',
+        country: shipping?.address?.country || 'GB',
       },
       artworkDetails: {
         style: session.metadata?.style || 'watercolour',
