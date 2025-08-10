@@ -77,14 +77,14 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     // Retrieve customer and shipping details
     const customer = session.customer as Stripe.Customer;
     
-    // Get full session details
-    const fullSession = await stripe.checkout.sessions.retrieve(session.id);
+    // Shipping details should be on the webhook session object directly
+    console.log('Session shipping_details:', (session as any).shipping_details);
+    console.log('Session shipping:', (session as any).shipping);
     
-    // Shipping details are directly on the session object
-    const shipping = (fullSession as any).shipping_details || (fullSession as any).shipping || (session as any).shipping_details;
+    const shipping = (session as any).shipping_details || (session as any).shipping;
     
     if (!shipping?.address) {
-      console.error('Missing shipping address in session:', JSON.stringify(fullSession, null, 2));
+      console.error('Missing shipping address. Full session data:', JSON.stringify(session, null, 2));
       throw new Error('Missing shipping address');
     }
 
