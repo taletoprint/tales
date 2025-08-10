@@ -4,12 +4,16 @@ import { PrismaClient, OrderStatus } from '@taletoprint/database';
 
 const prisma = new PrismaClient();
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params;
   // Check admin authentication
   const authError = requireAdminAuth(request);
   if (authError) return authError;
   try {
-    const orderId = params.id;
+    const orderId = id;
     
     const order = await prisma.order.findUnique({
       where: { id: orderId },
