@@ -168,7 +168,7 @@ export class ProdigiClient {
 }
 
 // Product mapping based on expert recommendations
-export type PrintSize = 'A4' | 'A3';
+export type PrintSize = 'A4' | 'A3' | 'SQUARE_8X8' | 'SQUARE_10X10';
 
 export interface ProductSpec {
   id: string;
@@ -201,6 +201,26 @@ export const PRODUCT_CATALOG: Record<PrintSize, ProductSpec> = {
     prodigiSku: 'GLOBAL-FAP-A3', // To be validated
     retailPrice: 5999, // £59.99
     description: 'Premium matte fine art print on archival paper (≥200gsm)'
+  },
+  SQUARE_8X8: {
+    id: 'poster_square_8x8_matte',
+    name: '8×8" Square Print',
+    size: 'SQUARE_8X8',
+    dimensions: { width: 203, height: 203, unit: 'mm' }, // 8×8 inches
+    printPixels: { width: 2400, height: 2400 }, // 300 DPI + border
+    prodigiSku: 'GLOBAL-FAP-8X8', // To be validated
+    retailPrice: 3499, // £34.99
+    description: 'Premium square matte print on archival paper (≥200gsm)'
+  },
+  SQUARE_10X10: {
+    id: 'poster_square_10x10_matte',
+    name: '10×10" Square Print',
+    size: 'SQUARE_10X10', 
+    dimensions: { width: 254, height: 254, unit: 'mm' }, // 10×10 inches
+    printPixels: { width: 3000, height: 3000 }, // 300 DPI + border
+    prodigiSku: 'GLOBAL-FAP-10X10', // To be validated
+    retailPrice: 4499, // £44.99
+    description: 'Premium large square matte print on archival paper (≥200gsm)'
   }
 };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { PreviewResult, PrintSize } from '@/lib/types';
 import { getProductSpec } from '@/lib/prodigi-client';
@@ -17,7 +17,18 @@ export const PreviewDisplay: React.FC<PreviewDisplayProps> = ({
   const [testingUpscale, setTestingUpscale] = useState(false);
   const [upscaleResult, setUpscaleResult] = useState<{url: string, pipeline: string} | null>(null);
   const [purchaseLoading, setPurchaseLoading] = useState(false);
-  const [selectedPrintSize, setSelectedPrintSize] = useState<PrintSize>('A3');
+  // Set default print size based on aspect ratio
+  const getDefaultPrintSize = (): PrintSize => {
+    const aspect = (preview as any).aspect;
+    return aspect === 'square' ? 'SQUARE_8X8' : 'A4';
+  };
+  
+  const [selectedPrintSize, setSelectedPrintSize] = useState<PrintSize>(getDefaultPrintSize());
+
+  // Update default print size when preview changes
+  useEffect(() => {
+    setSelectedPrintSize(getDefaultPrintSize());
+  }, [preview.id]);
 
   const handleTestUpscale = async () => {
     setTestingUpscale(true);
@@ -121,31 +132,39 @@ export const PreviewDisplay: React.FC<PreviewDisplayProps> = ({
           <div className="mb-8">
             <h4 className="font-serif font-semibold text-lg text-charcoal mb-4">Choose your print size:</h4>
             <div className="grid gap-3">
-              {(['A4', 'A3'] as PrintSize[]).map((size) => {
-                const spec = getProductSpec(size);
-                const price = (spec.retailPrice / 100).toFixed(2);
-                return (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedPrintSize(size)}
-                    className={`p-4 border-2 rounded-xl text-left transition-all ${
-                      selectedPrintSize === size
-                        ? 'border-terracotta bg-terracotta/5 shadow-md'
-                        : 'border-warm-grey/30 hover:border-sage hover:shadow-md'
-                    }`}
-                  >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <div className="font-serif font-medium text-charcoal">{spec.name}</div>
-                        <div className="text-sm text-charcoal/70">{spec.description}</div>
+              {(() => {
+                // Show different sizes based on image aspect ratio
+                const aspect = (preview as any).aspect;
+                const availableSizes: PrintSize[] = aspect === 'square' 
+                  ? ['SQUARE_8X8', 'SQUARE_10X10'] 
+                  : ['A4', 'A3'];
+                
+                return availableSizes.map((size) => {
+                  const spec = getProductSpec(size);
+                  const price = (spec.retailPrice / 100).toFixed(2);
+                  return (
+                    <button
+                      key={size}
+                      onClick={() => setSelectedPrintSize(size)}
+                      className={`p-4 border-2 rounded-xl text-left transition-all ${
+                        selectedPrintSize === size
+                          ? 'border-terracotta bg-terracotta/5 shadow-md'
+                          : 'border-warm-grey/30 hover:border-sage hover:shadow-md'
+                      }`}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <div className="font-serif font-medium text-charcoal">{spec.name}</div>
+                          <div className="text-sm text-charcoal/70">{spec.description}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold text-charcoal">£{price}</div>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-semibold text-charcoal">£{price}</div>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
+                    </button>
+                  );
+                });
+              })()}
             </div>
           </div>
 

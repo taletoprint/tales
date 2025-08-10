@@ -129,7 +129,7 @@ export default function Home() {
           </h2>
           <p className="text-lg sm:text-xl text-charcoal/80 mb-8 max-w-2xl mx-auto">
             Transform your most treasured memories into stunning, museum-quality prints. 
-            Available in A4 and A3 sizes, perfect for framing or as thoughtful gifts.
+            Available in multiple sizes including A4, A3, and square formats - perfect for framing or as thoughtful gifts.
           </p>
           
           {/* Trust indicators */}
