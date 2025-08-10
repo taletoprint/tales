@@ -15,6 +15,10 @@ interface Order {
   status: string;
   paymentStatus: string;
   prodigiOrderId?: string;
+  hdImageUrl?: string;
+  printAssetUrl?: string;
+  trackingNumber?: string;
+  shippingAddress: any;
   preview?: {
     story: string;
     style: string;
