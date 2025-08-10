@@ -12,20 +12,43 @@ export default function Home() {
   const previewSectionRef = useRef<HTMLDivElement>(null);
   const [showCancelMessage, setShowCancelMessage] = useState(false);
   
-  // Load saved previews and attempt count on mount
+  // Load saved previews and daily attempt count on mount
   useEffect(() => {
+    const today = new Date().toDateString();
+    
+    // Load previews
     const savedPreviews = localStorage.getItem('taletoprint_previews');
     if (savedPreviews) {
       try {
         const parsed = JSON.parse(savedPreviews);
         setAllPreviews(parsed);
-        setAttemptCount(parsed.length); // Set attempt count based on saved previews
         if (parsed.length > 0) {
           setSelectedPreview(parsed[parsed.length - 1]); // Select most recent
         }
       } catch (e) {
         console.error('Failed to load saved previews:', e);
       }
+    }
+    
+    // Load daily attempt count (separate from previews)
+    const savedAttempts = localStorage.getItem('taletoprint_daily_attempts');
+    if (savedAttempts) {
+      try {
+        const { date, count } = JSON.parse(savedAttempts);
+        if (date === today) {
+          setAttemptCount(count);
+        } else {
+          // New day - reset counter
+          setAttemptCount(0);
+          localStorage.setItem('taletoprint_daily_attempts', JSON.stringify({ date: today, count: 0 }));
+        }
+      } catch (e) {
+        console.error('Failed to load daily attempts:', e);
+        setAttemptCount(0);
+      }
+    } else {
+      // First time - initialize
+      localStorage.setItem('taletoprint_daily_attempts', JSON.stringify({ date: today, count: 0 }));
     }
   }, []);
   
@@ -39,7 +62,14 @@ export default function Home() {
   const handlePreview = (newPreview: PreviewResult) => {
     setSelectedPreview(newPreview);
     setAllPreviews(prev => [...prev, newPreview]);
-    setAttemptCount(prev => prev + 1);
+    
+    // Increment daily attempt counter
+    const newCount = attemptCount + 1;
+    setAttemptCount(newCount);
+    
+    // Save daily attempts to localStorage
+    const today = new Date().toDateString();
+    localStorage.setItem('taletoprint_daily_attempts', JSON.stringify({ date: today, count: newCount }));
   };
 
   // Auto-scroll to preview when it's created
@@ -282,8 +312,8 @@ export default function Home() {
                     onClick={() => {
                       setAllPreviews([]);
                       setSelectedPreview(null);
-                      setAttemptCount(0);
                       localStorage.removeItem('taletoprint_previews');
+                      // Note: We DON'T reset attemptCount - daily limit persists
                     }}
                     className="mt-4 text-sm text-charcoal/60 hover:text-charcoal transition-colors"
                   >
