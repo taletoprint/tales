@@ -21,7 +21,6 @@ export const StoryInput: React.FC<StoryInputProps> = ({
   const [story, setStory] = useState('');
   const [style, setStyle] = useState<ArtStyle>(ArtStyle.WATERCOLOUR);
   const [aspect, setAspect] = useState<Aspect>("A3_portrait"); // Default to portrait for prints
-  const [printSize, setPrintSize] = useState<PrintSize>("A3");
   const [loading, setLoading] = useState(false);
   const [showEmailGate, setShowEmailGate] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
@@ -40,7 +39,7 @@ export const StoryInput: React.FC<StoryInputProps> = ({
       const response = await fetch('/api/preview/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ story, style, aspect, printSize })
+        body: JSON.stringify({ story, style, aspect })
       });
       
       const data = await response.json();
