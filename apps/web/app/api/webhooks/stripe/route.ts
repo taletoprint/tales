@@ -74,17 +74,16 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       throw new Error('Missing required metadata in checkout session');
     }
 
-    // Retrieve customer and shipping details
-    const customer = session.customer as Stripe.Customer;
+    // Retrieve the full session with shipping details
+    const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
+      expand: ['customer', 'shipping_details']
+    });
     
-    // Shipping details should be on the webhook session object directly
-    console.log('Session shipping_details:', (session as any).shipping_details);
-    console.log('Session shipping:', (session as any).shipping);
-    
-    const shipping = (session as any).shipping_details || (session as any).shipping;
+    const customer = fullSession.customer as Stripe.Customer;
+    const shipping = fullSession.shipping_details;
     
     if (!shipping?.address) {
-      console.error('Missing shipping address. Full session data:', JSON.stringify(session, null, 2));
+      console.error('Missing shipping address. Full session data:', JSON.stringify(fullSession, null, 2));
       throw new Error('Missing shipping address');
     }
 
