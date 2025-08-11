@@ -134,7 +134,7 @@ export default function Home() {
                 alt="TaleToPrint"
                 width={128}
                 height={64}
-                className="h-16 w-auto"
+                className="h-12 w-auto py-2"
                 priority
               />
             </div>

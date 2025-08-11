@@ -99,6 +99,13 @@ export const StoryInput: React.FC<StoryInputProps> = ({
             <StyleSelector value={style} onChange={setStyle} />
           </div>
           
+          <div>
+            <label className="block text-lg font-serif font-medium text-charcoal mb-3">
+              Choose orientation
+            </label>
+            <AspectSelector value={aspect} onChange={setAspect} />
+          </div>
+          
           {error && (
             <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 flex items-center gap-3">
               <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
