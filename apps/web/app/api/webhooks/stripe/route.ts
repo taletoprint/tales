@@ -80,7 +80,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     });
     
     const customer = fullSession.customer as Stripe.Customer;
-    const shipping = fullSession.shipping_details;
+    const shipping = (fullSession as any).shipping_details || (fullSession as any).shipping;
     
     if (!shipping?.address) {
       console.error('Missing shipping address. Full session data:', JSON.stringify(fullSession, null, 2));
