@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { PreviewResult, PrintSize } from '@/lib/types';
-import { getProductSpec } from '@/lib/prodigi-client';
+import { PreviewResult } from '@/lib/types';
+import { getProductSpec, PrintSize } from '@/lib/prodigi-client';
 
 interface PreviewDisplayProps {
   preview: PreviewResult;
