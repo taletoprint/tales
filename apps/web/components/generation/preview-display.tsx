@@ -18,7 +18,7 @@ export const PreviewDisplay: React.FC<PreviewDisplayProps> = ({
   // Set default print size based on aspect ratio
   const getDefaultPrintSize = (): PrintSize => {
     const aspect = (preview as any).aspect;
-    return aspect === 'square' ? 'SQUARE_8X8' : 'A4';
+    return aspect === 'square' ? ('SQUARE_8X8' as PrintSize) : ('A4' as PrintSize);
   };
   
   const [selectedPrintSize, setSelectedPrintSize] = useState<PrintSize>(getDefaultPrintSize());
