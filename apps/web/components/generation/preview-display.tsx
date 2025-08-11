@@ -106,8 +106,8 @@ export const PreviewDisplay: React.FC<PreviewDisplayProps> = ({
                 // Show different sizes based on image aspect ratio
                 const aspect = (preview as any).aspect;
                 const availableSizes: PrintSize[] = aspect === 'square' 
-                  ? ['SQUARE_8X8', 'SQUARE_10X10'] 
-                  : ['A4', 'A3'];
+                  ? (['SQUARE_8X8', 'SQUARE_10X10'] as unknown as PrintSize[])
+                  : (['A4', 'A3'] as unknown as PrintSize[]);
                 
                 return availableSizes.map((size) => {
                   const spec = getProductSpec(size);
