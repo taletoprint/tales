@@ -125,15 +125,12 @@ export default function ExamplesPage() {
       <header className="sticky top-0 z-50 bg-cream/95 backdrop-blur-sm border-b border-warm-grey/20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-3">
+            <Link href="/" className="flex items-center">
               <img 
                 src="/images/logo/ttp_logo.png" 
-                alt="TaleToPrint Logo" 
-                className="h-8 w-8"
+                alt="TaleToPrint" 
+                className="h-10"
               />
-              <h1 className="text-2xl font-serif font-semibold text-charcoal">
-                TaleToPrint
-              </h1>
             </Link>
             <Link 
               href="/#create"
@@ -210,7 +207,7 @@ export default function ExamplesPage() {
                     {/* AI Generated Preview */}
                     <div>
                       <h4 className="font-medium text-charcoal mb-3">AI Generated Art</h4>
-                      <div className="aspect-[3/4] bg-warm-grey/20 rounded-lg overflow-hidden">
+                      <div className="aspect-square bg-warm-grey/20 rounded-lg overflow-hidden">
                         <img 
                           src={example.previewUrl}
                           alt={`${example.style} preview`}
@@ -222,7 +219,7 @@ export default function ExamplesPage() {
                     {/* Real World Mockup */}
                     <div>
                       <h4 className="font-medium text-charcoal mb-3">In Your Home</h4>
-                      <div className="aspect-[3/4] bg-warm-grey/20 rounded-lg overflow-hidden">
+                      <div className="aspect-square bg-warm-grey/20 rounded-lg overflow-hidden">
                         <img 
                           src={example.mockupUrl}
                           alt={`${example.style} mockup`}

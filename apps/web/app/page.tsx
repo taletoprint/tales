@@ -127,15 +127,12 @@ export default function Home() {
       <header className="sticky top-0 z-50 bg-cream/95 backdrop-blur-sm border-b border-warm-grey/20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center">
               <img 
                 src="/images/logo/ttp_logo.png" 
-                alt="TaleToPrint Logo" 
-                className="h-8 w-8"
+                alt="TaleToPrint" 
+                className="h-10"
               />
-              <h1 className="text-2xl font-serif font-semibold text-charcoal">
-                TaleToPrint
-              </h1>
             </div>
             <div className="hidden desktop:flex items-center space-x-6">
               <a href="#how-it-works" className="text-sage hover:text-terracotta transition-colors">

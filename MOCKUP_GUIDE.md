@@ -5,7 +5,7 @@
 You'll need to create 12 wall mockups (one for each example) showing the artwork in real-world settings.
 
 ### Mockup Requirements:
-- **Aspect Ratio**: 3:4 (600x800px minimum)
+- **Aspect Ratio**: Square (1:1, minimum 600x600px)
 - **Settings**: Home environments (living rooms, bedrooms, hallways, etc.)
 - **Print Sizes**: Show A4 and A3 frames appropriately sized
 - **Style**: Clean, aspirational, well-lit spaces
