@@ -17,14 +17,14 @@ const examples: Example[] = [
     id: 1,
     style: "Watercolour",
     prompt: "One summer evening, I walked barefoot along the beach with my daughter, collecting seashells as the waves lapped at our feet and the sky turned shades of pink and gold.",
-    previewUrl: "/api/placeholder/400/600", 
+    previewUrl: "/images/examples/watercolour01_Soft_dreamy_watercolour_painting_of_a_barefoot_6d899b94-39dc-456b-b311-0ec112d94f9f.png", 
     mockupUrl: "/api/placeholder/600/800"
   },
   {
     id: 2,
     style: "Watercolour", 
     prompt: "On a rainy afternoon, I sat at the café window with a steaming cup of tea, watching raindrops race down the glass as people hurried past under colourful umbrellas.",
-    previewUrl: "/api/placeholder/400/600",
+    previewUrl: "/images/examples/watercolour02_Cosy_watercolour_scene_of_a_rainy_afternoon_vi_6f86d19c-4fa2-4093-b8a6-4efbf6d0aec6.png",
     mockupUrl: "/api/placeholder/600/800"
   },
   
@@ -33,14 +33,14 @@ const examples: Example[] = [
     id: 3,
     style: "Oil Painting",
     prompt: "The family gathered in the old farmhouse kitchen, lit by the warm glow of a single lamp, as my grandfather carved the roast and everyone laughed over shared stories.",
-    previewUrl: "/api/placeholder/400/600",
+    previewUrl: "/images/examples/Oil01_Rich_detailed_oil_painting_of_a_warm_farmhou_9f2311bc-d0d8-45f4-b2f3-67c48046f78f_0.png",
     mockupUrl: "/api/placeholder/600/800"
   },
   {
     id: 4,
     style: "Oil Painting",
     prompt: "In the heart of autumn, we hiked through the forest where every tree was aflame with red and orange leaves, and the air smelled of woodsmoke and earth.",
-    previewUrl: "/api/placeholder/400/600", 
+    previewUrl: "/images/examples/Oil02_Vivid_oil_painting_of_an_autumn_forest_trees_19a49a27-1c1c-4690-9082-64240b3388dd_0.png", 
     mockupUrl: "/api/placeholder/600/800"
   },
   
@@ -49,14 +49,14 @@ const examples: Example[] = [
     id: 5,
     style: "Pastel Illustration",
     prompt: "On the first day of spring, my garden burst into life — tulips, daffodils, and blossom trees swaying gently in the breeze as the sun warmed my face.",
-    previewUrl: "/api/placeholder/400/600",
+    previewUrl: "/images/examples/chalk01_Charming_pastel_illustration_of_a_blooming_s_4fa50ac1-ac81-40d6-8ad1-7bc1eac12c23_0.png",
     mockupUrl: "/api/placeholder/600/800"
   },
   {
     id: 6,
     style: "Pastel Illustration",
     prompt: "My little terrier curled up on the armchair by the fire, her paws twitching as she dreamed, the soft crackle of logs filling the quiet room.",
-    previewUrl: "/api/placeholder/400/600",
+    previewUrl: "/images/examples/chalk02_Chalky_pastel_illustration_of_a_small_terrie_ce6b1897-7f29-4386-907d-74730a396cb5_0.png",
     mockupUrl: "/api/placeholder/600/800"
   },
   
@@ -65,14 +65,14 @@ const examples: Example[] = [
     id: 7,
     style: "Pencil & Ink Sketch",
     prompt: "We strolled through the cobbled streets of a small Italian village, stopping to admire ivy-covered walls and tiny balconies overflowing with flowers.",
-    previewUrl: "/api/placeholder/400/600",
+    previewUrl: "/images/examples/pen01_Elegant_pencil_and_ink_sketch_of_a_cobbled_I_1183204d-752a-4de5-969f-882b18ba82bc_2.png",
     mockupUrl: "/api/placeholder/600/800"
   },
   {
     id: 8,
     style: "Pencil & Ink Sketch", 
     prompt: "Standing at the harbour at dawn, I sketched the fishing boats rocking gently in the tide, their masts silhouetted against the pale morning sky.",
-    previewUrl: "/api/placeholder/400/600",
+    previewUrl: "/images/examples/pen02_Detailed_pencil_and_ink_sketch_of_a_quiet_ha_9b29e125-02ff-4779-a82a-e9997f1d25ef_0.png",
     mockupUrl: "/api/placeholder/600/800"
   },
   
@@ -81,14 +81,14 @@ const examples: Example[] = [
     id: 9,
     style: "Storybook",
     prompt: "My son's first steps across the living room, reaching out with a huge smile as the morning light poured through the window behind him.",
-    previewUrl: "/api/placeholder/400/600",
+    previewUrl: "/images/examples/storybook01_Whimsical_storybook_illustration_of_a_babys__dfe69dd9-14b0-440b-8a32-aebf58192c76_1.png",
     mockupUrl: "/api/placeholder/600/800"
   },
   {
     id: 10,
     style: "Storybook",
     prompt: "In winter's quiet, I built a snowman with my niece, wrapping a bright red scarf around his neck as snowflakes drifted gently from the sky.",
-    previewUrl: "/api/placeholder/400/600",
+    previewUrl: "/images/examples/Storybook02_Magical_storybook_illustration_of_a_snowy_wi_ebebaf54-0d72-4c92-b74a-afbbc3ac92e2_1.png",
     mockupUrl: "/api/placeholder/600/800"
   },
   
@@ -97,14 +97,14 @@ const examples: Example[] = [
     id: 11,
     style: "Impressionist",
     prompt: "At the summer fair, children twirled on the carousel under strings of glowing lights, the air filled with music and the scent of candy floss.",
-    previewUrl: "/api/placeholder/400/600",
+    previewUrl: "/images/examples/Impressionist01_Bright_impressionist_painting_of_a_summer_fa_7185ebc4-3b35-462b-ab7b-2f1be8ef2bca_1.png",
     mockupUrl: "/api/placeholder/600/800"
   },
   {
     id: 12,
     style: "Impressionist",
     prompt: "A couple danced barefoot in the meadow at sunset, the grass dotted with wildflowers and the horizon melting into shades of lavender and gold.",
-    previewUrl: "/api/placeholder/400/600",
+    previewUrl: "/images/examples/impressionist02_Romantic_impressionist_painting_of_a_couple__bfe300f4-750c-4480-b6e7-a3c30d403885_2.png",
     mockupUrl: "/api/placeholder/600/800"
   }
 ];
@@ -125,7 +125,12 @@ export default function ExamplesPage() {
       <header className="sticky top-0 z-50 bg-cream/95 backdrop-blur-sm border-b border-warm-grey/20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center">
+            <Link href="/" className="flex items-center gap-3">
+              <img 
+                src="/images/logo/ttp_logo.png" 
+                alt="TaleToPrint Logo" 
+                className="h-8 w-8"
+              />
               <h1 className="text-2xl font-serif font-semibold text-charcoal">
                 TaleToPrint
               </h1>
