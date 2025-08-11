@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface Example {
   id: number;
@@ -126,10 +127,13 @@ export default function ExamplesPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center">
-              <img 
+              <Image 
                 src="/images/logo/ttp_logo.png" 
-                alt="TaleToPrint" 
-                className="h-10"
+                alt="TaleToPrint"
+                width={80}
+                height={40}
+                className="h-10 w-auto"
+                priority
               />
             </Link>
             <Link 
@@ -208,10 +212,13 @@ export default function ExamplesPage() {
                     <div>
                       <h4 className="font-medium text-charcoal mb-3">AI Generated Art</h4>
                       <div className="aspect-square bg-warm-grey/20 rounded-lg overflow-hidden">
-                        <img 
+                        <Image 
                           src={example.previewUrl}
                           alt={`${example.style} preview`}
+                          width={512}
+                          height={512}
                           className="w-full h-full object-cover"
+                          priority={example.id <= 4} // Prioritize first 4 images
                         />
                       </div>
                     </div>
@@ -220,10 +227,13 @@ export default function ExamplesPage() {
                     <div>
                       <h4 className="font-medium text-charcoal mb-3">In Your Home</h4>
                       <div className="aspect-square bg-warm-grey/20 rounded-lg overflow-hidden">
-                        <img 
+                        <Image 
                           src={example.mockupUrl}
                           alt={`${example.style} mockup`}
+                          width={512}
+                          height={512}
                           className="w-full h-full object-cover"
+                          priority={example.id <= 4} // Prioritize first 4 images
                         />
                       </div>
                     </div>

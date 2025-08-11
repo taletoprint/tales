@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import { StoryInput } from '@/components/generation/story-input';
 import { PreviewDisplay } from '@/components/generation/preview-display';
 import { PreviewResult } from '@/lib/types';
@@ -128,10 +129,13 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
-              <img 
+              <Image 
                 src="/images/logo/ttp_logo.png" 
-                alt="TaleToPrint" 
-                className="h-10"
+                alt="TaleToPrint"
+                width={80}
+                height={40}
+                className="h-10 w-auto"
+                priority
               />
             </div>
             <div className="hidden desktop:flex items-center space-x-6">
