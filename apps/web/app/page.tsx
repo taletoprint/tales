@@ -132,9 +132,9 @@ export default function Home() {
               <Image 
                 src="/images/logo/ttp_logo.png" 
                 alt="TaleToPrint"
-                width={80}
-                height={40}
-                className="h-10 w-auto"
+                width={128}
+                height={64}
+                className="h-16 w-auto"
                 priority
               />
             </div>
