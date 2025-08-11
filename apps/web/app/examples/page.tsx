@@ -126,13 +126,13 @@ export default function ExamplesPage() {
       <header className="sticky top-0 z-50 bg-cream/95 backdrop-blur-sm border-b border-warm-grey/20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center">
+            <Link href="/" className="flex items-center py-2">
               <Image 
                 src="/images/logo/ttp_logo.png" 
                 alt="TaleToPrint"
                 width={128}
                 height={64}
-                className="h-12 w-auto py-2"
+                className="h-14 w-auto"
                 priority
               />
             </Link>
