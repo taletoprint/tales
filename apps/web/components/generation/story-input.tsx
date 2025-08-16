@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { PreviewResult, ArtStyle, Aspect } from '@/lib/types';
 import { PrintSize } from '@/lib/prodigi-client';
 import SizeSelector from './size-selector';
+import { ArtStyleIcon } from '@/components/ui/art-style-icon';
 
 interface StoryInputProps {
   onPreview: (preview: PreviewResult) => void;
@@ -181,12 +182,12 @@ interface StyleSelectorProps {
 
 const StyleSelector: React.FC<StyleSelectorProps> = ({ value, onChange }) => {
   const styles = [
-    { value: ArtStyle.WATERCOLOUR, label: 'Watercolour', description: 'Soft, flowing washes', emoji: '🎨' },
-    { value: ArtStyle.OIL_PAINTING, label: 'Oil Painting', description: 'Rich, textured strokes', emoji: '🖼️' },
-    { value: ArtStyle.PASTEL, label: 'Pastel', description: 'Chalky, muted tones', emoji: '🌸' },
-    { value: ArtStyle.PENCIL_INK, label: 'Pencil & Ink', description: 'Fine line work', emoji: '✏️' },
-    { value: ArtStyle.STORYBOOK, label: 'Storybook', description: 'Whimsical illustrations', emoji: '📚' },
-    { value: ArtStyle.IMPRESSIONIST, label: 'Impressionist', description: 'Light and movement', emoji: '🌟' },
+    { value: ArtStyle.WATERCOLOUR, label: 'Watercolour', description: 'Soft, flowing washes' },
+    { value: ArtStyle.OIL_PAINTING, label: 'Oil Painting', description: 'Rich, textured strokes' },
+    { value: ArtStyle.PASTEL, label: 'Pastel', description: 'Chalky, muted tones' },
+    { value: ArtStyle.PENCIL_INK, label: 'Pencil & Ink', description: 'Fine line work' },
+    { value: ArtStyle.STORYBOOK, label: 'Storybook', description: 'Whimsical illustrations' },
+    { value: ArtStyle.IMPRESSIONIST, label: 'Impressionist', description: 'Light and movement' },
   ];
   
   return (
@@ -195,17 +196,23 @@ const StyleSelector: React.FC<StyleSelectorProps> = ({ value, onChange }) => {
         <button
           key={style.value}
           onClick={() => onChange(style.value)}
-          className={`p-4 border-2 rounded-xl text-left transition-all hover:transform hover:-translate-y-0.5 ${
+          className={`p-3 sm:p-4 border-2 rounded-xl text-left transition-all hover:transform hover:-translate-y-0.5 ${
             value === style.value
               ? 'border-terracotta bg-terracotta/5 shadow-md'
               : 'border-warm-grey/30 hover:border-sage hover:shadow-md'
           }`}
         >
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-lg">{style.emoji}</span>
-            <div className="font-medium text-charcoal font-serif">{style.label}</div>
+          <div className="flex items-start gap-3 mb-1">
+            <ArtStyleIcon 
+              style={style.value} 
+              selected={value === style.value}
+              className="mt-0.5" 
+            />
+            <div>
+              <div className="font-medium text-charcoal font-serif text-sm sm:text-base leading-tight">{style.label}</div>
+              <div className="text-xs text-charcoal/60 mt-0.5">{style.description}</div>
+            </div>
           </div>
-          <div className="text-xs text-charcoal/60">{style.description}</div>
         </button>
       ))}
     </div>
@@ -221,23 +228,20 @@ const AspectSelector: React.FC<AspectSelectorProps> = ({ value, onChange }) => {
   const aspects = [
     { 
       value: "A3_landscape" as Aspect, 
-      label: 'A3 Landscape', 
-      description: 'Wide format (16.5" × 11.7")', 
-      icon: '📐',
+      label: 'Landscape', 
+      description: 'Wide format', 
       aspect: 'w-8 h-6'
     },
     { 
       value: "A3_portrait" as Aspect, 
-      label: 'A3 Portrait', 
-      description: 'Tall format (11.7" × 16.5")', 
-      icon: '🖼️',
+      label: 'Portrait', 
+      description: 'Tall format', 
       aspect: 'w-6 h-8'
     },
     { 
       value: "square" as Aspect, 
       label: 'Square', 
-      description: 'Equal sides (11.7" × 11.7")', 
-      icon: '⬜',
+      description: 'Equal sides', 
       aspect: 'w-6 h-6'
     },
   ];
@@ -255,7 +259,6 @@ const AspectSelector: React.FC<AspectSelectorProps> = ({ value, onChange }) => {
           }`}
         >
           <div className="flex flex-col items-center gap-2">
-            <span className="text-xl">{aspectOption.icon}</span>
             <div className={`bg-warm-grey/30 rounded border ${aspectOption.aspect}`}></div>
             <div className="font-medium text-charcoal font-serif text-sm">{aspectOption.label}</div>
             <div className="text-xs text-charcoal/60 leading-tight">{aspectOption.description}</div>
