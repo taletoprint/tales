@@ -281,20 +281,23 @@ export class SimpleAIGenerator {
 
 
   private mapDimensionsToFlux(width: number, height: number): { aspect_ratio: string; megapixels: string } {
-    // Map current dimensions to Flux aspect ratio and megapixels
+    // Map current dimensions to valid Flux aspect ratios
     const aspectRatio = width / height;
     
     if (Math.abs(aspectRatio - 1.0) < 0.1) {
+      // Square: 1024x1024
       return { aspect_ratio: "1:1", megapixels: "1" };
     } else if (aspectRatio > 1) {
-      // Landscape - use closest standard ratio
-      if (Math.abs(aspectRatio - 1.414) < 0.1) {
-        return { aspect_ratio: "16:10", megapixels: "1" }; // Close to A3 landscape
+      // Landscape - map to closest valid ratio
+      if (Math.abs(aspectRatio - 1.414) < 0.2) {
+        // A3 landscape (1448x1024 ≈ 1.41) -> use 4:3 (1.33) as closest
+        return { aspect_ratio: "4:3", megapixels: "1" };
       }
-      return { aspect_ratio: "16:10", megapixels: "1" };
+      // Default landscape
+      return { aspect_ratio: "4:3", megapixels: "1" };
     } else {
-      // Portrait
-      return { aspect_ratio: "10:16", megapixels: "1" };
+      // Portrait - map to 3:4 
+      return { aspect_ratio: "3:4", megapixels: "1" };
     }
   }
 
