@@ -56,8 +56,8 @@ const examples: Example[] = [
   {
     id: 6,
     style: "Pastel Illustration",
-    prompt: "My little terrier curled up on the armchair by the fire, her paws twitching as she dreamed, the soft crackle of logs filling the quiet room.",
-    previewUrl: "/images/examples/chalk02_Chalky_pastel_illustration_of_a_small_terrie_ce6b1897-7f29-4386-907d-74730a396cb5_0.png",
+    prompt: "When I was little, I loved playing on the swing that hung from the big oak tree in our garden. My dog would run around in circles underneath me while blossom petals drifted down in the breeze.",
+    previewUrl: "/images/examples/pastel03.png",
     mockupUrl: "/api/placeholder/600/800"
   },
   
