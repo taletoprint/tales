@@ -67,7 +67,9 @@ export async function POST(
         generationTime: 0,
         cost: 0.002,
         styleKeywords: [metadata?.style || 'watercolour'],
-        dimensions: { width: 1024, height: 1448 }
+        dimensions: { width: 1024, height: 1448 },
+        model: metadata?.model || 'flux-schnell' as 'flux-schnell' | 'sdxl',
+        has_people: metadata?.has_people ?? true
       }
     };
 
