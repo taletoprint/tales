@@ -278,7 +278,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     }
 
     console.log(`[WEBHOOK] Initializing AI generator...`);
-    const generator = new SimpleAIGenerator(openaiApiKey, replicateToken);
+    const generator = new SimpleAIGenerator(openaiApiKey!, replicateToken!);
     
     // Create preview result object for HD generation
     console.log(`[WEBHOOK] Creating preview result object for HD generation...`);
