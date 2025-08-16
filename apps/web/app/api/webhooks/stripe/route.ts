@@ -336,7 +336,6 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       orderId
     );
     console.log(`[WEBHOOK] S3 upload successful:`, {
-      bucket: s3Upload.bucket,
       key: s3Upload.key,
       signedUrl: s3Upload.signedUrl ? 'present' : 'missing'
     });
