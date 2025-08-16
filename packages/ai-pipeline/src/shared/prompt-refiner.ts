@@ -25,20 +25,26 @@ export class PromptRefiner {
   async refinePrompt(request: PromptRefinementRequest): Promise<PromptRefinementResult> {
     const stylePrompts = this.getStylePrompt(request.style);
     
-    const systemPrompt = `You are an expert at creating prompts for SDXL AI art generation. Transform user stories into detailed artistic prompts using the provided style template.
+    const wrapper = this.getUniversalWrapper();
+    const systemPrompt = `You are an expert at creating prompts for Flux-Schnell AI art generation. Transform user stories into detailed artistic prompts using the provided style template.
+
+UNIVERSAL WRAPPER:
+Prefix (always add): ${wrapper.prefix}
+Suffix (always add): ${wrapper.suffix}
 
 STYLE TEMPLATE: ${request.style}
 ${stylePrompts.template}
 
 INSTRUCTIONS:
-1. Use the template structure above, replacing [main subject/action] and [environment details] with content from the user's story
-2. Keep all style-specific details, colors, and negative prompts from the template
-3. Focus on visual elements, emotions, and atmosphere from the story
-4. Ensure the prompt will generate high-quality print artwork suitable for framing
+1. Start with the universal prefix, then use the template structure, replacing [main subject/action] and [setting] with content from the user's story
+2. Keep all style-specific details, colors, and atmosphere from the template
+3. End with the universal suffix
+4. Focus on positive descriptors only - Flux doesn't use negative prompts effectively
+5. Ensure the prompt will generate high-quality print artwork suitable for framing
 
 Respond with a JSON object containing:
-- refined_prompt: The complete prompt using the template structure
-- negative_prompt: Style-specific negative prompts from template
+- refined_prompt: The complete prompt with prefix + template + suffix
+- negative_prompt: Leave empty string (Flux doesn't use negative prompts)
 - style_keywords: Array of 3-5 key artistic terms for this style`;
 
     const userPrompt = `Transform this story into an artistic prompt:
@@ -66,9 +72,17 @@ Style: ${request.style}`;
       // Parse the JSON response
       const result = JSON.parse(content) as PromptRefinementResult;
       
-      // Add style-specific enhancements
-      result.refined_prompt = this.enhanceWithStyle(result.refined_prompt, request.style);
-      result.negative_prompt = this.getBaseNegativePrompt() + ', ' + result.negative_prompt;
+      // Add universal wrapper to refined prompt
+      const wrapper = this.getUniversalWrapper();
+      if (!result.refined_prompt.startsWith(wrapper.prefix)) {
+        result.refined_prompt = `${wrapper.prefix} ${result.refined_prompt}`;
+      }
+      if (!result.refined_prompt.endsWith(wrapper.suffix)) {
+        result.refined_prompt = `${result.refined_prompt} ${wrapper.suffix}`;
+      }
+      
+      // Flux doesn't use negative prompts effectively, so keep empty
+      result.negative_prompt = "";
 
       return result;
     } catch (error: any) {
@@ -84,90 +98,63 @@ Style: ${request.style}`;
     }
   }
 
+  private getUniversalWrapper() {
+    return {
+      prefix: "High-quality illustration, coherent composition, accurate proportions, gentle lighting.",
+      suffix: "Clean lines, pleasing colour harmony, no text, no watermark."
+    };
+  }
+
   private getStylePrompt(style: ArtStyle) {
     const styles = {
       WATERCOLOUR: {
-        template: `A delicate watercolour painting of [main subject/action]. 
-Setting: [environment details]. 
-Style: soft washes of translucent colour, light bleeding edges, textured paper effect. 
-Atmosphere: gentle, flowing, airy. 
-Colours: soft blends, subtle gradients, light brushstrokes. 
---no text, --no signature, --no watermark, --no harsh outlines, --no photorealism`,
-        keywords: ['watercolour', 'soft washes', 'translucent', 'bleeding edges', 'flowing']
+        template: `Delicate watercolour painting of [main subject/action] in [setting].
+Translucent washes, soft edges, light granulation on textured paper, airy highlights.
+Natural colours, gentle flow, serene atmosphere; faces softly defined, proportions consistent.`,
+        keywords: ['watercolour', 'translucent washes', 'soft edges', 'granulation', 'serene']
       },
       OIL_PAINTING: {
-        template: `An oil painting of [main subject/action]. 
-Scene: [environment details]. 
-Style: traditional canvas texture, visible brushstrokes, layered oil paint. 
-Inspiration: impressionist / classical fine art. 
-Colours: rich and natural, with depth and light contrast. 
---no text, --no signature, --no watermark, --no cartoonish elements`,
-        keywords: ['oil painting', 'brushstrokes', 'impasto', 'classical', 'canvas texture']
+        template: `Classic oil painting of [main subject/action] in [setting].
+Textured brushstrokes, layered paint, rich mid-tones, controlled highlights and shadow.
+Warm gallery feel, natural skin tones, clear faces, balanced composition.`,
+        keywords: ['oil painting', 'textured brushstrokes', 'layered paint', 'gallery feel', 'balanced']
       },
       PASTEL: {
-        template: `A soft pastel illustration of [main subject/action]. 
-Setting: [environment details]. 
-Colours: muted pastel palette (soft pinks, blues, greens, yellows). 
-Style: children's book art, gentle pencil shading, dreamy ambience. 
-Atmosphere: calm, light, peaceful. 
---no text, --no signature, --no watermark, --no harsh shadows, --no photorealism, --no yellow tint`,
-        keywords: ['pastel', 'muted colors', 'dreamy', 'gentle shading', 'peaceful']
+        template: `Soft pastel illustration of [main subject/action] in [setting].
+Muted, airy palette (soft pinks, blues, greens), smooth shading, hand-drawn feel, calm dreamy mood.
+Faces clear and natural, proportions consistent, gentle expressions.`,
+        keywords: ['pastel', 'muted palette', 'smooth shading', 'dreamy mood', 'gentle']
       },
       PENCIL_INK: {
-        template: `Minimalist line art illustration of [main subject/action]. 
-Composition: clean white background, strong simple black ink lines. 
-Style: elegant, minimal, modern. 
-Optional: small hints of muted colour accents. 
-Focus: form, gesture, and simplicity. 
---no text, --no signature, --no watermark, --no clutter, --no shading, --no complex background`,
-        keywords: ['line art', 'minimalist', 'ink lines', 'elegant', 'simple']
+        template: `Minimalist line art of [main subject/action], [setting very brief].
+Clean black ink lines, generous white space, simplified forms, subtle muted accent colour (optional).
+Elegant modern composition, clear silhouette, balanced negative space.`,
+        keywords: ['line art', 'minimalist', 'clean lines', 'simplified forms', 'elegant']
       },
       STORYBOOK: {
-        template: `A whimsical storybook illustration of [main subject/action]. 
-Scene: [environment details]. 
-Colours: bright, playful palette. 
-Style: hand-drawn, painterly, suitable for children's fairy tale books. 
-Mood: joyful, magical, heartwarming. 
---no text, --no signature, --no watermark, --no surreal distortion, --no photorealism`,
-        keywords: ['storybook', 'whimsical', 'hand-drawn', 'magical', 'painterly']
+        template: `Whimsical storybook illustration of [main subject/action] in [setting].
+Warm inviting palette, soft linework, simplified shapes, friendly expressions, gentle motion.
+Clear character focus, readable scene, cosy atmosphere.`,
+        keywords: ['storybook', 'whimsical', 'warm palette', 'friendly expressions', 'cosy']
       },
       IMPRESSIONIST: {
-        template: `A realistic digital painting of [main subject/action]. 
-Setting: [environment details]. 
-Style: painterly realism with fine brush details, soft light, accurate proportions. 
-Mood: lifelike but artistic, suited for home wall art. 
-Colours: balanced, natural palette. 
---no text, --no signature, --no watermark, --no surreal distortion, --no cartoon look`,
-        keywords: ['realistic painting', 'painterly realism', 'soft light', 'natural', 'wall art']
+        template: `Hand-drawn pencil sketch of [main subject/action] in [setting].
+Fine cross-hatching, soft graphite shading, subtle paper texture, gentle contrast.
+Natural expressions, accurate proportions, classic sketchbook feel.`,
+        keywords: ['pencil sketch', 'cross-hatching', 'graphite shading', 'paper texture', 'sketchbook']
       }
     };
 
     return styles[style];
   }
 
-  private enhanceWithStyle(prompt: string, style: ArtStyle): string {
-    const styleEnhancements = {
-      WATERCOLOUR: ', painted in watercolour style with soft washes and gentle color bleeding, on textured watercolour paper',
-      OIL_PAINTING: ', painted as a classical oil painting with rich textures and visible brushstrokes, museum quality',
-      PASTEL: ', created as a soft pastel illustration with muted colors and dreamy ambience, children\'s book art style',
-      PENCIL_INK: ', drawn as minimalist line art with elegant black ink lines and clean composition',
-      STORYBOOK: ', illustrated as whimsical storybook art with hand-drawn painterly style, magical and heartwarming',
-      IMPRESSIONIST: ', painted as realistic digital art with painterly realism and soft natural lighting'
-    };
-
-    return prompt + styleEnhancements[style];
-  }
-
-  private getBaseNegativePrompt(): string {
-    return 'text, words, letters, signatures, watermarks, ugly, deformed, blurry, bad anatomy, disfigured, poorly drawn, extra limbs, duplicate, mutated, bad proportions';
-  }
-
   private createFallbackPrompt(request: PromptRefinementRequest): PromptRefinementResult {
     const styleInfo = this.getStylePrompt(request.style);
+    const wrapper = this.getUniversalWrapper();
     
     return {
-      refined_prompt: `A beautiful artistic scene inspired by: ${request.story}. ${styleInfo.template.split('\n')[0]}`,
-      negative_prompt: this.getBaseNegativePrompt(),
+      refined_prompt: `${wrapper.prefix} A beautiful artistic scene inspired by: ${request.story}. ${styleInfo.template.split('\n')[0]} ${wrapper.suffix}`,
+      negative_prompt: "", // Flux doesn't use negative prompts effectively
       style_keywords: styleInfo.keywords
     };
   }

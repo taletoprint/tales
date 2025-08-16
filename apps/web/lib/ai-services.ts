@@ -124,9 +124,9 @@ export class SimpleAIGenerator {
         params: promptBundle.params
       });
 
-      // Step 2: Generate image with SDXL via Replicate using prompt bundle
-      const originalImageUrl = await this.generateWithSDXLBundle(promptBundle, previewId);
-      console.log(`[${previewId}] SDXL image generated successfully`);
+      // Step 2: Generate image with Flux-Schnell via Replicate using prompt bundle
+      const originalImageUrl = await this.generateWithFluxSchnell(promptBundle, previewId);
+      console.log(`[${previewId}] Flux-Schnell image generated successfully`);
 
       // Step 3: For now, skip processing and return original URL
       const processedImageUrl = originalImageUrl;
@@ -280,11 +280,32 @@ export class SimpleAIGenerator {
   }
 
 
-  private async generateWithSDXLBundle(promptBundle: PromptBundle, previewId: string): Promise<string> {
+  private mapDimensionsToFlux(width: number, height: number): { aspect_ratio: string; megapixels: string } {
+    // Map current dimensions to Flux aspect ratio and megapixels
+    const aspectRatio = width / height;
+    
+    if (Math.abs(aspectRatio - 1.0) < 0.1) {
+      return { aspect_ratio: "1:1", megapixels: "1" };
+    } else if (aspectRatio > 1) {
+      // Landscape - use closest standard ratio
+      if (Math.abs(aspectRatio - 1.414) < 0.1) {
+        return { aspect_ratio: "16:10", megapixels: "1" }; // Close to A3 landscape
+      }
+      return { aspect_ratio: "16:10", megapixels: "1" };
+    } else {
+      // Portrait
+      return { aspect_ratio: "10:16", megapixels: "1" };
+    }
+  }
+
+  private async generateWithFluxSchnell(promptBundle: PromptBundle, previewId: string): Promise<string> {
     try {
-      console.log(`[${previewId}] Starting SDXL generation via Replicate with prompt bundle...`);
+      console.log(`[${previewId}] Starting Flux-Schnell generation via Replicate with prompt bundle...`);
       
-      // Create prediction using prompt bundle parameters with retry
+      // Map dimensions to Flux parameters
+      const fluxDimensions = this.mapDimensionsToFlux(promptBundle.params.width, promptBundle.params.height);
+      
+      // Create prediction using Flux-Schnell parameters with retry
       const response = await this.fetchWithRetry('https://api.replicate.com/v1/predictions', {
         method: 'POST',
         headers: {
@@ -292,17 +313,17 @@ export class SimpleAIGenerator {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          version: 'stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b',
+          version: 'black-forest-labs/flux-schnell:c846a69991daf4c0e5d016514849d14ee5b2e6846ce6b9d6f21369e564cfe51e',
           input: {
             prompt: promptBundle.positive,
-            negative_prompt: promptBundle.negative,
-            width: promptBundle.params.width,
-            height: promptBundle.params.height,
-            num_inference_steps: promptBundle.params.steps,
-            guidance_scale: promptBundle.params.cfg,
+            seed: promptBundle.params.seed,
+            go_fast: true,
             num_outputs: 1,
-            scheduler: promptBundle.params.sampler,
-            seed: promptBundle.params.seed
+            aspect_ratio: fluxDimensions.aspect_ratio,
+            megapixels: fluxDimensions.megapixels,
+            num_inference_steps: 4,
+            output_format: "webp",
+            output_quality: 80
           }
         }),
       }, previewId, 3);
@@ -324,21 +345,21 @@ export class SimpleAIGenerator {
           await new Promise(resolve => setTimeout(resolve, (retrySeconds + 1) * 1000));
           
           // Retry the request once with new ID
-          return this.generateWithSDXLBundle(promptBundle, previewId + '_retry');
+          return this.generateWithFluxSchnell(promptBundle, previewId + '_retry');
         }
         
         throw new Error(`Replicate API error: ${response.status} - ${errorText}`);
       }
 
       const prediction = await response.json();
-      console.log(`[${previewId}] SDXL prediction created: ${prediction.id}`);
+      console.log(`[${previewId}] Flux-Schnell prediction created: ${prediction.id}`);
 
       // Poll for completion
       const imageUrl = await this.waitForReplicateCompletion(prediction.id, previewId);
       return imageUrl;
 
     } catch (error) {
-      console.error(`[${previewId}] SDXL generation failed:`, error);
+      console.error(`[${previewId}] Flux-Schnell generation failed:`, error);
       throw error;
     }
   }

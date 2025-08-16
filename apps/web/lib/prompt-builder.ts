@@ -66,68 +66,70 @@ function aspectToSize(aspect: Aspect): { width: number; height: number } {
   }
 }
 
-/** Style presets: wording + SDXL params to keep styles distinct */
+/** Universal wrapper for Flux-Schnell prompts */
+function getUniversalWrapper() {
+  return {
+    prefix: "High-quality illustration, coherent composition, accurate proportions, gentle lighting.",
+    suffix: "Clean lines, pleasing colour harmony, no text, no watermark."
+  };
+}
+
+/** Style presets: Flux-optimized templates with positive descriptors only */
 function stylePreset(style: ArtStyle) {
   switch (style) {
     case ArtStyle.WATERCOLOUR:
       return {
         styleLock:
-          "soft watercolour painting, gentle washes, subtle granulation, light pencil underdrawing, airy negative space, museum-quality, no harsh outlines",
-        steps: 30,
-        cfg: 6.8,
-        sampler: "DPMSolverMultistep",
-        negatives:
-          "text, watermark, logo, extra limbs, disfigured, oversaturated colours, harsh outlines, photographic lens effects",
+          "Delicate watercolour painting, translucent washes, soft edges, light granulation on textured paper, airy highlights, natural colours, gentle flow, serene atmosphere, faces softly defined, proportions consistent",
+        steps: 4, // Flux-Schnell optimized
+        cfg: 0.0, // Flux doesn't use guidance scale
+        sampler: "flux", // Placeholder for Flux
+        negatives: "", // Flux doesn't use negative prompts effectively
       };
     case ArtStyle.OIL_PAINTING:
       return {
         styleLock:
-          "rich oil painting, visible brush strokes, warm golden hour light, layered impasto texture, classic fine art composition",
-        steps: 28,
-        cfg: 6.2,
-        sampler: "K_EULER",
-        negatives:
-          "text, watermark, logo, plastic sheen, anime, cartoony, lens distortion, extra digits, low detail",
+          "Classic oil painting, textured brushstrokes, layered paint, rich mid-tones, controlled highlights and shadow, warm gallery feel, natural skin tones, clear faces, balanced composition",
+        steps: 4,
+        cfg: 0.0,
+        sampler: "flux",
+        negatives: "",
       };
     case ArtStyle.PASTEL:
       return {
         styleLock:
-          "soft pastel artwork, chalky texture, muted tones, gentle blending, paper tooth visible, cosy and comforting aesthetic",
-        steps: 30,
-        cfg: 7.0,
-        sampler: "DPMSolverMultistep",
-        negatives:
-          "text, watermark, logo, high contrast extremes, neon colours, glossy surfaces, hard outlines",
+          "Soft pastel illustration, muted airy palette (soft pinks, blues, greens), smooth shading, hand-drawn feel, calm dreamy mood, faces clear and natural, proportions consistent, gentle expressions",
+        steps: 4,
+        cfg: 0.0,
+        sampler: "flux",
+        negatives: "",
       };
     case ArtStyle.PENCIL_INK:
       return {
         styleLock:
-          "fine pencil and ink drawing, delicate linework, light cross-hatching, subtle watercolour tint, sketchbook elegance, clear focal point",
-        steps: 32,
-        cfg: 7.6,
-        sampler: "DPMSolverMultistep",
-        negatives:
-          "text, watermark, logo, heavy shading blotches, smudging artefacts, comic halftone dots, warped anatomy",
+          "Minimalist line art, clean black ink lines, generous white space, simplified forms, subtle muted accent colour (optional), elegant modern composition, clear silhouette, balanced negative space",
+        steps: 4,
+        cfg: 0.0,
+        sampler: "flux",
+        negatives: "",
       };
     case ArtStyle.STORYBOOK:
       return {
         styleLock:
-          "charming storybook illustration, whimsical children's book art, warm and inviting, soft textures, gentle narrative quality, enchanting atmosphere",
-        steps: 28,
-        cfg: 6.5,
-        sampler: "DPMSolverMultistep",
-        negatives:
-          "text, watermark, logo, scary imagery, dark themes, harsh shadows, photorealistic, anime style, 3D rendering",
+          "Whimsical storybook illustration, warm inviting palette, soft linework, simplified shapes, friendly expressions, gentle motion, clear character focus, readable scene, cosy atmosphere",
+        steps: 4,
+        cfg: 0.0,
+        sampler: "flux",
+        negatives: "",
       };
     case ArtStyle.IMPRESSIONIST:
       return {
         styleLock:
-          "impressionist painting, loose expressive brushwork, luminous colour, dappled light, inspired by Monet and Renoir, harmonious palette",
-        steps: 28,
-        cfg: 6.0,
-        sampler: "DPMSolverMultistep",
-        negatives:
-          "text, watermark, logo, photo-real lens effects, hard outlines, muddy colour mixing, posterisation",
+          "Hand-drawn pencil sketch, fine cross-hatching, soft graphite shading, subtle paper texture, gentle contrast, natural expressions, accurate proportions, classic sketchbook feel",
+        steps: 4,
+        cfg: 0.0,
+        sampler: "flux",
+        negatives: "",
       };
   }
 }
@@ -147,16 +149,16 @@ export function buildPrompt(
   const parsed = parseMemory(userMemory);
   const preset = stylePreset(style);
   const size = aspectToSize(aspect);
+  const wrapper = getUniversalWrapper();
 
   const positive =
-    `${preset.styleLock}. ` +
-    `A tasteful scene of ${parsed.mainSubject} in ${parsed.setting}. ` +
+    `${wrapper.prefix} ` +
+    `${preset.styleLock} of ${parsed.mainSubject} in ${parsed.setting}. ` +
     `Mood: ${parsed.mood}. Colour palette: ${parsed.paletteHint}. ` +
-    `Balanced composition for framed wall art, clear focal point, clean edges for print bleed.`;
+    `Balanced composition for framed wall art, clear focal point. ` +
+    `${wrapper.suffix}`;
 
-  const negative =
-    preset.negatives +
-    ", multiple faces duplicated, distorted perspective, cluttered background, noisy textures, text overlays";
+  const negative = preset.negatives; // Empty for Flux
 
   return {
     positive,
