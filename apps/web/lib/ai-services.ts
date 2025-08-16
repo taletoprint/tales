@@ -3,6 +3,7 @@ import OpenAI from 'openai';
 import sharp from 'sharp';
 import { buildPrompt } from './prompt-builder';
 import { ArtStyle, Aspect, PromptBundle } from './types';
+import { PromptRefiner } from '@taletoprint/ai-pipeline/src/shared/prompt-refiner';
 
 interface GenerationRequest {
   story: string;
@@ -34,10 +35,27 @@ interface GenerationResult {
 export class SimpleAIGenerator {
   private openai: OpenAI;
   private replicateToken: string;
+  private promptRefiner: PromptRefiner;
+  private useOpenAI: boolean;
   
-  constructor(openaiApiKey: string, replicateToken: string) {
+  constructor(openaiApiKey: string, replicateToken: string, useOpenAI: boolean = true) {
     this.openai = new OpenAI({ apiKey: openaiApiKey });
     this.replicateToken = replicateToken;
+    this.promptRefiner = new PromptRefiner(openaiApiKey);
+    this.useOpenAI = useOpenAI && !!openaiApiKey; // Only use OpenAI if enabled and API key provided
+  }
+
+  private mapArtStyleToPromptRefiner(style: ArtStyle): import('@taletoprint/ai-pipeline/src/shared/prompt-refiner').ArtStyle {
+    // Map web app ArtStyle enum to PromptRefiner ArtStyle type
+    const styleMap = {
+      [ArtStyle.WATERCOLOUR]: 'WATERCOLOUR' as const,
+      [ArtStyle.OIL_PAINTING]: 'OIL_PAINTING' as const,
+      [ArtStyle.PASTEL]: 'PASTEL' as const,
+      [ArtStyle.PENCIL_INK]: 'PENCIL_INK' as const,
+      [ArtStyle.STORYBOOK]: 'STORYBOOK' as const,
+      [ArtStyle.IMPRESSIONIST]: 'IMPRESSIONIST' as const,
+    };
+    return styleMap[style];
   }
 
   async generateHDPrint(previewResult: GenerationResult): Promise<string> {
@@ -67,9 +85,39 @@ export class SimpleAIGenerator {
     try {
       console.log(`[${previewId}] Starting AI generation...`);
 
-      // Step 1: Generate structured prompt bundle
+      // Step 1: Generate structured prompt bundle (with OpenAI enhancement if enabled)
       console.log(`[${previewId}] Building prompt for ${request.style} in ${request.aspect} aspect...`);
-      const promptBundle = buildPrompt(request.story, request.style, request.aspect);
+      let promptBundle: PromptBundle;
+      
+      if (this.useOpenAI) {
+        try {
+          console.log(`[${previewId}] Using OpenAI prompt enhancement...`);
+          const refinedResult = await this.promptRefiner.refinePrompt({
+            story: request.story,
+            style: this.mapArtStyleToPromptRefiner(request.style)
+          });
+          
+          // Create a PromptBundle from the refined result
+          const baseBundle = buildPrompt(request.story, request.style, request.aspect);
+          promptBundle = {
+            ...baseBundle,
+            positive: refinedResult.refined_prompt,
+            negative: refinedResult.negative_prompt,
+            meta: {
+              ...baseBundle.meta,
+              styleKeywords: refinedResult.style_keywords
+            }
+          };
+          console.log(`[${previewId}] OpenAI enhanced prompt generated successfully`);
+        } catch (error) {
+          console.warn(`[${previewId}] OpenAI prompt enhancement failed, falling back to heuristic:`, error);
+          promptBundle = buildPrompt(request.story, request.style, request.aspect);
+        }
+      } else {
+        console.log(`[${previewId}] Using heuristic prompt building (OpenAI disabled)...`);
+        promptBundle = buildPrompt(request.story, request.style, request.aspect);
+      }
+      
       console.log(`[${previewId}] Prompt generated:`, {
         positive: promptBundle.positive.substring(0, 100) + '...',
         negative: promptBundle.negative.substring(0, 50) + '...',

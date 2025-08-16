@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import Header from '@/components/navigation/header';
 
 interface Example {
   id: number;
@@ -123,28 +124,7 @@ export default function ExamplesPage() {
   return (
     <div className="min-h-screen bg-cream">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-cream/95 backdrop-blur-sm border-b border-warm-grey/20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center py-2">
-              <Image 
-                src="/images/logo/ttp_logo.png" 
-                alt="TaleToPrint"
-                width={128}
-                height={64}
-                className="h-14 w-auto"
-                priority
-              />
-            </Link>
-            <Link 
-              href="/#create"
-              className="px-6 py-2 bg-terracotta text-cream rounded-lg hover:bg-charcoal transition-colors font-medium"
-            >
-              Create yours
-            </Link>
-          </div>
-        </div>
-      </header>
+      <Header variant="minimal" />
 
       {/* Hero Section */}
       <section className="pt-12 pb-8 px-4 sm:px-6 lg:px-8">

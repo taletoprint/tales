@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 
-export type ArtStyle = 'WATERCOLOR' | 'OIL_PAINTING' | 'PENCIL_SKETCH' | 'VINTAGE_POSTER' | 'DIGITAL_ART' | 'IMPRESSIONIST';
+export type ArtStyle = 'WATERCOLOUR' | 'OIL_PAINTING' | 'PASTEL' | 'PENCIL_INK' | 'STORYBOOK' | 'IMPRESSIONIST';
 
 export interface PromptRefinementRequest {
   story: string;
@@ -25,23 +25,21 @@ export class PromptRefiner {
   async refinePrompt(request: PromptRefinementRequest): Promise<PromptRefinementResult> {
     const stylePrompts = this.getStylePrompt(request.style);
     
-    const systemPrompt = `You are an expert at creating prompts for AI art generation. Your job is to transform user stories into detailed, artistic prompts that will create beautiful, emotionally resonant artwork.
+    const systemPrompt = `You are an expert at creating prompts for SDXL AI art generation. Transform user stories into detailed artistic prompts using the provided style template.
 
-GUIDELINES:
-- Focus on visual elements, emotions, and atmosphere
-- Include specific artistic techniques for the chosen style
-- Avoid text, words, or letters in the image
-- Create prompts that are 1-2 sentences, detailed but concise
-- Always include the style-specific keywords provided
-- Make the scene feel warm, nostalgic, and emotionally meaningful
+STYLE TEMPLATE: ${request.style}
+${stylePrompts.template}
 
-STYLE: ${request.style}
-${stylePrompts.description}
+INSTRUCTIONS:
+1. Use the template structure above, replacing [main subject/action] and [environment details] with content from the user's story
+2. Keep all style-specific details, colors, and negative prompts from the template
+3. Focus on visual elements, emotions, and atmosphere from the story
+4. Ensure the prompt will generate high-quality print artwork suitable for framing
 
 Respond with a JSON object containing:
-- refined_prompt: The optimized prompt for image generation
-- negative_prompt: Things to avoid in the image
-- style_keywords: Array of 3-5 key terms that reinforce the artistic style`;
+- refined_prompt: The complete prompt using the template structure
+- negative_prompt: Style-specific negative prompts from template
+- style_keywords: Array of 3-5 key artistic terms for this style`;
 
     const userPrompt = `Transform this story into an artistic prompt:
 
@@ -88,29 +86,59 @@ Style: ${request.style}`;
 
   private getStylePrompt(style: ArtStyle) {
     const styles = {
-      WATERCOLOR: {
-        description: 'Soft, flowing watercolor technique with gentle color bleeds, transparent layers, and organic paper texture',
-        keywords: ['watercolor', 'soft washes', 'color bleeding', 'transparent', 'flowing']
+      WATERCOLOUR: {
+        template: `A delicate watercolour painting of [main subject/action]. 
+Setting: [environment details]. 
+Style: soft washes of translucent colour, light bleeding edges, textured paper effect. 
+Atmosphere: gentle, flowing, airy. 
+Colours: soft blends, subtle gradients, light brushstrokes. 
+--no text, --no signature, --no watermark, --no harsh outlines, --no photorealism`,
+        keywords: ['watercolour', 'soft washes', 'translucent', 'bleeding edges', 'flowing']
       },
       OIL_PAINTING: {
-        description: 'Rich, textured oil painting with visible brushstrokes, depth, and classical composition',
-        keywords: ['oil painting', 'brushstrokes', 'impasto', 'rich colors', 'classical']
+        template: `An oil painting of [main subject/action]. 
+Scene: [environment details]. 
+Style: traditional canvas texture, visible brushstrokes, layered oil paint. 
+Inspiration: impressionist / classical fine art. 
+Colours: rich and natural, with depth and light contrast. 
+--no text, --no signature, --no watermark, --no cartoonish elements`,
+        keywords: ['oil painting', 'brushstrokes', 'impasto', 'classical', 'canvas texture']
       },
-      PENCIL_SKETCH: {
-        description: 'Delicate pencil artwork with fine line work, shading, and artistic sketch quality',
-        keywords: ['pencil sketch', 'line art', 'cross-hatching', 'detailed', 'monochrome']
+      PASTEL: {
+        template: `A soft pastel illustration of [main subject/action]. 
+Setting: [environment details]. 
+Colours: muted pastel palette (soft pinks, blues, greens, yellows). 
+Style: children's book art, gentle pencil shading, dreamy ambience. 
+Atmosphere: calm, light, peaceful. 
+--no text, --no signature, --no watermark, --no harsh shadows, --no photorealism, --no yellow tint`,
+        keywords: ['pastel', 'muted colors', 'dreamy', 'gentle shading', 'peaceful']
       },
-      VINTAGE_POSTER: {
-        description: 'Retro poster style with bold colors, simplified forms, and vintage advertising aesthetic',
-        keywords: ['vintage poster', 'retro', 'bold colors', 'simplified', 'graphic design']
+      PENCIL_INK: {
+        template: `Minimalist line art illustration of [main subject/action]. 
+Composition: clean white background, strong simple black ink lines. 
+Style: elegant, minimal, modern. 
+Optional: small hints of muted colour accents. 
+Focus: form, gesture, and simplicity. 
+--no text, --no signature, --no watermark, --no clutter, --no shading, --no complex background`,
+        keywords: ['line art', 'minimalist', 'ink lines', 'elegant', 'simple']
       },
-      DIGITAL_ART: {
-        description: 'Modern digital artwork with vibrant colors, clean lines, and contemporary artistic style',
-        keywords: ['digital art', 'vibrant', 'modern', 'clean', 'contemporary']
+      STORYBOOK: {
+        template: `A whimsical storybook illustration of [main subject/action]. 
+Scene: [environment details]. 
+Colours: bright, playful palette. 
+Style: hand-drawn, painterly, suitable for children's fairy tale books. 
+Mood: joyful, magical, heartwarming. 
+--no text, --no signature, --no watermark, --no surreal distortion, --no photorealism`,
+        keywords: ['storybook', 'whimsical', 'hand-drawn', 'magical', 'painterly']
       },
       IMPRESSIONIST: {
-        description: 'Impressionist painting style with loose brushwork, light effects, and atmospheric quality',
-        keywords: ['impressionist', 'loose brushwork', 'light effects', 'atmospheric', 'plein air']
+        template: `A realistic digital painting of [main subject/action]. 
+Setting: [environment details]. 
+Style: painterly realism with fine brush details, soft light, accurate proportions. 
+Mood: lifelike but artistic, suited for home wall art. 
+Colours: balanced, natural palette. 
+--no text, --no signature, --no watermark, --no surreal distortion, --no cartoon look`,
+        keywords: ['realistic painting', 'painterly realism', 'soft light', 'natural', 'wall art']
       }
     };
 
@@ -119,12 +147,12 @@ Style: ${request.style}`;
 
   private enhanceWithStyle(prompt: string, style: ArtStyle): string {
     const styleEnhancements = {
-      WATERCOLOR: ', painted in watercolor style with soft washes and gentle color bleeding, on textured watercolor paper',
+      WATERCOLOUR: ', painted in watercolour style with soft washes and gentle color bleeding, on textured watercolour paper',
       OIL_PAINTING: ', painted as a classical oil painting with rich textures and visible brushstrokes, museum quality',
-      PENCIL_SKETCH: ', drawn as a detailed pencil sketch with fine line work and artistic shading',
-      VINTAGE_POSTER: ', designed as a vintage travel poster with bold colors and simplified graphic forms',
-      DIGITAL_ART: ', created as modern digital artwork with vibrant colors and clean contemporary style',
-      IMPRESSIONIST: ', painted in impressionist style with loose brushwork and beautiful light effects'
+      PASTEL: ', created as a soft pastel illustration with muted colors and dreamy ambience, children\'s book art style',
+      PENCIL_INK: ', drawn as minimalist line art with elegant black ink lines and clean composition',
+      STORYBOOK: ', illustrated as whimsical storybook art with hand-drawn painterly style, magical and heartwarming',
+      IMPRESSIONIST: ', painted as realistic digital art with painterly realism and soft natural lighting'
     };
 
     return prompt + styleEnhancements[style];
@@ -138,7 +166,7 @@ Style: ${request.style}`;
     const styleInfo = this.getStylePrompt(request.style);
     
     return {
-      refined_prompt: `A beautiful artistic scene inspired by: ${request.story}. ${styleInfo.description}`,
+      refined_prompt: `A beautiful artistic scene inspired by: ${request.story}. ${styleInfo.template.split('\n')[0]}`,
       negative_prompt: this.getBaseNegativePrompt(),
       style_keywords: styleInfo.keywords
     };

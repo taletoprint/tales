@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { StoryInput } from '@/components/generation/story-input';
 import { PreviewDisplay } from '@/components/generation/preview-display';
 import { PreviewResult } from '@/lib/types';
+import Header from '@/components/navigation/header';
 
 export default function Home() {
   const [selectedPreview, setSelectedPreview] = useState<PreviewResult | null>(null);
@@ -105,7 +106,9 @@ export default function Home() {
   
   return (
     <div className="min-h-screen bg-cream">
-      {/* Sticky Header */}
+      {/* Header */}
+      <Header />
+      
       {/* Cancel Message Toast */}
       {showCancelMessage && (
         <div className="fixed top-4 right-4 z-50 bg-white border border-warm-grey/20 rounded-xl shadow-lg p-4 max-w-sm animate-fade-in">
@@ -125,39 +128,8 @@ export default function Home() {
         </div>
       )}
 
-      <header className="sticky top-0 z-50 bg-cream/95 backdrop-blur-sm border-b border-warm-grey/20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center py-2">
-              <Image 
-                src="/images/logo/ttp_logo.png" 
-                alt="TaleToPrint"
-                width={128}
-                height={64}
-                className="h-14 w-auto"
-                priority
-              />
-            </div>
-            <div className="hidden desktop:flex items-center space-x-6">
-              <a href="#how-it-works" className="text-sage hover:text-terracotta transition-colors">
-                How it works
-              </a>
-              <a href="/examples" className="text-sage hover:text-terracotta transition-colors">
-                Examples
-              </a>
-            </div>
-            {/* Mobile menu button */}
-            <button className="desktop:hidden p-2">
-              <svg className="w-6 h-6 text-charcoal" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </header>
-
       {/* Hero Section with Integrated How It Works */}
-      <section className="pt-8 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-cream to-white">
+      <section id="how-it-works" className="pt-8 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-cream to-white">
         <div className="max-w-5xl mx-auto">
           {/* Main Hero Content */}
           <div className="text-center mb-12">

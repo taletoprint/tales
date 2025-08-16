@@ -34,5 +34,6 @@ export type PromptBundle = {
     paletteHint: string;
     style: ArtStyle;
     aspect: Aspect;
+    styleKeywords?: string[];
   };
 };

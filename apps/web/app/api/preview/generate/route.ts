@@ -36,6 +36,7 @@ function getAIGenerator(): SimpleAIGenerator {
   if (!aiGenerator) {
     const openaiApiKey = process.env.OPENAI_API_KEY;
     const replicateToken = process.env.REPLICATE_API_TOKEN;
+    const useOpenAI = process.env.USE_OPENAI_PROMPTS !== 'false'; // Default to true, disable with 'false'
     
     if (!openaiApiKey) {
       throw new Error('OPENAI_API_KEY environment variable is required');
@@ -44,7 +45,7 @@ function getAIGenerator(): SimpleAIGenerator {
       throw new Error('REPLICATE_API_TOKEN environment variable is required');
     }
 
-    aiGenerator = new SimpleAIGenerator(openaiApiKey, replicateToken);
+    aiGenerator = new SimpleAIGenerator(openaiApiKey, replicateToken, useOpenAI);
   }
 
   return aiGenerator;

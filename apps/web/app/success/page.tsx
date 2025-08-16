@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { PrintReceipt } from '@/components/receipt/print-receipt';
+import Header from '@/components/navigation/header';
 
 export interface OrderDetails {
   id: string;
@@ -98,17 +99,7 @@ function SuccessContent() {
   return (
     <div className="min-h-screen bg-cream">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-cream/95 backdrop-blur-sm border-b border-warm-grey/20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center">
-              <h1 className="text-2xl font-serif font-semibold text-charcoal">
-                TaleToPrint
-              </h1>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <Header variant="minimal" showCreateButton={false} />
 
       {/* Success Content */}
       <section className="pt-12 pb-20 px-4 sm:px-6 lg:px-8">
