@@ -296,7 +296,9 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         generationTime: 0,
         cost: 0.002,
         styleKeywords: [style || 'watercolour'],
-        dimensions: { width: 1024, height: 1448 }
+        dimensions: { width: 1024, height: 1448 },
+        model: 'flux-schnell' as 'flux-schnell' | 'sdxl', // Will be determined by the actual generation
+        has_people: true // Default for webhook processing
       }
     };
 
