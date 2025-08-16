@@ -324,7 +324,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     console.log(`[WEBHOOK] Print file generated:`, {
       filename: printFile.filename,
       bufferSize: printFile.buffer.length,
-      dimensions: `${printFile.dimensions?.width}x${printFile.dimensions?.height}`
+      dimensions: `${printFile.width}x${printFile.height}`
     });
 
     // Upload print-ready file to S3
