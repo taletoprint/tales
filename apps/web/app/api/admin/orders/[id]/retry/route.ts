@@ -126,7 +126,7 @@ export async function POST(
     }
 
     console.log(`[ADMIN-RETRY] Starting HD generation...`);
-    const generator = new SimpleAIGenerator(openaiApiKey, replicateToken);
+    const generator = new SimpleAIGenerator(openaiApiKey!, replicateToken!);
     
     // Create preview result object for HD generation
     const previewResult = {
@@ -143,7 +143,9 @@ export async function POST(
         generationTime: 0,
         cost: 0.002,
         styleKeywords: [style || 'watercolour'],
-        dimensions: { width: 1024, height: 1448 }
+        dimensions: { width: 1024, height: 1448 },
+        model: metadata?.model || 'flux-schnell' as 'flux-schnell' | 'sdxl',
+        has_people: metadata?.has_people ?? true
       }
     };
 
