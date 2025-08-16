@@ -29,6 +29,8 @@ interface GenerationResult {
       width: number;
       height: number;
     };
+    model: 'flux-schnell' | 'sdxl';
+    has_people: boolean;
   };
 }
 
@@ -58,12 +60,27 @@ export class SimpleAIGenerator {
     return styleMap[style];
   }
 
+  private routeModel(promptBundle: PromptBundle): 'flux-schnell' | 'sdxl' {
+    const { has_people } = promptBundle.meta;
+    
+    // Route people to Flux (better anatomy/faces), non-people to SDXL (better style fidelity)
+    if (has_people) {
+      return 'flux-schnell';
+    } else {
+      return 'sdxl';
+    }
+  }
+
   async generateHDPrint(previewResult: GenerationResult): Promise<string> {
     const printId = `print_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     try {
       console.log(`[${printId}] Starting HD print generation from preview ${previewResult.id}...`);
       console.log(`[${printId}] Pipeline: Pure Real-ESRGAN upscale (zero drift)`);
+      console.log(`[${printId}] Original model: ${previewResult.metadata.model}, has_people: ${previewResult.metadata.has_people}`);
+      
+      // Log HD generation analytics
+      console.log(`[ANALYTICS] HD generation: original_model=${previewResult.metadata.model}, has_people=${previewResult.metadata.has_people}, style=${previewResult.style}, aspect=${previewResult.aspect}`);
       
       // Pure Real-ESRGAN upscaling (×4 clean upscale)
       console.log(`[${printId}] Real-ESRGAN upscaling ×4...`);
@@ -105,7 +122,8 @@ export class SimpleAIGenerator {
             negative: refinedResult.negative_prompt,
             meta: {
               ...baseBundle.meta,
-              styleKeywords: refinedResult.style_keywords
+              styleKeywords: refinedResult.style_keywords,
+              has_people: refinedResult.has_people
             }
           };
           console.log(`[${previewId}] OpenAI enhanced prompt generated successfully`);
@@ -124,15 +142,27 @@ export class SimpleAIGenerator {
         params: promptBundle.params
       });
 
-      // Step 2: Generate image with Flux-Schnell via Replicate using prompt bundle
-      const originalImageUrl = await this.generateWithFluxSchnell(promptBundle, previewId);
-      console.log(`[${previewId}] Flux-Schnell image generated successfully`);
+      // Step 2: Route to appropriate model based on people detection
+      const selectedModel = this.routeModel(promptBundle);
+      console.log(`[${previewId}] Routing to ${selectedModel} model (has_people: ${promptBundle.meta.has_people})`);
+      
+      let originalImageUrl: string;
+      if (selectedModel === 'flux-schnell') {
+        originalImageUrl = await this.generateWithFluxSchnell(promptBundle, previewId);
+        console.log(`[${previewId}] Flux-Schnell image generated successfully`);
+      } else {
+        originalImageUrl = await this.generateWithSDXL(promptBundle, previewId);
+        console.log(`[${previewId}] SDXL image generated successfully`);
+      }
 
       // Step 3: For now, skip processing and return original URL
       const processedImageUrl = originalImageUrl;
       console.log(`[${previewId}] Using original image (processing disabled for debugging)`);
 
       const generationTime = Date.now() - startTime;
+
+      // Log model usage analytics
+      console.log(`[ANALYTICS] Model usage: ${selectedModel}, has_people: ${promptBundle.meta.has_people}, style: ${request.style}, generation_time: ${generationTime}ms, aspect: ${request.aspect}`);
 
       return {
         id: previewId,
@@ -147,11 +177,13 @@ export class SimpleAIGenerator {
         metadata: {
           generationTime,
           cost: 0.002,
-          styleKeywords: [request.style],
+          styleKeywords: promptBundle.meta.styleKeywords || [request.style],
           dimensions: {
             width: promptBundle.params.width,
             height: promptBundle.params.height
-          }
+          },
+          model: selectedModel,
+          has_people: promptBundle.meta.has_people
         }
       };
 
@@ -363,6 +395,72 @@ export class SimpleAIGenerator {
 
     } catch (error) {
       console.error(`[${previewId}] Flux-Schnell generation failed:`, error);
+      throw error;
+    }
+  }
+
+  private async generateWithSDXL(promptBundle: PromptBundle, previewId: string): Promise<string> {
+    try {
+      console.log(`[${previewId}] Starting SDXL generation via Replicate with prompt bundle...`);
+      
+      // Create prediction using SDXL parameters with retry
+      const response = await this.fetchWithRetry('https://api.replicate.com/v1/predictions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${this.replicateToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          version: 'stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b',
+          input: {
+            prompt: promptBundle.positive,
+            negative_prompt: promptBundle.negative,
+            width: promptBundle.params.width,
+            height: promptBundle.params.height,
+            num_inference_steps: 30,
+            guidance_scale: 7.5,
+            scheduler: "DPMSolverMultistep",
+            seed: promptBundle.params.seed,
+            num_outputs: 1,
+            apply_watermark: false,
+            output_format: "webp",
+            output_quality: 80
+          }
+        }),
+      }, previewId, 3);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[${previewId}] Replicate SDXL API error ${response.status}:`, errorText);
+        
+        if (response.status === 402) {
+          throw new Error('Replicate account has insufficient credits. Please add credits to your Replicate account.');
+        }
+        
+        if (response.status === 429) {
+          // Rate limited - wait and retry once
+          const retryAfter = response.headers.get('retry-after') || '3';
+          const retrySeconds = parseInt(retryAfter);
+          console.log(`[${previewId}] Rate limited, retrying in ${retrySeconds} seconds...`);
+          
+          await new Promise(resolve => setTimeout(resolve, (retrySeconds + 1) * 1000));
+          
+          // Retry the request once with new ID
+          return this.generateWithSDXL(promptBundle, previewId + '_retry');
+        }
+        
+        throw new Error(`Replicate SDXL API error: ${response.status} - ${errorText}`);
+      }
+
+      const prediction = await response.json();
+      console.log(`[${previewId}] SDXL prediction created: ${prediction.id}`);
+
+      // Poll for completion
+      const imageUrl = await this.waitForReplicateCompletion(prediction.id, previewId);
+      return imageUrl;
+
+    } catch (error) {
+      console.error(`[${previewId}] SDXL generation failed:`, error);
       throw error;
     }
   }

@@ -35,5 +35,6 @@ export type PromptBundle = {
     style: ArtStyle;
     aspect: Aspect;
     styleKeywords?: string[];
+    has_people: boolean;
   };
 };
