@@ -147,7 +147,7 @@ export default function ExamplesPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="pt-12 pb-16 px-4 sm:px-6 lg:px-8">
+      <section className="pt-12 pb-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl sm:text-5xl font-serif font-semibold text-charcoal mb-6">
             Story inspiration & 
@@ -157,6 +157,57 @@ export default function ExamplesPage() {
             Discover how different art styles can bring your memories to life. 
             Each example shows a real story transformed into beautiful artwork.
           </p>
+        </div>
+      </section>
+
+      {/* Real World Example */}
+      <section className="pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div className="grid lg:grid-cols-2 gap-0">
+              {/* Mockup Image */}
+              <div className="relative">
+                <Image
+                  src="/images/ttp_mock.jpg"
+                  alt="TaleToPrint artwork in a beautiful home setting"
+                  width={600}
+                  height={400}
+                  className="w-full h-full object-cover"
+                  priority
+                />
+              </div>
+              
+              {/* Content */}
+              <div className="p-8 lg:p-12 flex flex-col justify-center">
+                <h3 className="text-2xl sm:text-3xl font-serif font-semibold text-charcoal mb-4">
+                  Beautiful in any home
+                </h3>
+                <p className="text-lg text-charcoal/80 mb-6">
+                  Our premium prints are designed to complement any décor style. Each piece is printed on archival-quality paper and arrives ready to frame and display.
+                </p>
+                <div className="space-y-3 text-charcoal/70">
+                  <div className="flex items-center gap-3">
+                    <svg className="w-5 h-5 text-terracotta" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    <span>Museum-quality archival paper (200gsm+)</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <svg className="w-5 h-5 text-terracotta" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    <span>Fade-resistant inks for lasting quality</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <svg className="w-5 h-5 text-terracotta" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    <span>Available in A4, A3, and square formats</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -206,36 +257,18 @@ export default function ExamplesPage() {
                     </blockquote>
                   </div>
                   
-                  {/* Preview and Mockup */}
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {/* AI Generated Preview */}
-                    <div>
-                      <h4 className="font-medium text-charcoal mb-3">AI Generated Art</h4>
-                      <div className="aspect-square bg-warm-grey/20 rounded-lg overflow-hidden">
-                        <Image 
-                          src={example.previewUrl}
-                          alt={`${example.style} preview`}
-                          width={512}
-                          height={512}
-                          className="w-full h-full object-cover"
-                          priority={example.id <= 4} // Prioritize first 4 images
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Real World Mockup */}
-                    <div>
-                      <h4 className="font-medium text-charcoal mb-3">In Your Home</h4>
-                      <div className="aspect-square bg-warm-grey/20 rounded-lg overflow-hidden">
-                        <Image 
-                          src={example.mockupUrl}
-                          alt={`${example.style} mockup`}
-                          width={512}
-                          height={512}
-                          className="w-full h-full object-cover"
-                          priority={example.id <= 4} // Prioritize first 4 images
-                        />
-                      </div>
+                  {/* AI Generated Artwork */}
+                  <div className="max-w-md mx-auto">
+                    <h4 className="font-medium text-charcoal mb-4 text-center">AI Generated Artwork</h4>
+                    <div className="aspect-square bg-warm-grey/20 rounded-lg overflow-hidden shadow-md">
+                      <Image 
+                        src={example.previewUrl}
+                        alt={`${example.style} preview`}
+                        width={512}
+                        height={512}
+                        className="w-full h-full object-cover"
+                        priority={example.id <= 4} // Prioritize first 4 images
+                      />
                     </div>
                   </div>
                   
