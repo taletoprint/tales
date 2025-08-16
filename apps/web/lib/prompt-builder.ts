@@ -74,13 +74,13 @@ function getUniversalWrapper() {
   };
 }
 
-/** Style presets: Flux-optimized templates with positive descriptors only */
+/** Style presets: Flux-optimized templates with correct style descriptions */
 function stylePreset(style: ArtStyle) {
   switch (style) {
     case ArtStyle.WATERCOLOUR:
       return {
         styleLock:
-          "Delicate watercolour painting, translucent washes, soft edges, light granulation on textured paper, airy highlights, natural colours, gentle flow, serene atmosphere, faces softly defined, proportions consistent",
+          "Soft watercolour painting, translucent washes, gentle bleeding edges, visible paper texture, light granulation, colours layered and uneven in places, airy highlights, fluid brushstrokes, natural proportions, clear but softly defined faces, serene mood",
         steps: 4, // Flux-Schnell optimized
         cfg: 0.0, // Flux doesn't use guidance scale
         sampler: "flux", // Placeholder for Flux
@@ -89,7 +89,7 @@ function stylePreset(style: ArtStyle) {
     case ArtStyle.OIL_PAINTING:
       return {
         styleLock:
-          "Classic oil painting, textured brushstrokes, layered paint, rich mid-tones, controlled highlights and shadow, warm gallery feel, natural skin tones, clear faces, balanced composition",
+          "Traditional oil painting, rich textured brushstrokes, layered pigments, subtle cracks and impasto depth, visible canvas texture, warm gallery lighting, natural skin tones, classic fine-art atmosphere with clear faces and expressive poses",
         steps: 4,
         cfg: 0.0,
         sampler: "flux",
@@ -98,7 +98,7 @@ function stylePreset(style: ArtStyle) {
     case ArtStyle.PASTEL:
       return {
         styleLock:
-          "Soft pastel illustration, muted airy palette (soft pinks, blues, greens), smooth shading, hand-drawn feel, calm dreamy mood, faces clear and natural, proportions consistent, gentle expressions",
+          "Chalk pastel artwork, dusty chalk texture, muted powdery tones, soft blending with visible strokes, uneven shading, smudged edges, hand-drawn feel on textured paper, natural expressions, warm nostalgic atmosphere",
         steps: 4,
         cfg: 0.0,
         sampler: "flux",
@@ -107,7 +107,7 @@ function stylePreset(style: ArtStyle) {
     case ArtStyle.PENCIL_INK:
       return {
         styleLock:
-          "Minimalist line art, clean black ink lines, generous white space, simplified forms, subtle muted accent colour (optional), elegant modern composition, clear silhouette, balanced negative space",
+          "Hand-drawn pencil and ink sketch, fine linework with cross-hatching, soft graphite shading, occasional ink outlines, visible paper grain, slightly uneven strokes, sketchbook style, clear proportions, expressive faces, classic monochrome look",
         steps: 4,
         cfg: 0.0,
         sampler: "flux",
@@ -116,7 +116,7 @@ function stylePreset(style: ArtStyle) {
     case ArtStyle.STORYBOOK:
       return {
         styleLock:
-          "Whimsical storybook illustration, warm inviting palette, soft linework, simplified shapes, friendly expressions, gentle motion, clear character focus, readable scene, cosy atmosphere",
+          "Whimsical storybook illustration, playful simplified shapes, soft linework, gentle colours, flat washes with slight texture, warm cosy atmosphere, friendly expressions, looks like children's picture-book art, imaginative and inviting",
         steps: 4,
         cfg: 0.0,
         sampler: "flux",
@@ -125,7 +125,7 @@ function stylePreset(style: ArtStyle) {
     case ArtStyle.IMPRESSIONIST:
       return {
         styleLock:
-          "Hand-drawn pencil sketch, fine cross-hatching, soft graphite shading, subtle paper texture, gentle contrast, natural expressions, accurate proportions, classic sketchbook feel",
+          "Impressionist painting, loose visible brushstrokes, dappled light, broken colour, focus on atmosphere and movement, less detail, lively energy, natural light effects, soft human forms with expressive motion",
         steps: 4,
         cfg: 0.0,
         sampler: "flux",

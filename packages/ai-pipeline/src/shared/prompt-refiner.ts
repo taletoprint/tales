@@ -108,40 +108,46 @@ Style: ${request.style}`;
   private getStylePrompt(style: ArtStyle) {
     const styles = {
       WATERCOLOUR: {
-        template: `Delicate watercolour painting of [main subject/action] in [setting].
-Translucent washes, soft edges, light granulation on textured paper, airy highlights.
-Natural colours, gentle flow, serene atmosphere; faces softly defined, proportions consistent.`,
-        keywords: ['watercolour', 'translucent washes', 'soft edges', 'granulation', 'serene']
+        template: `Soft watercolour painting of [main subject/action] in [setting].
+Translucent washes, gentle bleeding edges, visible paper texture, light granulation.
+Colours layered and uneven in places, airy highlights, fluid brushstrokes.
+Natural proportions, clear but softly defined faces, serene mood.`,
+        keywords: ['watercolour', 'translucent washes', 'bleeding edges', 'granulation', 'fluid']
       },
       OIL_PAINTING: {
-        template: `Classic oil painting of [main subject/action] in [setting].
-Textured brushstrokes, layered paint, rich mid-tones, controlled highlights and shadow.
-Warm gallery feel, natural skin tones, clear faces, balanced composition.`,
-        keywords: ['oil painting', 'textured brushstrokes', 'layered paint', 'gallery feel', 'balanced']
+        template: `Traditional oil painting of [main subject/action] in [setting].
+Rich textured brushstrokes, layered pigments, subtle cracks and impasto depth.
+Visible canvas texture, warm gallery lighting, natural skin tones.
+Classic fine-art atmosphere with clear faces and expressive poses.`,
+        keywords: ['oil painting', 'textured brushstrokes', 'impasto', 'canvas texture', 'fine-art']
       },
       PASTEL: {
-        template: `Soft pastel illustration of [main subject/action] in [setting].
-Muted, airy palette (soft pinks, blues, greens), smooth shading, hand-drawn feel, calm dreamy mood.
-Faces clear and natural, proportions consistent, gentle expressions.`,
-        keywords: ['pastel', 'muted palette', 'smooth shading', 'dreamy mood', 'gentle']
+        template: `Chalk pastel artwork of [main subject/action] in [setting].
+Dusty chalk texture, muted powdery tones, soft blending with visible strokes.
+Uneven shading, smudged edges, hand-drawn feel on textured paper.
+Natural expressions, warm nostalgic atmosphere.`,
+        keywords: ['chalk pastel', 'dusty texture', 'powdery tones', 'smudged edges', 'nostalgic']
       },
       PENCIL_INK: {
-        template: `Minimalist line art of [main subject/action], [setting very brief].
-Clean black ink lines, generous white space, simplified forms, subtle muted accent colour (optional).
-Elegant modern composition, clear silhouette, balanced negative space.`,
-        keywords: ['line art', 'minimalist', 'clean lines', 'simplified forms', 'elegant']
+        template: `Hand-drawn pencil and ink sketch of [main subject/action] in [setting].
+Fine linework with cross-hatching, soft graphite shading, occasional ink outlines.
+Visible paper grain, slightly uneven strokes, sketchbook style.
+Clear proportions, expressive faces, classic monochrome look.`,
+        keywords: ['pencil ink', 'cross-hatching', 'graphite shading', 'sketchbook', 'monochrome']
       },
       STORYBOOK: {
         template: `Whimsical storybook illustration of [main subject/action] in [setting].
-Warm inviting palette, soft linework, simplified shapes, friendly expressions, gentle motion.
-Clear character focus, readable scene, cosy atmosphere.`,
-        keywords: ['storybook', 'whimsical', 'warm palette', 'friendly expressions', 'cosy']
+Playful simplified shapes, soft linework, gentle colours.
+Flat washes with slight texture, warm cosy atmosphere, friendly expressions.
+Looks like children's picture-book art, imaginative and inviting.`,
+        keywords: ['storybook', 'whimsical', 'simplified shapes', 'picture-book', 'inviting']
       },
       IMPRESSIONIST: {
-        template: `Hand-drawn pencil sketch of [main subject/action] in [setting].
-Fine cross-hatching, soft graphite shading, subtle paper texture, gentle contrast.
-Natural expressions, accurate proportions, classic sketchbook feel.`,
-        keywords: ['pencil sketch', 'cross-hatching', 'graphite shading', 'paper texture', 'sketchbook']
+        template: `Impressionist painting of [main subject/action] in [setting].
+Loose visible brushstrokes, dappled light, broken colour.
+Focus on atmosphere and movement, less detail, lively energy.
+Natural light effects, soft human forms with expressive motion.`,
+        keywords: ['impressionist', 'loose brushstrokes', 'dappled light', 'broken colour', 'lively']
       }
     };
 
