@@ -328,8 +328,8 @@ export class SimpleAIGenerator {
       // Default landscape
       return { aspect_ratio: "4:3", megapixels: "1" };
     } else {
-      // Portrait - map to 5:7 (closer to A3/A4 ratio of 0.707)
-      return { aspect_ratio: "5:7", megapixels: "1" };
+      // Portrait - map to 2:3 (closest to A3/A4 ratio of 0.707)
+      return { aspect_ratio: "2:3", megapixels: "1" };
     }
   }
 
