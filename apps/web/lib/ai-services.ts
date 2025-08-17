@@ -4,6 +4,7 @@ import sharp from 'sharp';
 import { buildPrompt } from './prompt-builder';
 import { ArtStyle, Aspect, PromptBundle } from './types';
 import { PromptRefiner } from '@taletoprint/ai-pipeline/src/shared/prompt-refiner';
+import { S3Storage, PreviewMetadata } from '@taletoprint/ai-pipeline/src/shared/storage';
 import { 
   chooseModelJob, 
   chooseModelJobLegacy,
@@ -53,6 +54,7 @@ export class SimpleAIGenerator {
   private replicateToken: string;
   private promptRefiner: PromptRefiner;
   private useOpenAI: boolean;
+  private s3Storage: S3Storage | null;
   
   constructor(openaiApiKey: string, replicateToken: string, useOpenAI: boolean = true) {
     // Sanitize API key to remove any potential line breaks or whitespace
@@ -62,6 +64,20 @@ export class SimpleAIGenerator {
     this.replicateToken = replicateToken;
     this.promptRefiner = new PromptRefiner(cleanApiKey);
     this.useOpenAI = useOpenAI && !!cleanApiKey; // Only use OpenAI if enabled and API key provided
+    
+    // Initialize S3 storage for preview archiving
+    try {
+      const bucket = process.env.AWS_S3_BUCKET || 'taletoprint-assets';
+      this.s3Storage = new S3Storage(
+        process.env.AWS_REGION || 'eu-north-1',
+        bucket,
+        process.env.AWS_ACCESS_KEY_ID,
+        process.env.AWS_SECRET_ACCESS_KEY
+      );
+    } catch (error) {
+      console.warn('S3 storage not available for preview archiving:', error);
+      this.s3Storage = null;
+    }
   }
 
   private mapArtStyleToPromptRefiner(style: ArtStyle): import('@taletoprint/ai-pipeline/src/shared/prompt-refiner').ArtStyle {
@@ -195,7 +211,7 @@ export class SimpleAIGenerator {
       const loraUsed = job.useLora && job.loraKey ? job.loraKey : 'none';
       console.log(`[ANALYTICS] Model usage: ${job.model}, has_people: ${promptBundle.meta.has_people}, style: ${request.style}, lora: ${loraUsed}, generation_time: ${generationTime}ms, aspect: ${request.aspect}`);
 
-      return {
+      const result = {
         id: previewId,
         imageUrl: processedImageUrl,
         prompt: request.story,
@@ -217,6 +233,13 @@ export class SimpleAIGenerator {
           has_people: promptBundle.meta.has_people
         }
       };
+
+      // Save preview to S3 for analysis (async, don't wait)
+      this.savePreviewToS3(result, promptBundle, job, reason, generationTime, request).catch(error => {
+        console.warn(`[${previewId}] Failed to save preview to S3:`, error);
+      });
+
+      return result;
 
     } catch (error) {
       console.error(`[${previewId}] Generation failed:`, error);
@@ -596,6 +619,104 @@ export class SimpleAIGenerator {
     }
 
     throw new Error(`SDXL generation timed out after ${maxWaitTime / 1000} seconds`);
+  }
+
+  private async savePreviewToS3(
+    result: GenerationResult,
+    promptBundle: PromptBundle,
+    job: ModelJob,
+    routingReason: string,
+    generationTime: number,
+    request: GenerationRequest
+  ): Promise<void> {
+    if (!this.s3Storage) {
+      console.log(`[${result.id}] S3 storage not configured, skipping preview save`);
+      return;
+    }
+
+    try {
+      const loraConfig = job.useLora && job.loraKey ? getLoRAConfig(job.loraKey) : null;
+      const modelConfig = getModelConfig(job.model);
+      
+      // Build comprehensive metadata for analysis
+      const metadata: PreviewMetadata = {
+        previewId: result.id,
+        generatedAt: new Date().toISOString(),
+        
+        // User input
+        originalStory: request.story,
+        requestedStyle: request.style,
+        requestedAspect: request.aspect,
+        
+        // AI processing
+        refinedPrompt: promptBundle.positive,
+        negativePrompt: promptBundle.negative,
+        openaiEnhanced: this.useOpenAI,
+        openaiError: undefined, // TODO: Track OpenAI errors
+        
+        // Model routing
+        model: job.model,
+        routingReason: routingReason,
+        
+        // People detection
+        hasPeople: promptBundle.meta.has_people,
+        peopleCount: (promptBundle.meta as any).people_count,
+        peopleCloseUp: (promptBundle.meta as any).people_close_up,
+        peopleRendering: (promptBundle.meta as any).people_rendering,
+        
+        // LoRA usage
+        loraUsed: job.useLora,
+        loraKey: job.loraKey,
+        loraScale: loraConfig ? autoTuneLoRAScale(loraConfig, request.style, promptBundle.positive.length) : undefined,
+        loraScaleOriginal: loraConfig?.scale,
+        loraScaleAutoTuned: loraConfig ? autoTuneLoRAScale(loraConfig, request.style, promptBundle.positive.length) !== loraConfig.scale : false,
+        
+        // Model parameters
+        modelVersion: modelConfig.version,
+        guidanceScale: modelConfig.params.guidance_scale,
+        steps: promptBundle.params.steps,
+        seed: promptBundle.params.seed,
+        dimensions: {
+          width: promptBundle.params.width,
+          height: promptBundle.params.height
+        },
+        
+        // Generation metrics
+        generationTimeMs: generationTime,
+        estimatedCost: result.metadata?.cost || 0.002,
+        phase: 'phase1', // Track optimization phases
+        
+        // Technical metadata
+        replicateUrl: result.imageUrl,
+        styleKeywords: promptBundle.meta.styleKeywords || [request.style]
+      };
+
+      await this.s3Storage.savePreviewWithMetadata(result.id, result.imageUrl, metadata);
+      console.log(`[${result.id}] Preview and metadata saved to S3 successfully`);
+      
+    } catch (error) {
+      console.error(`[${result.id}] Failed to save preview to S3:`, error);
+      // Don't throw - we don't want to break the main generation flow
+    }
+  }
+
+  /**
+   * Track when a preview is selected for printing - updates S3 metadata for analysis
+   */
+  async trackPreviewToPrint(previewId: string, orderId: string): Promise<void> {
+    if (!this.s3Storage) return;
+
+    try {
+      // This would typically update the metadata file in S3 to mark the preview as selected
+      // For now, we'll log it and in future could implement S3 metadata updates
+      console.log(`[ANALYTICS] Preview ${previewId} selected for print order ${orderId}`);
+      
+      // TODO: Implement S3 metadata update to track conversion
+      // await this.s3Storage.updatePreviewMetadata(previewId, { selectedForPrint: true, printOrderId: orderId });
+      
+    } catch (error) {
+      console.warn(`Failed to track preview-to-print for ${previewId}:`, error);
+    }
   }
 
   // Helper method for retrying fetch requests with network timeout handling
