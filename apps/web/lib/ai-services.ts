@@ -130,10 +130,13 @@ export class SimpleAIGenerator {
   private useOpenAI: boolean;
   
   constructor(openaiApiKey: string, replicateToken: string, useOpenAI: boolean = true) {
-    this.openai = new OpenAI({ apiKey: openaiApiKey });
+    // Sanitize API key to remove any potential line breaks or whitespace
+    const cleanApiKey = openaiApiKey?.trim().replace(/\s+/g, '');
+    
+    this.openai = new OpenAI({ apiKey: cleanApiKey });
     this.replicateToken = replicateToken;
-    this.promptRefiner = new PromptRefiner(openaiApiKey);
-    this.useOpenAI = useOpenAI && !!openaiApiKey; // Only use OpenAI if enabled and API key provided
+    this.promptRefiner = new PromptRefiner(cleanApiKey);
+    this.useOpenAI = useOpenAI && !!cleanApiKey; // Only use OpenAI if enabled and API key provided
   }
 
   private mapArtStyleToPromptRefiner(style: ArtStyle): import('@taletoprint/ai-pipeline/src/shared/prompt-refiner').ArtStyle {
@@ -150,10 +153,23 @@ export class SimpleAIGenerator {
   }
 
   private routeModel(promptBundle: PromptBundle): 'flux-schnell' | 'sdxl' {
-    const { has_people } = promptBundle.meta;
+    const { has_people, style } = promptBundle.meta;
     
-    // Route people to Flux (better anatomy/faces), non-people to SDXL (better style fidelity)
-    // Both models now have LoRA support for all styles including impressionist
+    // Cost-conscious LoRA strategy:
+    // 1. Painterly styles that need texture → SDXL (with LoRA)
+    // 2. People + simple styles → Flux (cheap & fast)
+    
+    // Always use SDXL for styles that need heavy texture/paint effects
+    if (style === ArtStyle.IMPRESSIONIST || style === ArtStyle.OIL_PAINTING) {
+      return 'sdxl';
+    }
+    
+    // Watercolor and Pastel: SDXL when no people (better texture), Flux when people (better faces)
+    if ((style === ArtStyle.WATERCOLOUR || style === ArtStyle.PASTEL) && !has_people) {
+      return 'sdxl';
+    }
+    
+    // Everything else: Flux for people, SDXL for non-people
     if (has_people) {
       return 'flux-schnell';
     } else {
@@ -179,6 +195,19 @@ export class SimpleAIGenerator {
     
     // Add trigger word at the beginning of the prompt for better activation
     return `${loraConfig.trigger}, ${prompt}`;
+  }
+
+  private getRoutingReason(style: ArtStyle, hasPeople: boolean, selectedModel: 'flux-schnell' | 'sdxl'): string {
+    if (style === ArtStyle.IMPRESSIONIST || style === ArtStyle.OIL_PAINTING) {
+      return `${style} style needs texture → SDXL`;
+    }
+    if ((style === ArtStyle.WATERCOLOUR || style === ArtStyle.PASTEL) && selectedModel === 'sdxl') {
+      return `${style} without people → SDXL for texture`;
+    }
+    if (hasPeople && selectedModel === 'flux-schnell') {
+      return `people detected → Flux for faces`;
+    }
+    return `no people → SDXL for style`;
   }
 
   async generateHDPrint(previewResult: GenerationResult): Promise<string> {
@@ -254,9 +283,7 @@ export class SimpleAIGenerator {
 
       // Step 2: Route to appropriate model based on style and people detection
       const selectedModel = this.routeModel(promptBundle);
-      const routingReason = promptBundle.meta.style === ArtStyle.IMPRESSIONIST 
-        ? 'impressionist style override' 
-        : `has_people: ${promptBundle.meta.has_people}`;
+      const routingReason = this.getRoutingReason(promptBundle.meta.style, promptBundle.meta.has_people, selectedModel);
       console.log(`[${previewId}] Routing to ${selectedModel} model (${routingReason})`);
       
       let originalImageUrl: string;
@@ -457,9 +484,8 @@ export class SimpleAIGenerator {
       // Map dimensions to Flux parameters
       const fluxDimensions = this.mapDimensionsToFlux(promptBundle.params.width, promptBundle.params.height);
       
-      const modelVersion = loraConfig ? 'lucataco/flux-dev-lora' : 'black-forest-labs/flux-schnell';
-      console.log(`[${previewId}] Using model: ${modelVersion}`);
-      console.log(`[${previewId}] Using LoRA: ${loraConfig?.model || 'none'}, trigger: ${loraConfig?.trigger || 'none'}`);
+      console.log(`[${previewId}] Using model: black-forest-labs/flux-schnell`);
+      console.log(`[${previewId}] LoRA for Flux: Not supported (painterly styles routed to SDXL)`);
       
       // Prepare input parameters
       const inputParams: any = {
@@ -472,16 +498,14 @@ export class SimpleAIGenerator {
         output_quality: 80
       };
       
-      // Different parameters for LoRA vs non-LoRA models
+      // flux-schnell parameters (LoRA not supported, will be ignored)
+      inputParams.go_fast = true;
+      inputParams.num_inference_steps = 4;
+      
+      // Note: flux-schnell doesn't support LoRA, so these params will be ignored
+      // LoRA styling will come from SDXL routing for painterly styles
       if (loraConfig) {
-        // flux-dev-lora model parameters
-        inputParams.extra_lora = loraConfig.model;
-        inputParams.extra_lora_scale = loraConfig.scale;
-        inputParams.num_inference_steps = 20; // flux-dev uses more steps
-      } else {
-        // flux-schnell model parameters
-        inputParams.go_fast = true;
-        inputParams.num_inference_steps = 4;
+        console.log(`[${previewId}] LoRA configured but flux-schnell doesn't support it - routed painterly styles to SDXL instead`);
       }
       
       // Create prediction using Flux-Schnell parameters with retry
@@ -492,7 +516,7 @@ export class SimpleAIGenerator {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          version: loraConfig ? 'lucataco/flux-dev-lora:56fb3b39c96c80e59959dfae4c5c6b8c45e01ce84c45b4b3e62c20dd02cbdedd' : 'black-forest-labs/flux-schnell:c846a69991daf4c0e5d016514849d14ee5b2e6846ce6b9d6f21369e564cfe51e',
+          version: 'black-forest-labs/flux-schnell:c846a69991daf4c0e5d016514849d14ee5b2e6846ce6b9d6f21369e564cfe51e',
           input: inputParams
         }),
       }, previewId, 3);
