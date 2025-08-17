@@ -56,13 +56,14 @@ export class S3ImageResolver {
           source = 'replicate';
         }
 
-        // For HD images, try S3 first, then fall back to order.hdImageUrl
-        const hdKey = `print-assets/${order.id}/${order.id}_hd.png`;
+        // For HD images, try S3 first with correct key format
+        const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
+        const hdKey = `hd/${orderDate}/${order.id}-hd.jpg`;
         try {
           hdImageUrl = await this.s3Storage.getSignedUrl(hdKey, 3600);
           // If we got S3 HD image, keep S3 as source
         } catch (error) {
-          // HD not in S3, use the existing hdImageUrl from Replicate
+          // HD not in S3, use the existing hdImageUrl from Replicate/direct S3
           hdImageUrl = order.hdImageUrl || null;
           if (source === 's3' && hdImageUrl) {
             source = 'replicate'; // Mixed sources
