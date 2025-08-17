@@ -11,6 +11,7 @@ export interface PreviewResult {
   imageUrl: string;
   prompt: string;
   refinedPrompt: string;
+  story?: string; // Original user story
   aspect: Aspect;
   style: string;
   timestamp: number;

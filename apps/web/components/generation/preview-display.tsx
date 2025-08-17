@@ -85,6 +85,19 @@ export const PreviewDisplay: React.FC<PreviewDisplayProps> = ({
               </div>
             )}
           </div>
+          
+          {/* Original Story Display */}
+          {preview.story && (
+            <div className="mt-4 p-4 bg-cream/30 rounded-xl border border-warm-grey/20">
+              <h4 className="text-sm font-medium text-charcoal/80 mb-2 flex items-center gap-2">
+                <span className="text-base">💭</span>
+                Your Story
+              </h4>
+              <p className="text-sm text-charcoal/70 leading-relaxed italic">
+                "{preview.story}"
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Purchase Details */}

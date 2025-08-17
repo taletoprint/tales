@@ -231,11 +231,12 @@ export default function Home() {
                             : 'border-transparent hover:border-warm-grey/30'
                         }`}
                         onClick={() => setSelectedPreview(preview)}
+                        title={preview.story ? `"${preview.story}"` : `Preview ${index + 1}`}
                       >
                         <div className="aspect-square">
                           <img 
                             src={preview.imageUrl} 
-                            alt={`Preview ${index + 1}`}
+                            alt={preview.story ? `Preview: ${preview.story.substring(0, 50)}...` : `Preview ${index + 1}`}
                             className="w-full h-full object-cover"
                           />
                         </div>

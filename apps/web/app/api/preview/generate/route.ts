@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
         imageUrl: `https://via.placeholder.com/800x600.png?text=Preview+${style}`,
         prompt: `A ${style.toLowerCase().replace('_', ' ')} artwork depicting: ${story.substring(0, 50)}...`,
         refinedPrompt: `A ${style.toLowerCase().replace('_', ' ')} artwork depicting: ${story.substring(0, 50)}...`,
+        story: story, // Include original story
         aspect: aspect as Aspect,
         style: style as any,
         timestamp: Date.now(),
@@ -125,6 +126,7 @@ export async function POST(request: NextRequest) {
       imageUrl: result.imageUrl,
       prompt: result.prompt,
       refinedPrompt: result.refinedPrompt,
+      story: story, // Include original story
       aspect: result.aspect,
       style: result.style as any,
       timestamp: result.timestamp,
