@@ -46,11 +46,11 @@ export class S3ImageResolver {
         const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
         const previewKey = `previews/${orderDate}/${order.previewId}.jpg`;
         
-        // Check if preview exists in S3 by trying to get a signed URL
-        try {
+        // Check if preview exists in S3 before generating signed URL
+        if (await this.s3Storage.objectExists(previewKey)) {
           previewUrl = await this.s3Storage.getSignedUrl(previewKey, 3600); // 1 hour
           source = 's3';
-        } catch (error) {
+        } else {
           // Preview not in S3, fall back to Replicate URL
           previewUrl = order.metadata?.previewUrl || null;
           source = 'replicate';
@@ -58,10 +58,10 @@ export class S3ImageResolver {
 
         // For HD images, try S3 first with correct key format
         const hdKey = `hd/${orderDate}/${order.id}-hd.jpg`;
-        try {
+        if (await this.s3Storage.objectExists(hdKey)) {
           hdImageUrl = await this.s3Storage.getSignedUrl(hdKey, 3600);
           // If we got S3 HD image, keep S3 as source
-        } catch (error) {
+        } else {
           // HD not in S3, use the existing hdImageUrl from Replicate/direct S3
           hdImageUrl = order.hdImageUrl || null;
           if (source === 's3' && hdImageUrl) {
@@ -118,4 +118,5 @@ export class S3ImageResolver {
   isS3Available(): boolean {
     return this.s3Storage !== null;
   }
+
 }

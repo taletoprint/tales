@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand, ListObjectsV2Command, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 export interface UploadResult {
@@ -117,6 +117,20 @@ export class S3Storage {
     } catch (error) {
       console.error('Error listing objects from S3:', error);
       throw new Error(`Failed to list objects: ${error}`);
+    }
+  }
+
+  async objectExists(key: string): Promise<boolean> {
+    try {
+      const command = new HeadObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+      });
+
+      await this.client.send(command);
+      return true;
+    } catch (error) {
+      return false;
     }
   }
 
