@@ -179,7 +179,7 @@ export async function POST(
       data: { 
         hdImageUrl,
         printAssetUrl: s3Upload.signedUrl,
-        status: 'AWAITING_APPROVAL',
+        status: 'PRINT_READY', // Temporarily use PRINT_READY until migration is run
         metadata: {
           ...metadata,
           retrySuccess: true,
@@ -195,7 +195,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       orderId,
-      status: 'AWAITING_APPROVAL',
+      status: 'PRINT_READY', // Temporarily use PRINT_READY until migration is run
       hdImageUrl,
       printAssetUrl: s3Upload.signedUrl,
       message: 'Order processing completed successfully'

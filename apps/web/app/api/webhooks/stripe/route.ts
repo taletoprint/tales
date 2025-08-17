@@ -379,7 +379,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       data: { 
         hdImageUrl,
         printAssetUrl: s3Upload.signedUrl, // Signed URL for Prodigi
-        status: 'AWAITING_APPROVAL', // Manual approval required
+        status: 'PRINT_READY', // Temporarily use PRINT_READY until migration is run
       },
     });
 
