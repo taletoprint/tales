@@ -29,8 +29,8 @@ export async function POST(
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    if (order.status !== 'AWAITING_APPROVAL' && order.status !== 'PRINT_READY') {
-      return NextResponse.json({ error: 'Order cannot be regenerated in current status' }, { status: 400 });
+    if (order.status !== 'PRINT_READY') {
+      return NextResponse.json({ error: 'Order must be in PRINT_READY status to regenerate' }, { status: 400 });
     }
 
     console.log(`Admin regenerating HD file for order ${orderId}...`);
@@ -94,13 +94,13 @@ export async function POST(
       orderId
     );
 
-    // Update order with new files and return to AWAITING_APPROVAL
+    // Update order with new files and return to PRINT_READY
     await prisma.order.update({
       where: { id: orderId },
       data: { 
         hdImageUrl,
         printAssetUrl: s3Upload.signedUrl,
-        status: 'AWAITING_APPROVAL',
+        status: 'PRINT_READY',
         metadata: {
           ...metadata,
           regeneratedAt: new Date().toISOString(),
@@ -121,11 +121,11 @@ export async function POST(
   } catch (error) {
     console.error('HD regeneration error:', error);
     
-    // Try to update order status back to AWAITING_APPROVAL on failure
+    // Try to update order status back to PRINT_READY on failure
     try {
       await prisma.order.update({
         where: { id },
-        data: { status: 'AWAITING_APPROVAL' },
+        data: { status: 'PRINT_READY' },
       });
     } catch (dbError) {
       console.error('Failed to reset order status:', dbError);

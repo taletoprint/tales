@@ -19,6 +19,8 @@ interface OrderDetails {
     aspect?: string;
     previewUrl?: string;
     refinedPrompt?: string;
+    regeneratedAt?: string;
+    regeneratedBy?: string;
   };
 }
 
@@ -33,7 +35,7 @@ export default function ApprovalsPage() {
 
   const fetchPendingOrders = async () => {
     try {
-      const response = await fetch('/api/admin/orders?status=AWAITING_APPROVAL');
+      const response = await fetch('/api/admin/orders?status=PRINT_READY');
       const data = await response.json();
       if (data.orders) {
         setOrders(data.orders);
@@ -246,7 +248,12 @@ export default function ApprovalsPage() {
                       
                       <div className="mt-2 text-xs text-gray-500">
                         <p>Print Size: {order.printSize}</p>
-                        <p>Status: Awaiting Approval</p>
+                        <p>Status: Ready for Approval</p>
+                        {order.metadata?.regeneratedAt && (
+                          <p className="text-yellow-600 font-medium">
+                            ⚡ Regenerated {new Date(order.metadata.regeneratedAt).toLocaleString()}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
