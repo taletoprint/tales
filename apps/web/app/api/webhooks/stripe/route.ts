@@ -182,8 +182,9 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       console.log(`[WEBHOOK] Preview ${previewId} validated successfully`);
     }
     
-    // Create order record in database
-    const orderId = `TTP-${session.id.replace('cs_', '').toUpperCase()}`;
+    // Create order record in database with shorter ID
+    const sessionShort = session.id.replace('cs_', '').substring(0, 8).toUpperCase();
+    const orderId = `TTP-${sessionShort}`;
     
     // Check if order already exists (prevent duplicate processing)
     const existingOrder = await prisma.order.findUnique({
@@ -406,7 +407,8 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     console.error(`[WEBHOOK] Stack trace:`, stackTrace);
     
     // Try to update order status to FAILED if we have an order ID
-    const orderId = `TTP-${session.id.replace('cs_', '').toUpperCase()}`;
+    const sessionShort = session.id.replace('cs_', '').substring(0, 8).toUpperCase();
+    const orderId = `TTP-${sessionShort}`;
     try {
       console.log(`[WEBHOOK] Attempting to mark order ${orderId} as FAILED...`);
       await prisma.order.update({

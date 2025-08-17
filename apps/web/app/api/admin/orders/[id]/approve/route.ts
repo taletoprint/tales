@@ -25,19 +25,13 @@ export async function POST(
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    if (order.status !== 'AWAITING_APPROVAL') {
-      return NextResponse.json({ error: 'Order is not awaiting approval' }, { status: 400 });
+    if (order.status !== 'PRINT_READY') {
+      return NextResponse.json({ error: 'Order is not ready for approval' }, { status: 400 });
     }
 
     if (!order.printAssetUrl) {
       return NextResponse.json({ error: 'No print asset available for approval' }, { status: 400 });
     }
-
-    // Update order status to PRINT_READY
-    await prisma.order.update({
-      where: { id: orderId },
-      data: { status: 'PRINT_READY' },
-    });
 
     // Submit to Prodigi for fulfillment
     const prodigiOrderId = await submitToProdigiForFulfillment(order, order.printAssetUrl);

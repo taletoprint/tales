@@ -58,6 +58,29 @@ export default function OrderDetailModal({ order, onClose, onUpdate }: OrderDeta
     }
   };
 
+  const handleApprove = async () => {
+    if (!confirm('Approve this order for printing? This will send it to Prodigi for fulfillment.')) return;
+    
+    setActionLoading(true);
+    try {
+      const response = await fetch(`/api/admin/orders/${order.id}/approve`, {
+        method: 'POST',
+      });
+      
+      if (response.ok) {
+        onUpdate();
+        onClose();
+      } else {
+        const data = await response.json();
+        alert(`Approval failed: ${data.error}`);
+      }
+    } catch (error) {
+      alert('Approval failed');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleRefund = async () => {
     if (!confirm('Are you sure you want to refund this order?')) return;
     
@@ -189,6 +212,15 @@ export default function OrderDetailModal({ order, onClose, onUpdate }: OrderDeta
               Status: {order.status}
             </div>
             <div className="flex space-x-2">
+              {order.status === 'PRINT_READY' && (
+                <button
+                  onClick={handleApprove}
+                  disabled={actionLoading}
+                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                >
+                  {actionLoading ? 'Approving...' : 'Approve for Print'}
+                </button>
+              )}
               {(order.status === 'FAILED' || order.status === 'PENDING') && (
                 <button
                   onClick={handleRetry}
