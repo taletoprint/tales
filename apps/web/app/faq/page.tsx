@@ -6,7 +6,7 @@ import Header from '@/components/navigation/header';
 interface FAQItem {
   id: string;
   question: string;
-  answer: string | JSX.Element;
+  answer: string | React.ReactElement;
   category: string;
 }
 
