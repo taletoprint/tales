@@ -36,5 +36,8 @@ export type PromptBundle = {
     aspect: Aspect;
     styleKeywords?: string[];
     has_people: boolean;
+    people_count?: number;
+    people_close_up?: boolean;
+    people_rendering?: 'none' | 'implied' | 'distant' | 'close_up';
   };
 };
