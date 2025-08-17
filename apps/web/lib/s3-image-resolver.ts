@@ -57,7 +57,6 @@ export class S3ImageResolver {
         }
 
         // For HD images, try S3 first with correct key format
-        const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
         const hdKey = `hd/${orderDate}/${order.id}-hd.jpg`;
         try {
           hdImageUrl = await this.s3Storage.getSignedUrl(hdKey, 3600);
