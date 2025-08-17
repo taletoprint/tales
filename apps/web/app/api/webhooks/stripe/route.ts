@@ -92,15 +92,16 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       throw new Error(error);
     }
 
-    // Retrieve the full session with shipping details
+    // Retrieve the full session with customer details
     console.log(`[WEBHOOK] Retrieving full session details...`);
     const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
-      expand: ['customer', 'shipping_details']
+      expand: ['customer']
     });
     
     console.log(`[WEBHOOK] Full session retrieved successfully`);
     const customer = fullSession.customer as Stripe.Customer;
-    const shipping = (fullSession as any).shipping_details || (fullSession as any).shipping;
+    // Shipping details are directly on the session object
+    const shipping = fullSession.shipping_details || fullSession.shipping || fullSession.customer_details;
     
     console.log(`[WEBHOOK] Customer:`, customer?.email || session.customer_email || 'no email');
     console.log(`[WEBHOOK] Shipping data:`, shipping ? 'present' : 'missing');
