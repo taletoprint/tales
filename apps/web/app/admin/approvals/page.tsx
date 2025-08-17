@@ -24,8 +24,19 @@ interface OrderDetails {
   };
 }
 
+interface ResolvedImages {
+  previewUrl: string | null;
+  hdImageUrl: string | null;
+  source: 's3' | 'replicate' | 'fallback';
+}
+
+interface OrderWithImages extends OrderDetails {
+  resolvedImages?: ResolvedImages;
+  imageLoading?: boolean;
+}
+
 export default function ApprovalsPage() {
-  const [orders, setOrders] = useState<OrderDetails[]>([]);
+  const [orders, setOrders] = useState<OrderWithImages[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
 
@@ -38,12 +49,47 @@ export default function ApprovalsPage() {
       const response = await fetch('/api/admin/orders?status=PRINT_READY');
       const data = await response.json();
       if (data.orders) {
-        setOrders(data.orders);
+        const ordersWithImages = data.orders.map((order: OrderDetails) => ({
+          ...order,
+          imageLoading: true,
+        }));
+        setOrders(ordersWithImages);
+        
+        // Resolve images for each order
+        ordersWithImages.forEach((order: OrderWithImages) => {
+          resolveOrderImages(order.id);
+        });
       }
     } catch (error) {
       console.error('Failed to fetch pending orders:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const resolveOrderImages = async (orderId: string) => {
+    try {
+      const response = await fetch(`/api/admin/orders/${orderId}/images`);
+      const data = await response.json();
+      
+      if (data.images) {
+        setOrders(prev => prev.map(order => 
+          order.id === orderId 
+            ? { 
+                ...order, 
+                resolvedImages: data.images,
+                imageLoading: false 
+              }
+            : order
+        ));
+      }
+    } catch (error) {
+      console.error(`Failed to resolve images for order ${orderId}:`, error);
+      setOrders(prev => prev.map(order => 
+        order.id === orderId 
+          ? { ...order, imageLoading: false }
+          : order
+      ));
     }
   };
 
@@ -185,16 +231,32 @@ export default function ApprovalsPage() {
 
                     {/* Preview Image */}
                     <div className="lg:col-span-1">
-                      <h4 className="font-medium text-gray-900 mb-2">Original Preview</h4>
-                      {order.metadata?.previewUrl ? (
+                      <h4 className="font-medium text-gray-900 mb-2">
+                        Original Preview
+                        {order.resolvedImages && (
+                          <span className={`ml-2 text-xs px-2 py-1 rounded ${
+                            order.resolvedImages.source === 's3' ? 'bg-green-100 text-green-800' :
+                            order.resolvedImages.source === 'replicate' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {order.resolvedImages.source === 's3' ? '✓ S3' : 
+                             order.resolvedImages.source === 'replicate' ? '⚠ Replicate' : '⚠ Fallback'}
+                          </span>
+                        )}
+                      </h4>
+                      {order.imageLoading ? (
+                        <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        </div>
+                      ) : order.resolvedImages?.previewUrl ? (
                         <div className="relative">
                           <img
-                            src={order.metadata.previewUrl}
+                            src={order.resolvedImages.previewUrl}
                             alt="Preview"
                             className="w-full rounded-lg shadow border"
                           />
                           <a
-                            href={order.metadata.previewUrl}
+                            href={order.resolvedImages.previewUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 text-xs rounded hover:bg-opacity-75"
@@ -212,16 +274,20 @@ export default function ApprovalsPage() {
                     {/* HD Print File */}
                     <div className="lg:col-span-1">
                       <h4 className="font-medium text-gray-900 mb-2">HD Print File</h4>
-                      {order.hdImageUrl ? (
+                      {order.imageLoading ? (
+                        <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        </div>
+                      ) : order.resolvedImages?.hdImageUrl ? (
                         <div className="relative">
                           <img
-                            src={order.hdImageUrl}
+                            src={order.resolvedImages.hdImageUrl}
                             alt="HD Print"
                             className="w-full rounded-lg shadow border"
                           />
                           <div className="absolute top-2 right-2 flex gap-1">
                             <a
-                              href={order.hdImageUrl}
+                              href={order.resolvedImages.hdImageUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="bg-black bg-opacity-50 text-white px-2 py-1 text-xs rounded hover:bg-opacity-75"
