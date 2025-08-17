@@ -6,6 +6,7 @@ import { StoryInput } from '@/components/generation/story-input';
 import { PreviewDisplay } from '@/components/generation/preview-display';
 import { PreviewResult } from '@/lib/types';
 import Header from '@/components/navigation/header';
+import { getDailyAttempts, incrementDailyAttempts } from '@/lib/preview-counter';
 
 export default function Home() {
   const [selectedPreview, setSelectedPreview] = useState<PreviewResult | null>(null);
@@ -13,11 +14,10 @@ export default function Home() {
   const [attemptCount, setAttemptCount] = useState(0);
   const previewSectionRef = useRef<HTMLDivElement>(null);
   const [showCancelMessage, setShowCancelMessage] = useState(false);
+  const [showResetMessage, setShowResetMessage] = useState(false);
   
   // Load saved previews and daily attempt count on mount
   useEffect(() => {
-    const today = new Date().toDateString();
-    
     // Load previews
     const savedPreviews = localStorage.getItem('taletoprint_previews');
     if (savedPreviews) {
@@ -32,25 +32,18 @@ export default function Home() {
       }
     }
     
-    // Load daily attempt count (separate from previews)
-    const savedAttempts = localStorage.getItem('taletoprint_daily_attempts');
-    if (savedAttempts) {
-      try {
-        const { date, count } = JSON.parse(savedAttempts);
-        if (date === today) {
-          setAttemptCount(count);
-        } else {
-          // New day - reset counter
-          setAttemptCount(0);
-          localStorage.setItem('taletoprint_daily_attempts', JSON.stringify({ date: today, count: 0 }));
-        }
-      } catch (e) {
-        console.error('Failed to load daily attempts:', e);
-        setAttemptCount(0);
-      }
-    } else {
-      // First time - initialize
-      localStorage.setItem('taletoprint_daily_attempts', JSON.stringify({ date: today, count: 0 }));
+    // Load daily attempt count using utility function
+    const attempts = getDailyAttempts();
+    setAttemptCount(attempts.count);
+    
+    // Check for reset attempts parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('reset_attempts') === 'true') {
+      setShowResetMessage(true);
+      // Clear the parameter from URL
+      window.history.replaceState({}, '', window.location.pathname);
+      // Hide message after 5 seconds
+      setTimeout(() => setShowResetMessage(false), 5000);
     }
   }, []);
   
@@ -65,13 +58,9 @@ export default function Home() {
     setSelectedPreview(newPreview);
     setAllPreviews(prev => [...prev, newPreview]);
     
-    // Increment daily attempt counter
-    const newCount = attemptCount + 1;
+    // Increment daily attempt counter using utility function
+    const newCount = incrementDailyAttempts();
     setAttemptCount(newCount);
-    
-    // Save daily attempts to localStorage
-    const today = new Date().toDateString();
-    localStorage.setItem('taletoprint_daily_attempts', JSON.stringify({ date: today, count: newCount }));
   };
 
   // Auto-scroll to preview when it's created
@@ -121,6 +110,25 @@ export default function Home() {
             <button
               onClick={() => setShowCancelMessage(false)}
               className="text-charcoal/50 hover:text-charcoal ml-2"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Attempts Success Message */}
+      {showResetMessage && (
+        <div className="fixed top-4 right-4 z-50 bg-sage border border-sage/20 rounded-xl shadow-lg p-4 max-w-sm animate-fade-in">
+          <div className="flex items-center gap-3">
+            <span className="text-xl">🎉</span>
+            <div>
+              <p className="font-medium text-cream">Free previews reset!</p>
+              <p className="text-sm text-cream/80">You have 3 new attempts to create more artwork.</p>
+            </div>
+            <button
+              onClick={() => setShowResetMessage(false)}
+              className="text-cream/50 hover:text-cream ml-2"
             >
               ✕
             </button>

@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { PrintReceipt } from '@/components/receipt/print-receipt';
 import Header from '@/components/navigation/header';
+import { resetDailyAttempts } from '@/lib/preview-counter';
 
 export interface OrderDetails {
   id: string;
@@ -39,6 +40,9 @@ function SuccessContent() {
   useEffect(() => {
     if (sessionId) {
       fetchOrderDetails(sessionId);
+      // Reset daily attempts counter after successful purchase
+      resetDailyAttempts();
+      console.log('Daily preview attempts reset after successful purchase');
     }
   }, [sessionId]);
 
@@ -182,10 +186,11 @@ function SuccessContent() {
 
             <div className="grid md:grid-cols-2 gap-4">
               <Link
-                href="/"
-                className="px-6 py-3 bg-sage text-cream rounded-xl hover:bg-charcoal transition-colors font-medium"
+                href="/?reset_attempts=true"
+                className="px-6 py-3 bg-sage text-cream rounded-xl hover:bg-charcoal transition-colors font-medium text-center"
               >
-                Create Another Print
+                <span className="block">Create Another Print</span>
+                <span className="text-xs opacity-80">You have 3 new free previews!</span>
               </Link>
               
               {orderDetails && <PrintReceipt order={orderDetails} />}
