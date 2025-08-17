@@ -66,8 +66,15 @@ UNIVERSAL WRAPPER:
 Prefix: ${wrapper.prefix}
 Suffix: ${wrapper.suffix}
 
+PROMPT COMPILATION RULES:
+- Structure: [Key Subject] in [Setting]; [Medium] with [3-4 max style adjectives]
+- Keep it concise: Flux ignores long lists, SDXL prefers focused prompts
+- Front-load important nouns: "Girl on swing under oak; spring meadow; pastel on textured paper"
+- Avoid comma soup: Use short clauses separated by semicolons
+- Medium-specific keywords only: Let LoRA handle the heavy lifting
+
 Respond with JSON containing:
-- refined_prompt: Complete prompt optimized for SDXL+LoRA with minimal people
+- refined_prompt: Compiled prompt with optimal structure for target model
 - negative_prompt: Empty for Flux, can include for SDXL
 - style_keywords: Array of 3-5 artistic terms
 - has_people: Boolean (legacy compatibility)

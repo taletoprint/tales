@@ -71,7 +71,7 @@
       "version": "black-forest-labs/flux-schnell:c846a69991daf4c0e5d016514849d14ee5b2e6846ce6b9d6f21369e564cfe51e",
       "params": {
         "num_inference_steps": 4,
-        "guidance_scale": 0.0,
+        "guidance_scale": 0.25,
         "go_fast": true
       },
       "supportsLora": false,
@@ -86,6 +86,17 @@
       },
       "supportsLora": true,
       "costTier": "medium"
+    }
+  },
+  "negativePrompts": {
+    "flux": "smooth digital painting, glossy, plastic, 3D render, photorealism, hyper-detailed pores, harsh outlines, airbrush",
+    "sdxl": {
+      "impressionist": "smooth digital, glossy, 3D render, plastic skin, airbrush, hard edges, hyper-detail, photorealism",
+      "oil_painting": "smooth digital, glossy, plastic, airbrush, hard edges, hyper-detail, flat colors, cartoon",
+      "watercolour": "smooth digital, glossy, 3D render, plastic, hard edges, hyper-detail, oil paint, thick paint",
+      "pastel": "smooth digital, glossy, 3D render, plastic, hard edges, hyper-detail, oil paint, watercolor",
+      "storybook": "smooth digital, glossy, 3D render, plastic, hyper-detail, photorealism, dark, scary",
+      "pencil_ink": "smooth digital, glossy, 3D render, plastic, color, bright colors, hyper-detail, painterly"
     }
   },
   "prompts": {

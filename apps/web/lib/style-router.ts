@@ -84,6 +84,62 @@ export function getModelConfig(model: 'flux-schnell' | 'sdxl'): ModelConfig {
 }
 
 /**
+ * Get negative prompt for style and model
+ */
+export function getNegativePrompt(style: ArtStyle, model: 'flux-schnell' | 'sdxl'): string {
+  const negatives = (stylesConfig as any).negativePrompts;
+  if (!negatives) return "";
+  
+  if (model === 'flux-schnell') {
+    return negatives.flux || "";
+  } else {
+    const styleKey = style.toLowerCase();
+    return negatives.sdxl?.[styleKey] || "";
+  }
+}
+
+/**
+ * Auto-tune LoRA scale based on style and prompt complexity
+ */
+export function autoTuneLoRAScale(loraConfig: LoRAConfig, style: ArtStyle, promptLength: number): number {
+  if (!loraConfig) return 0;
+  
+  let scale = loraConfig.scale;
+  const styleKey = style.toLowerCase();
+  
+  // Boost scale for complex prompts (more style adherence needed)
+  if (promptLength > 150) {
+    scale = Math.min(scale + 0.05, 0.95);
+  }
+  
+  // Style-specific adjustments based on testing feedback
+  switch (styleKey) {
+    case 'impressionist':
+      // Already quite high at 0.85, but boost for complex scenes
+      if (promptLength > 200) scale = Math.min(scale + 0.05, 0.9);
+      break;
+    case 'oil_painting':
+      // Good balance at 0.75, boost slightly for texture-heavy scenes
+      if (promptLength > 180) scale = Math.min(scale + 0.05, 0.85);
+      break;
+    case 'watercolour':
+    case 'pastel':
+      // Already balanced at 0.8, minimal adjustment
+      break;
+    case 'storybook':
+      // Lower scale works better, don't boost much
+      if (promptLength > 200) scale = Math.min(scale + 0.03, 0.75);
+      break;
+    case 'pencil_ink':
+      // Good at 0.75, boost for detailed scenes
+      if (promptLength > 180) scale = Math.min(scale + 0.05, 0.8);
+      break;
+  }
+  
+  return scale;
+}
+
+/**
  * Build a style-appropriate prompt
  */
 export function buildStylePrompt(

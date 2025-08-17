@@ -12,6 +12,8 @@ import {
   buildStylePrompt, 
   getRoutingReason,
   getRoutingReasonLegacy,
+  getNegativePrompt,
+  autoTuneLoRAScale,
   type ModelJob,
   type LoRAConfig as StyleLoRAConfig
 } from './style-router';
@@ -370,6 +372,9 @@ export class SimpleAIGenerator {
       const loraConfig = job.useLora && job.loraKey ? getLoRAConfig(job.loraKey) : null;
       const enhancedPrompt = this.enhancePromptWithLoRA(promptBundle.positive, loraConfig);
       
+      // Get curated negative prompt for Flux
+      const negativePrompt = getNegativePrompt(promptBundle.meta.style, 'flux-schnell');
+      
       // Map dimensions to Flux parameters
       const fluxDimensions = this.mapDimensionsToFlux(promptBundle.params.width, promptBundle.params.height);
       
@@ -382,6 +387,7 @@ export class SimpleAIGenerator {
       // Prepare input parameters
       const inputParams: any = {
         prompt: enhancedPrompt,
+        negative_prompt: negativePrompt,
         seed: promptBundle.params.seed,
         num_outputs: 1,
         aspect_ratio: fluxDimensions.aspect_ratio,
@@ -393,8 +399,10 @@ export class SimpleAIGenerator {
       
       // Add LoRA parameters if supported and configured
       if (modelConfig.supportsLora && loraConfig) {
+        const tunedScale = autoTuneLoRAScale(loraConfig, promptBundle.meta.style, enhancedPrompt.length);
         inputParams.extra_lora = loraConfig.url;
-        inputParams.extra_lora_scale = loraConfig.scale;
+        inputParams.extra_lora_scale = tunedScale;
+        console.log(`[${previewId}] LoRA scale auto-tuned: ${loraConfig.scale} → ${tunedScale}`);
       } else if (loraConfig) {
         console.log(`[${previewId}] LoRA configured but ${job.model} doesn't support it`);
       }
@@ -456,6 +464,10 @@ export class SimpleAIGenerator {
       const loraConfig = job.useLora && job.loraKey ? getLoRAConfig(job.loraKey) : null;
       const enhancedPrompt = this.enhancePromptWithLoRA(promptBundle.positive, loraConfig);
       
+      // Get curated negative prompt for SDXL
+      const curatedNegative = getNegativePrompt(promptBundle.meta.style, 'sdxl');
+      const finalNegative = curatedNegative || promptBundle.negative;
+      
       // Get model configuration
       const modelConfig = getModelConfig('sdxl');
       
@@ -465,7 +477,7 @@ export class SimpleAIGenerator {
       // Prepare input parameters
       const inputParams: any = {
         prompt: enhancedPrompt,
-        negative_prompt: promptBundle.negative,
+        negative_prompt: finalNegative,
         width: promptBundle.params.width,
         height: promptBundle.params.height,
         seed: promptBundle.params.seed,
@@ -478,8 +490,10 @@ export class SimpleAIGenerator {
       
       // Add LoRA parameters if supported and configured
       if (modelConfig.supportsLora && loraConfig) {
+        const tunedScale = autoTuneLoRAScale(loraConfig, promptBundle.meta.style, enhancedPrompt.length);
         inputParams.extra_lora = loraConfig.url;
-        inputParams.extra_lora_scale = loraConfig.scale;
+        inputParams.extra_lora_scale = tunedScale;
+        console.log(`[${previewId}] SDXL LoRA scale auto-tuned: ${loraConfig.scale} → ${tunedScale}`);
       }
       
       // Create prediction using model configuration
