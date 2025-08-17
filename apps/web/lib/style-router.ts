@@ -26,7 +26,7 @@ export interface ModelConfig {
  */
 export function chooseModelJob(style: ArtStyle, hasPeople: boolean): ModelJob {
   const styleKey = style.toLowerCase();
-  const styleConfig = stylesConfig.styles[styleKey as keyof typeof stylesConfig.styles];
+  const styleConfig = stylesConfig.styles[styleKey as keyof typeof stylesConfig.styles] as any;
   
   if (!styleConfig) {
     return { model: 'sdxl', useLora: false };
@@ -34,20 +34,20 @@ export function chooseModelJob(style: ArtStyle, hasPeople: boolean): ModelJob {
 
   // Check for people-based routing
   if ('ifPeople' in styleConfig || 'ifNoPeople' in styleConfig) {
-    const choice = hasPeople ? styleConfig.ifPeople : styleConfig.ifNoPeople;
+    const choice = hasPeople ? (styleConfig as any).ifPeople : (styleConfig as any).ifNoPeople;
     if (choice) {
-      return choice;
+      return choice as ModelJob;
     }
   }
 
   // Use primary choice
   if (styleConfig.primary) {
-    return styleConfig.primary;
+    return styleConfig.primary as ModelJob;
   }
 
   // Fall back to first fallback
   if (styleConfig.fallbacks && styleConfig.fallbacks.length > 0) {
-    return styleConfig.fallbacks[0];
+    return styleConfig.fallbacks[0] as ModelJob;
   }
 
   return { model: 'sdxl', useLora: false };
