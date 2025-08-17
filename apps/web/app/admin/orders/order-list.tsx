@@ -98,7 +98,32 @@ export default function OrderList({ limit }: OrderListProps) {
   };
 
   if (loading) {
-    return <div className="animate-pulse">Loading orders...</div>;
+    return (
+      <div className="space-y-3">
+        {[...Array(limit || 5)].map((_, i) => (
+          <div key={i} className="animate-pulse">
+            <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+              <div className="h-4 bg-gray-200 rounded w-24"></div>
+              <div className="h-4 bg-gray-200 rounded w-32"></div>
+              <div className="h-4 bg-gray-200 rounded w-20"></div>
+              <div className="h-4 bg-gray-200 rounded w-16"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (orders.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8-4 4-4-4m0 0L9 9l-3-3" />
+        </svg>
+        <h3 className="mt-2 text-sm font-medium text-gray-900">No orders found</h3>
+        <p className="mt-1 text-sm text-gray-500">Orders will appear here once customers place them.</p>
+      </div>
+    );
   }
 
   return (

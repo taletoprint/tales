@@ -53,11 +53,26 @@ export default function SystemHealth() {
   };
 
   if (loading) {
-    return <div className="animate-pulse">Loading health status...</div>;
+    return (
+      <div className="space-y-3">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="animate-pulse flex items-center justify-between">
+            <div className="h-4 bg-gray-200 rounded w-20"></div>
+            <div className="h-4 bg-gray-200 rounded w-16"></div>
+          </div>
+        ))}
+      </div>
+    );
   }
 
   if (!health) {
-    return <div className="text-red-600">Health check failed</div>;
+    return (
+      <div className="text-center py-4">
+        <div className="text-red-500 text-2xl mb-2">⚠️</div>
+        <p className="text-red-600 text-sm font-medium">Health check failed</p>
+        <p className="text-gray-500 text-xs mt-1">Unable to fetch system status</p>
+      </div>
+    );
   }
 
   return (

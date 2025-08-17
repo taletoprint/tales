@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import LogoutButton from './logout-button';
 
@@ -31,8 +32,15 @@ export default function AdminLayout({
           <div className="flex justify-between h-16">
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
-                <Link href="/" className="mr-4">
-                  <h1 className="text-xl font-bold text-gray-900">TaleToPrint Admin</h1>
+                <Link href="/" className="flex items-center gap-3 mr-6">
+                  <Image
+                    src="/logo/ttp_logo.png"
+                    alt="TaleToPrint"
+                    width={40}
+                    height={40}
+                    className="object-contain"
+                  />
+                  <h1 className="text-xl font-bold text-gray-900">Admin</h1>
                 </Link>
               </div>
               {/* Desktop Navigation */}
@@ -109,7 +117,7 @@ export default function AdminLayout({
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto py-4 px-4 sm:py-6 sm:px-6 lg:px-8">
         {children}
       </main>
     </div>

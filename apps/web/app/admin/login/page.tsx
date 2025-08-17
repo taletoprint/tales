@@ -1,13 +1,40 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [error, setError] = useState('');
   const router = useRouter();
+
+  // Check if user is already authenticated on component mount
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      // Check if we have a valid session cookie
+      const response = await fetch('/api/admin/auth/check', {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        // User is already authenticated, redirect to admin dashboard
+        router.push('/admin');
+        return;
+      }
+    } catch (error) {
+      // Auth check failed, user is not authenticated - stay on login page
+      console.log('Auth check failed, showing login form');
+    } finally {
+      setChecking(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +61,18 @@ export default function AdminLogin() {
       setLoading(false);
     }
   };
+
+  // Show loading state while checking authentication
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
