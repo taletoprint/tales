@@ -22,7 +22,7 @@ const faqData: FAQItem[] = [
     id: 'ai-technology',
     category: 'How It Works',
     question: 'What AI technology do you use?',
-    answer: `We use advanced AI models including Flux-Schnell and SDXL, optimized specifically for creating beautiful artwork from personal stories. Our AI is trained to understand emotional context and create images that capture the essence of your memories.`
+    answer: `We use advanced AI models including Flux-Schnell and SDXL, optimised specifically for creating beautiful artwork from personal stories. Our AI is trained to understand emotional context and create images that capture the essence of your memories.`
   },
   {
     id: 'story-requirements',
@@ -34,7 +34,7 @@ const faqData: FAQItem[] = [
     id: 'preview-vs-final',
     category: 'How It Works',
     question: 'How is the final print different from the preview?',
-    answer: `The preview is a lower resolution version to show you the style and composition. Your final print is generated at 8K resolution (much higher quality) specifically for printing, with enhanced details and print-optimized colors.`
+    answer: `The preview is a lower resolution version to show you the style and composition. Your final print is generated at 8K resolution (much higher quality) specifically for printing, with enhanced details and print-optimised colours.`
   },
 
   // Pricing & Sizes
@@ -48,6 +48,8 @@ const faqData: FAQItem[] = [
         <ul className="list-disc list-inside space-y-1">
           <li><strong>A4 (21×30cm):</strong> £39.99</li>
           <li><strong>A3 (30×42cm):</strong> £59.99</li>
+          <li><strong>8×8" Square (20×20cm):</strong> £34.99</li>
+          <li><strong>10×10" Square (25×25cm):</strong> £44.99</li>
         </ul>
         <p className="mt-2">All prices include free UK delivery and are one-time payments with no subscriptions.</p>
       </div>
@@ -63,7 +65,7 @@ const faqData: FAQItem[] = [
     id: 'size-guidance',
     category: 'Pricing & Sizes',
     question: 'Which size should I choose?',
-    answer: `A4 (21×30cm) is perfect for desks, shelves, or smaller wall spaces. A3 (30×42cm) makes a statement piece for living rooms or bedrooms. Both sizes look stunning and the choice depends on where you plan to display your artwork.`
+    answer: `A4 (21×30cm) is perfect for desks, shelves, or smaller wall spaces. A3 (30×42cm) makes a statement piece for living rooms or bedrooms. Square formats (8×8" and 10×10") are ideal for Instagram-style memories, children's artwork, or modern gallery walls. All sizes look stunning and the choice depends on where you plan to display your artwork.`
   },
 
   // Quality & Materials
@@ -82,8 +84,8 @@ const faqData: FAQItem[] = [
   {
     id: 'colors',
     category: 'Quality & Materials',
-    question: 'Will the colors match what I see on screen?',
-    answer: `We optimize all artwork for print using professional color profiles (sRGB). While screen colors can vary, our prints are designed to be vibrant and true to the artistic style you selected. We've calibrated our process for the best possible color reproduction.`
+    question: 'Will the colours match what I see on screen?',
+    answer: `We optimise all artwork for print using professional colour profiles (sRGB). While screen colours can vary, our prints are designed to be vibrant and true to the artistic style you selected. We've calibrated our process for the best possible colour reproduction.`
   },
   {
     id: 'framing',
@@ -118,10 +120,10 @@ const faqData: FAQItem[] = [
     answer: `Your print is carefully packaged in a protective mailer designed specifically for artwork. It's rigid enough to prevent bending and includes moisture protection to ensure your print arrives in perfect condition.`
   },
 
-  // Customization & Styles
+  // Customisation & Styles
   {
     id: 'art-styles',
-    category: 'Customization & Styles',
+    category: 'Customisation & Styles',
     question: 'What art styles are available?',
     answer: (
       <div>
@@ -139,13 +141,13 @@ const faqData: FAQItem[] = [
   },
   {
     id: 'revisions',
-    category: 'Customization & Styles',
+    category: 'Customisation & Styles',
     question: 'Can I request changes to my artwork?',
     answer: `Each artwork is uniquely generated from your story. If you'd like different results, you can create new previews with adjusted stories or try different art styles. We recommend being as descriptive as possible in your initial story for the best results.`
   },
   {
     id: 'multiple-stories',
-    category: 'Customization & Styles',
+    category: 'Customisation & Styles',
     question: 'Can I order multiple prints?',
     answer: `Absolutely! Each story creates a unique artwork, so you can order as many different prints as you'd like. Many customers create a series of family memories or different views of the same special place.`
   },
