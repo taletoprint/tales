@@ -58,10 +58,12 @@ export async function GET(request: NextRequest) {
 
     // Extract customer and shipping details
     const customer = session.customer as Stripe.Customer;
-    const shipping = (session as any).shipping_details;
+    // Shipping details are directly on the session object - cast to any to access dynamic properties
+    const sessionData = session as any;
+    const shipping = sessionData.shipping_details || sessionData.shipping || sessionData.customer_details;
     
     const orderDetails = {
-      id: session.id.replace('cs_', 'TTP-').toUpperCase(),
+      id: `TTP-${session.id.replace('cs_', '').substring(0, 8).toUpperCase()}`,
       customerName: shipping?.name || customer?.name || 'Customer',
       customerEmail: customer?.email || session.customer_email,
       shippingAddress: {
