@@ -51,9 +51,9 @@ INSTRUCTIONS:
 
 PEOPLE DETECTION RULES:
 - has_people = true if story mentions: humans, family, people, "we", "us", "I", faces, hands, silhouettes, children, adults, names of people
-- has_people = true for styles likely to include people (STORYBOOK) unless story clearly excludes people
+- has_people = true for STORYBOOK style (Flux handles this well) unless story clearly excludes people
 - has_people = false for stories about objects, landscapes, buildings, animals only (without people)
-- When in doubt, bias toward has_people = true
+- When in doubt, bias toward has_people = false (use SDXL by default)
 
 Respond with a JSON object containing:
 - refined_prompt: The complete prompt with prefix + template + suffix
@@ -260,11 +260,12 @@ Traditional plein air feel with bold brushwork.`,
     const hasOnlyObjects = objectKeywords.some(keyword => lowerStory.includes(keyword)) 
                           && !hasPeopleKeywords;
     
-    // When in doubt, bias toward people = true unless clearly only animals/objects
+    // Default to SDXL unless we're confident there are people
     if (hasOnlyAnimals || hasOnlyObjects) {
       return false;
     }
     
+    // Only return true if we have explicit people keywords OR it's storybook style
     return hasPeopleKeywords || styleHasPeopleBias;
   }
 }

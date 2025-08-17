@@ -26,8 +26,8 @@ function parseMemory(memory: string) {
   const hasOnlyAnimals = animalOnlyKeywords.some(keyword => lc.includes(keyword)) && !hasPeopleKeywords;
   const hasOnlyObjects = objectKeywords.some(keyword => lc.includes(keyword)) && !hasPeopleKeywords;
 
-  // When in doubt, bias toward people = true unless clearly only animals/objects
-  const has_people = hasOnlyAnimals || hasOnlyObjects ? false : hasPeopleKeywords || true;
+  // Default to SDXL unless we're confident there are people
+  const has_people = hasOnlyAnimals || hasOnlyObjects ? false : hasPeopleKeywords;
 
   // Mood cues
   const mood =
