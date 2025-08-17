@@ -144,6 +144,18 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       where: { id: previewId }
     });
     
+    // Debug: Check recent previews
+    const recentPreviews = await prisma.preview.findMany({
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, createdAt: true, expiresAt: true }
+    });
+    console.log(`[WEBHOOK] Recent previews in database:`, recentPreviews.map(p => ({
+      id: p.id,
+      created: p.createdAt.toISOString(),
+      expires: p.expiresAt.toISOString()
+    })));
+    
     if (!existingPreview) {
       console.warn(`[WEBHOOK] Preview ${previewId} not found in database - creating from metadata`);
       
