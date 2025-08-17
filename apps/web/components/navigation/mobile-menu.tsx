@@ -29,6 +29,12 @@ const mainNavItems: NavItem[] = [
     label: 'Examples',
     icon: '🎨',
     description: 'See art styles & inspiration'
+  },
+  {
+    href: '/faq',
+    label: 'FAQ',
+    icon: '❓',
+    description: 'Answers to common questions'
   }
 ];
 

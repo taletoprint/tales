@@ -19,7 +19,8 @@ interface NavLink {
 
 const defaultNavLinks: NavLink[] = [
   { href: '/#how-it-works', label: 'How it works' },
-  { href: '/examples', label: 'Examples' }
+  { href: '/examples', label: 'Examples' },
+  { href: '/faq', label: 'FAQ' }
 ];
 
 export default function Header({ variant = 'default', showCreateButton = true }: HeaderProps) {
