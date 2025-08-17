@@ -139,18 +139,36 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     // Database validations before creating order
     console.log(`[WEBHOOK] Performing database validations...`);
     
-    // Check if preview exists
-    const existingPreview = await prisma.preview.findUnique({
+    // Check if preview exists - if not, create it from metadata
+    let existingPreview = await prisma.preview.findUnique({
       where: { id: previewId }
     });
     
     if (!existingPreview) {
-      const error = `Preview ${previewId} not found in database`;
-      console.error(`[WEBHOOK] ${error}`);
-      throw new Error(error);
+      console.warn(`[WEBHOOK] Preview ${previewId} not found in database - creating from metadata`);
+      
+      // Create the preview record from metadata
+      try {
+        existingPreview = await prisma.preview.create({
+          data: {
+            id: previewId,
+            imageUrl: previewUrl,
+            story: story || 'Custom artwork',
+            style: style || 'watercolour',
+            prompt: refinedPrompt || story || 'Custom artwork',
+            ipAddress: '0.0.0.0', // Webhook-created
+            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+            selected: true
+          }
+        });
+        console.log(`[WEBHOOK] Created preview ${previewId} from metadata`);
+      } catch (createError) {
+        console.error(`[WEBHOOK] Failed to create preview:`, createError);
+        // Continue anyway as we have the metadata
+      }
+    } else {
+      console.log(`[WEBHOOK] Preview ${previewId} validated successfully`);
     }
-    
-    console.log(`[WEBHOOK] Preview ${previewId} validated successfully`);
     
     // Create order record in database
     const orderId = `TTP-${session.id.replace('cs_', '').toUpperCase()}`;
