@@ -457,25 +457,31 @@ export class SimpleAIGenerator {
       // Map dimensions to Flux parameters
       const fluxDimensions = this.mapDimensionsToFlux(promptBundle.params.width, promptBundle.params.height);
       
+      const modelVersion = loraConfig ? 'lucataco/flux-dev-lora' : 'black-forest-labs/flux-schnell';
+      console.log(`[${previewId}] Using model: ${modelVersion}`);
       console.log(`[${previewId}] Using LoRA: ${loraConfig?.model || 'none'}, trigger: ${loraConfig?.trigger || 'none'}`);
       
       // Prepare input parameters
       const inputParams: any = {
         prompt: enhancedPrompt,
         seed: promptBundle.params.seed,
-        go_fast: true,
         num_outputs: 1,
         aspect_ratio: fluxDimensions.aspect_ratio,
         megapixels: fluxDimensions.megapixels,
-        num_inference_steps: 4,
         output_format: "webp",
         output_quality: 80
       };
       
-      // Add LoRA parameters if available
+      // Different parameters for LoRA vs non-LoRA models
       if (loraConfig) {
+        // flux-dev-lora model parameters
         inputParams.extra_lora = loraConfig.model;
         inputParams.extra_lora_scale = loraConfig.scale;
+        inputParams.num_inference_steps = 20; // flux-dev uses more steps
+      } else {
+        // flux-schnell model parameters
+        inputParams.go_fast = true;
+        inputParams.num_inference_steps = 4;
       }
       
       // Create prediction using Flux-Schnell parameters with retry
@@ -486,7 +492,7 @@ export class SimpleAIGenerator {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          version: 'black-forest-labs/flux-schnell:c846a69991daf4c0e5d016514849d14ee5b2e6846ce6b9d6f21369e564cfe51e',
+          version: loraConfig ? 'lucataco/flux-dev-lora:56fb3b39c96c80e59959dfae4c5c6b8c45e01ce84c45b4b3e62c20dd02cbdedd' : 'black-forest-labs/flux-schnell:c846a69991daf4c0e5d016514849d14ee5b2e6846ce6b9d6f21369e564cfe51e',
           input: inputParams
         }),
       }, previewId, 3);
