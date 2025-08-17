@@ -190,6 +190,11 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       where: { id: orderId }
     });
     
+    // Also check if an order exists for this preview (unique constraint)
+    const existingPreviewOrder = await prisma.order.findUnique({
+      where: { previewId: previewId }
+    });
+    
     if (existingOrder) {
       console.log(`[WEBHOOK] Order ${orderId} already exists with status: ${existingOrder.status}`);
       if (existingOrder.status === 'FAILED') {
@@ -198,6 +203,10 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         console.log(`[WEBHOOK] Order already processed successfully, skipping`);
         return;
       }
+    } else if (existingPreviewOrder) {
+      console.log(`[WEBHOOK] Preview ${previewId} already has order ${existingPreviewOrder.id} with status: ${existingPreviewOrder.status}`);
+      console.log(`[WEBHOOK] Cannot create duplicate order for same preview, skipping`);
+      return;
     }
     
     console.log(`[WEBHOOK] Creating order ${orderId} for customer: ${customer?.email || session.customer_email}`);
