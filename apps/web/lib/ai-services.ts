@@ -5,6 +5,95 @@ import { buildPrompt } from './prompt-builder';
 import { ArtStyle, Aspect, PromptBundle } from './types';
 import { PromptRefiner } from '@taletoprint/ai-pipeline/src/shared/prompt-refiner';
 
+interface LoRAConfig {
+  flux?: {
+    model: string;
+    trigger: string;
+    scale: number;
+  };
+  sdxl?: {
+    model: string;
+    trigger: string;
+    scale: number;
+  };
+}
+
+// LoRA configuration for each art style
+const STYLE_LORAS: Record<ArtStyle, LoRAConfig> = {
+  [ArtStyle.WATERCOLOUR]: {
+    flux: {
+      model: "jtorregrosa/watercolour-lora-flux",
+      trigger: "W4T3RC0L0UR style",
+      scale: 0.9
+    },
+    sdxl: {
+      model: "jtorregrosa/watercolour-lora-flux", // May need SDXL alternative
+      trigger: "watercolor painting",
+      scale: 0.9
+    }
+  },
+  [ArtStyle.OIL_PAINTING]: {
+    flux: {
+      model: "bingbangboom/flux_oilscape",
+      trigger: "in the style of Oilstyle002",
+      scale: 0.95
+    },
+    sdxl: {
+      model: "doriandarko/sdxl-allaprima", // Replicate model
+      trigger: "oil painting",
+      scale: 0.9
+    }
+  },
+  [ArtStyle.IMPRESSIONIST]: {
+    flux: {
+      model: "UmeAiRT/FLUX.1-dev-LoRA-Impressionism",
+      trigger: "impressionist",
+      scale: 1.0
+    },
+    sdxl: {
+      model: "UmeAiRT/FLUX.1-dev-LoRA-Impressionism", // May need SDXL alternative
+      trigger: "impressionist painting",
+      scale: 0.95
+    }
+  },
+  [ArtStyle.PASTEL]: {
+    flux: {
+      model: "alvdansen/flux-koda",
+      trigger: "flmft style",
+      scale: 0.9
+    },
+    sdxl: {
+      model: "alvdansen/flux-koda", // May need SDXL alternative
+      trigger: "pastel drawing",
+      scale: 0.9
+    }
+  },
+  [ArtStyle.PENCIL_INK]: {
+    flux: {
+      model: "h1t/pencil_drawing_flux_lora",
+      trigger: "p3nc1l style",
+      scale: 0.95
+    },
+    sdxl: {
+      model: "h1t/pencil_drawing_flux_lora", // May need SDXL alternative
+      trigger: "pencil and ink drawing",
+      scale: 0.9
+    }
+  },
+  [ArtStyle.STORYBOOK]: {
+    flux: {
+      model: "lucataco/flux-childrens-storybook-illustration-lora",
+      trigger: "storybook illustration",
+      scale: 1.0
+    },
+    sdxl: {
+      model: "lucataco/flux-childrens-storybook-illustration-lora", // May need SDXL alternative
+      trigger: "children's storybook illustration",
+      scale: 0.95
+    }
+  }
+};
+
 interface GenerationRequest {
   story: string;
   style: ArtStyle;
@@ -61,19 +150,35 @@ export class SimpleAIGenerator {
   }
 
   private routeModel(promptBundle: PromptBundle): 'flux-schnell' | 'sdxl' {
-    const { has_people, style } = promptBundle.meta;
+    const { has_people } = promptBundle.meta;
     
-    // Special case: Always use SDXL for impressionist style (Flux can't capture the style well)
-    if (style === ArtStyle.IMPRESSIONIST) {
-      return 'sdxl';
-    }
-    
-    // For all other styles: Route people to Flux (better anatomy/faces), non-people to SDXL (better style fidelity)
+    // Route people to Flux (better anatomy/faces), non-people to SDXL (better style fidelity)
+    // Both models now have LoRA support for all styles including impressionist
     if (has_people) {
       return 'flux-schnell';
     } else {
       return 'sdxl';
     }
+  }
+
+  private getLoRAConfig(style: ArtStyle, model: 'flux-schnell' | 'sdxl'): { model: string; trigger: string; scale: number } | null {
+    const styleConfig = STYLE_LORAS[style];
+    if (!styleConfig) return null;
+    
+    if (model === 'flux-schnell' && styleConfig.flux) {
+      return styleConfig.flux;
+    } else if (model === 'sdxl' && styleConfig.sdxl) {
+      return styleConfig.sdxl;
+    }
+    
+    return null;
+  }
+
+  private enhancePromptWithLoRA(prompt: string, loraConfig: { trigger: string } | null): string {
+    if (!loraConfig) return prompt;
+    
+    // Add trigger word at the beginning of the prompt for better activation
+    return `${loraConfig.trigger}, ${prompt}`;
   }
 
   async generateHDPrint(previewResult: GenerationResult): Promise<string> {
@@ -345,8 +450,33 @@ export class SimpleAIGenerator {
     try {
       console.log(`[${previewId}] Starting Flux-Schnell generation via Replicate with prompt bundle...`);
       
+      // Get LoRA configuration for this style
+      const loraConfig = this.getLoRAConfig(promptBundle.meta.style, 'flux-schnell');
+      const enhancedPrompt = this.enhancePromptWithLoRA(promptBundle.positive, loraConfig);
+      
       // Map dimensions to Flux parameters
       const fluxDimensions = this.mapDimensionsToFlux(promptBundle.params.width, promptBundle.params.height);
+      
+      console.log(`[${previewId}] Using LoRA: ${loraConfig?.model || 'none'}, trigger: ${loraConfig?.trigger || 'none'}`);
+      
+      // Prepare input parameters
+      const inputParams: any = {
+        prompt: enhancedPrompt,
+        seed: promptBundle.params.seed,
+        go_fast: true,
+        num_outputs: 1,
+        aspect_ratio: fluxDimensions.aspect_ratio,
+        megapixels: fluxDimensions.megapixels,
+        num_inference_steps: 4,
+        output_format: "webp",
+        output_quality: 80
+      };
+      
+      // Add LoRA parameters if available
+      if (loraConfig) {
+        inputParams.extra_lora = loraConfig.model;
+        inputParams.extra_lora_scale = loraConfig.scale;
+      }
       
       // Create prediction using Flux-Schnell parameters with retry
       const response = await this.fetchWithRetry('https://api.replicate.com/v1/predictions', {
@@ -357,17 +487,7 @@ export class SimpleAIGenerator {
         },
         body: JSON.stringify({
           version: 'black-forest-labs/flux-schnell:c846a69991daf4c0e5d016514849d14ee5b2e6846ce6b9d6f21369e564cfe51e',
-          input: {
-            prompt: promptBundle.positive,
-            seed: promptBundle.params.seed,
-            go_fast: true,
-            num_outputs: 1,
-            aspect_ratio: fluxDimensions.aspect_ratio,
-            megapixels: fluxDimensions.megapixels,
-            num_inference_steps: 4,
-            output_format: "webp",
-            output_quality: 80
-          }
+          input: inputParams
         }),
       }, previewId, 3);
 
@@ -411,6 +531,34 @@ export class SimpleAIGenerator {
     try {
       console.log(`[${previewId}] Starting SDXL generation via Replicate with prompt bundle...`);
       
+      // Get LoRA configuration for this style
+      const loraConfig = this.getLoRAConfig(promptBundle.meta.style, 'sdxl');
+      const enhancedPrompt = this.enhancePromptWithLoRA(promptBundle.positive, loraConfig);
+      
+      console.log(`[${previewId}] Using LoRA: ${loraConfig?.model || 'none'}, trigger: ${loraConfig?.trigger || 'none'}`);
+      
+      // Prepare input parameters
+      const inputParams: any = {
+        prompt: enhancedPrompt,
+        negative_prompt: promptBundle.negative,
+        width: promptBundle.params.width,
+        height: promptBundle.params.height,
+        num_inference_steps: 30,
+        guidance_scale: 7.5,
+        scheduler: "DPMSolverMultistep",
+        seed: promptBundle.params.seed,
+        num_outputs: 1,
+        apply_watermark: false,
+        output_format: "webp",
+        output_quality: 80
+      };
+      
+      // Add LoRA parameters if available
+      if (loraConfig) {
+        inputParams.extra_lora = loraConfig.model;
+        inputParams.extra_lora_scale = loraConfig.scale;
+      }
+      
       // Create prediction using SDXL parameters with retry
       const response = await this.fetchWithRetry('https://api.replicate.com/v1/predictions', {
         method: 'POST',
@@ -420,20 +568,7 @@ export class SimpleAIGenerator {
         },
         body: JSON.stringify({
           version: 'stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b',
-          input: {
-            prompt: promptBundle.positive,
-            negative_prompt: promptBundle.negative,
-            width: promptBundle.params.width,
-            height: promptBundle.params.height,
-            num_inference_steps: 30,
-            guidance_scale: 7.5,
-            scheduler: "DPMSolverMultistep",
-            seed: promptBundle.params.seed,
-            num_outputs: 1,
-            apply_watermark: false,
-            output_format: "webp",
-            output_quality: 80
-          }
+          input: inputParams
         }),
       }, previewId, 3);
 
