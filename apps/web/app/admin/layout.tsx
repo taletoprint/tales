@@ -34,7 +34,7 @@ export default function AdminLayout({
               <div className="flex-shrink-0 flex items-center">
                 <Link href="/" className="flex items-center gap-3 mr-6">
                   <Image
-                    src="/logo/ttp_logo.png"
+                    src="/images/logo/ttp_logo.png"
                     alt="TaleToPrint"
                     width={40}
                     height={40}
