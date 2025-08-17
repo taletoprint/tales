@@ -83,8 +83,9 @@ Style: ${request.style}`;
         throw new Error('No response from OpenAI');
       }
 
-      // Parse the JSON response
-      const result = JSON.parse(content) as PromptRefinementResult;
+      // Clean and parse the JSON response (handle markdown code blocks)
+      const cleanedContent = this.extractJsonFromResponse(content);
+      const result = JSON.parse(cleanedContent) as PromptRefinementResult;
       
       // Add universal wrapper to refined prompt
       const wrapper = this.getUniversalWrapper();
@@ -227,6 +228,23 @@ Traditional plein air feel with bold brushwork.`,
       style_keywords: styleInfo.keywords,
       has_people
     };
+  }
+
+  private extractJsonFromResponse(content: string): string {
+    // Handle responses wrapped in markdown code blocks
+    const jsonMatch = content.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+    if (jsonMatch) {
+      return jsonMatch[1];
+    }
+    
+    // If no code blocks, try to find JSON object directly
+    const directJsonMatch = content.match(/\{[\s\S]*\}/);
+    if (directJsonMatch) {
+      return directJsonMatch[0];
+    }
+    
+    // Fallback: assume the entire content is JSON
+    return content.trim();
   }
 
   private detectPeopleInStory(story: string, style: ArtStyle): boolean {
