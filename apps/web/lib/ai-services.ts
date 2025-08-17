@@ -4,95 +4,16 @@ import sharp from 'sharp';
 import { buildPrompt } from './prompt-builder';
 import { ArtStyle, Aspect, PromptBundle } from './types';
 import { PromptRefiner } from '@taletoprint/ai-pipeline/src/shared/prompt-refiner';
+import { 
+  chooseModelJob, 
+  getLoRAConfig, 
+  getModelConfig, 
+  buildStylePrompt, 
+  getRoutingReason,
+  type ModelJob,
+  type LoRAConfig as StyleLoRAConfig
+} from './style-router';
 
-interface LoRAConfig {
-  flux?: {
-    model: string;
-    trigger: string;
-    scale: number;
-  };
-  sdxl?: {
-    model: string;
-    trigger: string;
-    scale: number;
-  };
-}
-
-// LoRA configuration for each art style
-const STYLE_LORAS: Record<ArtStyle, LoRAConfig> = {
-  [ArtStyle.WATERCOLOUR]: {
-    flux: {
-      model: "jtorregrosa/watercolour-lora-flux",
-      trigger: "W4T3RC0L0UR style",
-      scale: 0.9
-    },
-    sdxl: {
-      model: "jtorregrosa/watercolour-lora-flux", // May need SDXL alternative
-      trigger: "watercolor painting",
-      scale: 0.9
-    }
-  },
-  [ArtStyle.OIL_PAINTING]: {
-    flux: {
-      model: "bingbangboom/flux_oilscape",
-      trigger: "in the style of Oilstyle002",
-      scale: 0.95
-    },
-    sdxl: {
-      model: "doriandarko/sdxl-allaprima", // Replicate model
-      trigger: "oil painting",
-      scale: 0.9
-    }
-  },
-  [ArtStyle.IMPRESSIONIST]: {
-    flux: {
-      model: "UmeAiRT/FLUX.1-dev-LoRA-Impressionism",
-      trigger: "impressionist",
-      scale: 1.0
-    },
-    sdxl: {
-      model: "UmeAiRT/FLUX.1-dev-LoRA-Impressionism", // May need SDXL alternative
-      trigger: "impressionist painting",
-      scale: 0.95
-    }
-  },
-  [ArtStyle.PASTEL]: {
-    flux: {
-      model: "alvdansen/flux-koda",
-      trigger: "flmft style",
-      scale: 0.9
-    },
-    sdxl: {
-      model: "alvdansen/flux-koda", // May need SDXL alternative
-      trigger: "pastel drawing",
-      scale: 0.9
-    }
-  },
-  [ArtStyle.PENCIL_INK]: {
-    flux: {
-      model: "h1t/pencil_drawing_flux_lora",
-      trigger: "p3nc1l style",
-      scale: 0.95
-    },
-    sdxl: {
-      model: "h1t/pencil_drawing_flux_lora", // May need SDXL alternative
-      trigger: "pencil and ink drawing",
-      scale: 0.9
-    }
-  },
-  [ArtStyle.STORYBOOK]: {
-    flux: {
-      model: "lucataco/flux-childrens-storybook-illustration-lora",
-      trigger: "storybook illustration",
-      scale: 1.0
-    },
-    sdxl: {
-      model: "lucataco/flux-childrens-storybook-illustration-lora", // May need SDXL alternative
-      trigger: "children's storybook illustration",
-      scale: 0.95
-    }
-  }
-};
 
 interface GenerationRequest {
   story: string;
@@ -152,62 +73,21 @@ export class SimpleAIGenerator {
     return styleMap[style];
   }
 
-  private routeModel(promptBundle: PromptBundle): 'flux-schnell' | 'sdxl' {
+  private routeModel(promptBundle: PromptBundle): { job: ModelJob; reason: string } {
     const { has_people, style } = promptBundle.meta;
     
-    // Cost-conscious LoRA strategy:
-    // 1. Painterly styles that need texture → SDXL (with LoRA)
-    // 2. People + simple styles → Flux (cheap & fast)
+    // Use config-driven routing
+    const job = chooseModelJob(style, has_people);
+    const reason = getRoutingReason(style, has_people, job);
     
-    // Always use SDXL for styles that need heavy texture/paint effects
-    if (style === ArtStyle.IMPRESSIONIST || style === ArtStyle.OIL_PAINTING) {
-      return 'sdxl';
-    }
-    
-    // Watercolor and Pastel: SDXL when no people (better texture), Flux when people (better faces)
-    if ((style === ArtStyle.WATERCOLOUR || style === ArtStyle.PASTEL) && !has_people) {
-      return 'sdxl';
-    }
-    
-    // Everything else: Flux for people, SDXL for non-people
-    if (has_people) {
-      return 'flux-schnell';
-    } else {
-      return 'sdxl';
-    }
+    return { job, reason };
   }
 
-  private getLoRAConfig(style: ArtStyle, model: 'flux-schnell' | 'sdxl'): { model: string; trigger: string; scale: number } | null {
-    const styleConfig = STYLE_LORAS[style];
-    if (!styleConfig) return null;
-    
-    if (model === 'flux-schnell' && styleConfig.flux) {
-      return styleConfig.flux;
-    } else if (model === 'sdxl' && styleConfig.sdxl) {
-      return styleConfig.sdxl;
-    }
-    
-    return null;
-  }
-
-  private enhancePromptWithLoRA(prompt: string, loraConfig: { trigger: string } | null): string {
+  private enhancePromptWithLoRA(prompt: string, loraConfig: StyleLoRAConfig | null): string {
     if (!loraConfig) return prompt;
     
     // Add trigger word at the beginning of the prompt for better activation
     return `${loraConfig.trigger}, ${prompt}`;
-  }
-
-  private getRoutingReason(style: ArtStyle, hasPeople: boolean, selectedModel: 'flux-schnell' | 'sdxl'): string {
-    if (style === ArtStyle.IMPRESSIONIST || style === ArtStyle.OIL_PAINTING) {
-      return `${style} style needs texture → SDXL`;
-    }
-    if ((style === ArtStyle.WATERCOLOUR || style === ArtStyle.PASTEL) && selectedModel === 'sdxl') {
-      return `${style} without people → SDXL for texture`;
-    }
-    if (hasPeople && selectedModel === 'flux-schnell') {
-      return `people detected → Flux for faces`;
-    }
-    return `no people → SDXL for style`;
   }
 
   async generateHDPrint(previewResult: GenerationResult): Promise<string> {
@@ -281,17 +161,16 @@ export class SimpleAIGenerator {
         params: promptBundle.params
       });
 
-      // Step 2: Route to appropriate model based on style and people detection
-      const selectedModel = this.routeModel(promptBundle);
-      const routingReason = this.getRoutingReason(promptBundle.meta.style, promptBundle.meta.has_people, selectedModel);
-      console.log(`[${previewId}] Routing to ${selectedModel} model (${routingReason})`);
+      // Step 2: Route to appropriate model based on config-driven rules
+      const { job, reason } = this.routeModel(promptBundle);
+      console.log(`[${previewId}] Routing to ${job.model} model (${reason})`);
       
       let originalImageUrl: string;
-      if (selectedModel === 'flux-schnell') {
-        originalImageUrl = await this.generateWithFluxSchnell(promptBundle, previewId);
+      if (job.model === 'flux-schnell') {
+        originalImageUrl = await this.generateWithFluxSchnell(promptBundle, job, previewId);
         console.log(`[${previewId}] Flux-Schnell image generated successfully`);
       } else {
-        originalImageUrl = await this.generateWithSDXL(promptBundle, previewId);
+        originalImageUrl = await this.generateWithSDXL(promptBundle, job, previewId);
         console.log(`[${previewId}] SDXL image generated successfully`);
       }
 
@@ -302,7 +181,8 @@ export class SimpleAIGenerator {
       const generationTime = Date.now() - startTime;
 
       // Log model usage analytics
-      console.log(`[ANALYTICS] Model usage: ${selectedModel}, has_people: ${promptBundle.meta.has_people}, style: ${request.style}, generation_time: ${generationTime}ms, aspect: ${request.aspect}`);
+      const loraUsed = job.useLora && job.loraKey ? job.loraKey : 'none';
+      console.log(`[ANALYTICS] Model usage: ${job.model}, has_people: ${promptBundle.meta.has_people}, style: ${request.style}, lora: ${loraUsed}, generation_time: ${generationTime}ms, aspect: ${request.aspect}`);
 
       return {
         id: previewId,
@@ -322,7 +202,7 @@ export class SimpleAIGenerator {
             width: promptBundle.params.width,
             height: promptBundle.params.height
           },
-          model: selectedModel,
+          model: job.model,
           has_people: promptBundle.meta.has_people
         }
       };
@@ -473,19 +353,22 @@ export class SimpleAIGenerator {
     }
   }
 
-  private async generateWithFluxSchnell(promptBundle: PromptBundle, previewId: string): Promise<string> {
+  private async generateWithFluxSchnell(promptBundle: PromptBundle, job: ModelJob, previewId: string): Promise<string> {
     try {
       console.log(`[${previewId}] Starting Flux-Schnell generation via Replicate with prompt bundle...`);
       
-      // Get LoRA configuration for this style
-      const loraConfig = this.getLoRAConfig(promptBundle.meta.style, 'flux-schnell');
+      // Get LoRA configuration if needed
+      const loraConfig = job.useLora && job.loraKey ? getLoRAConfig(job.loraKey) : null;
       const enhancedPrompt = this.enhancePromptWithLoRA(promptBundle.positive, loraConfig);
       
       // Map dimensions to Flux parameters
       const fluxDimensions = this.mapDimensionsToFlux(promptBundle.params.width, promptBundle.params.height);
       
-      console.log(`[${previewId}] Using model: black-forest-labs/flux-schnell`);
-      console.log(`[${previewId}] LoRA for Flux: Not supported (painterly styles routed to SDXL)`);
+      // Get model configuration
+      const modelConfig = getModelConfig('flux-schnell');
+      
+      console.log(`[${previewId}] Using model: ${modelConfig.version}`);
+      console.log(`[${previewId}] LoRA: ${loraConfig ? `${loraConfig.url} (scale: ${loraConfig.scale})` : 'none'}`);
       
       // Prepare input parameters
       const inputParams: any = {
@@ -495,20 +378,19 @@ export class SimpleAIGenerator {
         aspect_ratio: fluxDimensions.aspect_ratio,
         megapixels: fluxDimensions.megapixels,
         output_format: "webp",
-        output_quality: 80
+        output_quality: 80,
+        ...modelConfig.params
       };
       
-      // flux-schnell parameters (LoRA not supported, will be ignored)
-      inputParams.go_fast = true;
-      inputParams.num_inference_steps = 4;
-      
-      // Note: flux-schnell doesn't support LoRA, so these params will be ignored
-      // LoRA styling will come from SDXL routing for painterly styles
-      if (loraConfig) {
-        console.log(`[${previewId}] LoRA configured but flux-schnell doesn't support it - routed painterly styles to SDXL instead`);
+      // Add LoRA parameters if supported and configured
+      if (modelConfig.supportsLora && loraConfig) {
+        inputParams.extra_lora = loraConfig.url;
+        inputParams.extra_lora_scale = loraConfig.scale;
+      } else if (loraConfig) {
+        console.log(`[${previewId}] LoRA configured but ${job.model} doesn't support it`);
       }
       
-      // Create prediction using Flux-Schnell parameters with retry
+      // Create prediction using model configuration
       const response = await this.fetchWithRetry('https://api.replicate.com/v1/predictions', {
         method: 'POST',
         headers: {
@@ -516,7 +398,7 @@ export class SimpleAIGenerator {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          version: 'black-forest-labs/flux-schnell:c846a69991daf4c0e5d016514849d14ee5b2e6846ce6b9d6f21369e564cfe51e',
+          version: modelConfig.version,
           input: inputParams
         }),
       }, previewId, 3);
@@ -557,15 +439,19 @@ export class SimpleAIGenerator {
     }
   }
 
-  private async generateWithSDXL(promptBundle: PromptBundle, previewId: string): Promise<string> {
+  private async generateWithSDXL(promptBundle: PromptBundle, job: ModelJob, previewId: string): Promise<string> {
     try {
       console.log(`[${previewId}] Starting SDXL generation via Replicate with prompt bundle...`);
       
-      // Get LoRA configuration for this style
-      const loraConfig = this.getLoRAConfig(promptBundle.meta.style, 'sdxl');
+      // Get LoRA configuration if needed
+      const loraConfig = job.useLora && job.loraKey ? getLoRAConfig(job.loraKey) : null;
       const enhancedPrompt = this.enhancePromptWithLoRA(promptBundle.positive, loraConfig);
       
-      console.log(`[${previewId}] Using LoRA: ${loraConfig?.model || 'none'}, trigger: ${loraConfig?.trigger || 'none'}`);
+      // Get model configuration
+      const modelConfig = getModelConfig('sdxl');
+      
+      console.log(`[${previewId}] Using model: ${modelConfig.version}`);
+      console.log(`[${previewId}] LoRA: ${loraConfig ? `${loraConfig.url} (scale: ${loraConfig.scale})` : 'none'}`);
       
       // Prepare input parameters
       const inputParams: any = {
@@ -573,23 +459,21 @@ export class SimpleAIGenerator {
         negative_prompt: promptBundle.negative,
         width: promptBundle.params.width,
         height: promptBundle.params.height,
-        num_inference_steps: 30,
-        guidance_scale: 7.5,
-        scheduler: "DPMSolverMultistep",
         seed: promptBundle.params.seed,
         num_outputs: 1,
         apply_watermark: false,
         output_format: "webp",
-        output_quality: 80
+        output_quality: 80,
+        ...modelConfig.params
       };
       
-      // Add LoRA parameters if available
-      if (loraConfig) {
-        inputParams.extra_lora = loraConfig.model;
+      // Add LoRA parameters if supported and configured
+      if (modelConfig.supportsLora && loraConfig) {
+        inputParams.extra_lora = loraConfig.url;
         inputParams.extra_lora_scale = loraConfig.scale;
       }
       
-      // Create prediction using SDXL parameters with retry
+      // Create prediction using model configuration
       const response = await this.fetchWithRetry('https://api.replicate.com/v1/predictions', {
         method: 'POST',
         headers: {
@@ -597,7 +481,7 @@ export class SimpleAIGenerator {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          version: 'stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b',
+          version: modelConfig.version,
           input: inputParams
         }),
       }, previewId, 3);

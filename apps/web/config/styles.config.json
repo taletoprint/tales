@@ -1,0 +1,116 @@
+{
+  "styles": {
+    "impressionist": {
+      "primary": { "model": "sdxl", "useLora": true, "loraKey": "impressionist" },
+      "fallbacks": [{ "model": "sdxl", "useLora": false }]
+    },
+    "oil_painting": {
+      "primary": { "model": "sdxl", "useLora": true, "loraKey": "oil_paint" },
+      "fallbacks": [{ "model": "sdxl", "useLora": false }]
+    },
+    "watercolour": {
+      "ifPeople": { "model": "flux-schnell", "useLora": false },
+      "ifNoPeople": { "model": "sdxl", "useLora": true, "loraKey": "watercolour" },
+      "fallbacks": [{ "model": "sdxl", "useLora": false }]
+    },
+    "pastel": {
+      "ifPeople": { "model": "flux-schnell", "useLora": false },
+      "ifNoPeople": { "model": "sdxl", "useLora": true, "loraKey": "pastel" },
+      "fallbacks": [{ "model": "sdxl", "useLora": false }]
+    },
+    "storybook": {
+      "primary": { "model": "flux-schnell", "useLora": false },
+      "fallbacks": [{ "model": "sdxl", "useLora": true, "loraKey": "storybook" }]
+    },
+    "pencil_ink": {
+      "primary": { "model": "flux-schnell", "useLora": false },
+      "fallbacks": [{ "model": "sdxl", "useLora": true, "loraKey": "ink_sketch" }]
+    }
+  },
+  "loras": {
+    "impressionist": { 
+      "repo": "hf", 
+      "url": "UmeAiRT/FLUX.1-dev-LoRA-Impressionism", 
+      "scale": 0.75,
+      "trigger": "impressionist"
+    },
+    "oil_paint": { 
+      "repo": "hf", 
+      "url": "bingbangboom/flux_oilscape", 
+      "scale": 0.7,
+      "trigger": "in the style of Oilstyle002"
+    },
+    "watercolour": { 
+      "repo": "hf", 
+      "url": "jtorregrosa/watercolour-lora-flux", 
+      "scale": 0.8,
+      "trigger": "W4T3RC0L0UR style"
+    },
+    "pastel": { 
+      "repo": "hf", 
+      "url": "alvdansen/flux-koda", 
+      "scale": 0.8,
+      "trigger": "flmft style"
+    },
+    "storybook": { 
+      "repo": "hf", 
+      "url": "lucataco/flux-childrens-storybook-illustration-lora", 
+      "scale": 0.6,
+      "trigger": "storybook illustration"
+    },
+    "ink_sketch": { 
+      "repo": "hf", 
+      "url": "h1t/pencil_drawing_flux_lora", 
+      "scale": 0.7,
+      "trigger": "p3nc1l style"
+    }
+  },
+  "models": {
+    "flux-schnell": {
+      "version": "black-forest-labs/flux-schnell:c846a69991daf4c0e5d016514849d14ee5b2e6846ce6b9d6f21369e564cfe51e",
+      "params": {
+        "num_inference_steps": 4,
+        "guidance_scale": 0.0,
+        "go_fast": true
+      },
+      "supportsLora": false,
+      "costTier": "low"
+    },
+    "sdxl": {
+      "version": "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+      "params": {
+        "num_inference_steps": 30,
+        "guidance_scale": 7.5,
+        "scheduler": "DPMSolverMultistep"
+      },
+      "supportsLora": true,
+      "costTier": "medium"
+    }
+  },
+  "prompts": {
+    "impressionist": {
+      "withLora": "Impressionist painting of {subject} in {setting}, broken colour, dappled light, visible brushstrokes, lively movement.",
+      "withoutLora": "Impressionist painting of {subject} in {setting}, heavy visible brushstrokes, broken colour technique, paint texture, raw impressionist style with authentic painting marks, traditional plein air feel with bold brushwork."
+    },
+    "oil_painting": {
+      "withLora": "Traditional oil painting of {subject} in {setting}, layered pigments, visible canvas texture, impasto highlights, warm gallery feel.",
+      "withoutLora": "Traditional oil painting of {subject} in {setting}, heavy impasto texture, visible canvas weave, layered paint buildup, authentic brushstroke marks, paint cracks, gallery lighting, rich pigment texture with classical depth."
+    },
+    "watercolour": {
+      "withLora": "Soft watercolour of {subject} in {setting}, translucent washes, gentle bleeding edges, light granulation, airy highlights.",
+      "withoutLora": "Authentic watercolour painting of {subject} in {setting}, heavy bleeding edges, visible paper grain, uneven pigment pools, raw watercolour texture, granulation, authentic painting artifacts, traditional medium feel."
+    },
+    "pastel": {
+      "withLora": "Chalk pastel artwork of {subject} in {setting}, powdery muted tones, visible strokes, soft blending, textured paper.",
+      "withoutLora": "Chalk pastel artwork of {subject} in {setting}, heavy chalk dust, powdery smudges, rough paper texture, uneven coverage, finger-blended areas, authentic pastel feel, dusty medium artifacts with textured paper grain."
+    },
+    "storybook": {
+      "withLora": "Whimsical storybook illustration of {subject} in {setting}, friendly expressions, simplified shapes, warm cosy palette.",
+      "withoutLora": "Whimsical storybook illustration of {subject} in {setting}, friendly characters, warm expressions, clear friendly faces, soft linework, gentle colours, cosy atmosphere, children's picture-book style with inviting personalities."
+    },
+    "pencil_ink": {
+      "withLora": "Hand-drawn pen-and-ink sketch of {subject}, fine linework, cross-hatching, subtle graphite shading, sketchbook feel.",
+      "withoutLora": "Hand-drawn pencil and ink sketch of {subject} in {setting}, heavy cross-hatching, visible pen strokes, ink bleed on paper, uneven line weights, sketchbook texture, authentic drawing feel, raw sketching marks with paper grain."
+    }
+  }
+}
