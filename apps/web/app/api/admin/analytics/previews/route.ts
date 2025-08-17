@@ -108,7 +108,7 @@ async function collectPreviewAnalytics(
       
       // Apply filters
       if (filters.style && metadata.requestedStyle !== filters.style) continue;
-      if (filters.model && metadata.modelUsed !== filters.model) continue;
+      if (filters.model && metadata.model !== filters.model) continue;
 
       // Count this preview
       analytics.totalPreviews++;
@@ -118,7 +118,7 @@ async function collectPreviewAnalytics(
       analytics.styleBreakdown[style] = (analytics.styleBreakdown[style] || 0) + 1;
 
       // Model breakdown
-      const model = metadata.modelUsed || 'unknown';
+      const model = metadata.model || 'unknown';
       analytics.modelBreakdown[model] = (analytics.modelBreakdown[model] || 0) + 1;
 
       // Daily generation count
@@ -126,8 +126,8 @@ async function collectPreviewAnalytics(
       dailyCounts[dateKey] = (dailyCounts[dateKey] || 0) + 1;
 
       // Generation time
-      if (metadata.generationTime) {
-        totalGenerationTime += metadata.generationTime;
+      if (metadata.generationTimeMs) {
+        totalGenerationTime += metadata.generationTimeMs / 1000; // Convert to seconds
       }
 
       // Cost tracking
@@ -145,9 +145,9 @@ async function collectPreviewAnalytics(
         previewId: metadata.previewId || pathParts[2].replace('_metadata.json', ''),
         style,
         model,
-        generationTime: metadata.generationTime || 0,
+        generationTime: metadata.generationTimeMs ? metadata.generationTimeMs / 1000 : 0,
         cost,
-        createdAt: metadata.createdAt || fileDate.toISOString(),
+        createdAt: metadata.generatedAt || fileDate.toISOString(),
       });
 
     } catch (error) {
@@ -179,7 +179,7 @@ async function collectPreviewAnalytics(
 
 function calculateGenerationCost(metadata: any): number {
   // Cost calculation based on model and parameters
-  const model = metadata.modelUsed || 'unknown';
+  const model = metadata.model || 'unknown';
   
   const costs = {
     'flux-schnell': 0.003,

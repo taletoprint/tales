@@ -99,13 +99,13 @@ async function getPreviewGallery(
       
       // Apply filters
       if (filters.style && metadata.requestedStyle !== filters.style) continue;
-      if (filters.model && metadata.modelUsed !== filters.model) continue;
+      if (filters.model && metadata.model !== filters.model) continue;
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
         const searchableText = [
           metadata.refinedPrompt || '',
           metadata.requestedStyle || '',
-          metadata.modelUsed || '',
+          metadata.model || '',
         ].join(' ').toLowerCase();
         
         if (!searchableText.includes(searchLower)) continue;
@@ -120,12 +120,12 @@ async function getPreviewGallery(
         imageUrl,
         metadata: {
           style: metadata.requestedStyle || 'unknown',
-          model: metadata.modelUsed || 'unknown',
-          generationTime: metadata.generationTime || 0,
+          model: metadata.model || 'unknown',
+          generationTime: metadata.generationTimeMs ? metadata.generationTimeMs / 1000 : 0,
           cost: calculateGenerationCost(metadata),
           prompt: metadata.refinedPrompt || 'No prompt available',
-          createdAt: metadata.createdAt || new Date().toISOString(),
-          aspectRatio: metadata.aspectRatio || 'unknown',
+          createdAt: metadata.generatedAt || new Date().toISOString(),
+          aspectRatio: metadata.requestedAspect || 'unknown',
         },
       };
 
@@ -153,7 +153,7 @@ async function getPreviewGallery(
 }
 
 function calculateGenerationCost(metadata: any): number {
-  const model = metadata.modelUsed || 'unknown';
+  const model = metadata.model || 'unknown';
   
   const costs = {
     'flux-schnell': 0.003,

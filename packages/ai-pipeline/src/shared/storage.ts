@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 export interface UploadResult {
@@ -77,6 +77,46 @@ export class S3Storage {
     } catch (error) {
       console.error('Error generating signed URL:', error);
       throw new Error(`Failed to generate signed URL: ${error}`);
+    }
+  }
+
+  async listObjects(prefix: string, suffix?: string): Promise<Array<{ key: string; lastModified?: Date; size?: number }>> {
+    try {
+      const objects: Array<{ key: string; lastModified?: Date; size?: number }> = [];
+      let continuationToken: string | undefined;
+
+      do {
+        const command = new ListObjectsV2Command({
+          Bucket: this.bucket,
+          Prefix: prefix,
+          ContinuationToken: continuationToken,
+          MaxKeys: 1000,
+        });
+
+        const response = await this.client.send(command);
+        
+        if (response.Contents) {
+          for (const object of response.Contents) {
+            if (object.Key) {
+              // Filter by suffix if provided
+              if (!suffix || object.Key.endsWith(suffix)) {
+                objects.push({
+                  key: object.Key,
+                  lastModified: object.LastModified,
+                  size: object.Size,
+                });
+              }
+            }
+          }
+        }
+
+        continuationToken = response.NextContinuationToken;
+      } while (continuationToken);
+
+      return objects;
+    } catch (error) {
+      console.error('Error listing objects from S3:', error);
+      throw new Error(`Failed to list objects: ${error}`);
     }
   }
 
