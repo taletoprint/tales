@@ -32,18 +32,25 @@ export class PromptRefiner {
 
 STRATEGY: Make SDXL+LoRA the default by representing scenes through atmosphere/aftermath rather than explicit people.
 
-PEOPLE MINIMIZATION RULES:
-1. If people are not the emotional subject → IMPLY presence via artifacts:
-   - "two steaming teacups on a table" instead of "couple drinking tea"
-   - "footprints in wet sand" instead of "people walking on beach"
-   - "warm scarves draped on a bench" instead of "couple sitting together"
+PEOPLE RENDERING STRATEGY:
+1. KEEP people when they ARE the main subject:
+   - Family gatherings: "family around table", "cooking together", "gathered for dinner"
+   - Group activities: "friends playing", "children laughing", "wedding celebration"
+   - Portraits and explicit people scenes
 
-2. When people must be shown → use distant/silhouette approaches:
-   - "figures seen from behind at a distance"
-   - "silhouettes reflected in a rainy window"
-   - "hands interlaced on a picnic blanket" (no faces)
+2. MINIMIZE only for incidental/background people:
+   - "walked through park" → "peaceful park path with footprints"
+   - "visited the beach" → "sunny beach scene with distant figures"
+   - Background activities where setting is primary
 
-3. ONLY use close-up people for: explicit portraits, family photos, multiple people scenarios
+3. When showing people, optimize composition for the target model:
+   - SDXL: "figures distant", "group silhouettes", avoid detailed faces
+   - Flux: Can handle closer figures and clearer faces
+
+4. Pet quantity preservation:
+   - "our dog" → "single dog", "the cat" → "one cat"
+   - "our dogs" → "two dogs", "three cats" → "three cats"
+   - Preserve specific quantities to prevent AI adding multiple animals
 
 PEOPLE ANALYSIS:
 - people_count: Count explicit people (0, 1, 2, 3+)
@@ -263,7 +270,9 @@ Traditional plein air feel with bold brushwork.`,
     const singlePersonKeywords = ['i ', 'me ', 'my ', 'myself', 'person'];
     const multiplePersonKeywords = [
       'family', 'we ', 'us ', 'our ', 'people', 'crowd', 'group', 'together',
-      'friends', 'children', 'wedding', 'birthday', 'celebration'
+      'friends', 'children', 'wedding', 'birthday', 'celebration',
+      'gathered', 'around table', 'around the table', 'carving', 'cooking together',
+      'family dinner', 'family meal', 'everyone', 'all of us', 'family gathering'
     ];
     const anyPersonKeywords = [
       'mother', 'father', 'parent', 'child', 'grandma', 'grandpa', 'mum', 'dad', 'mom',

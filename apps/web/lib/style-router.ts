@@ -32,11 +32,11 @@ export function chooseModelJob(style: ArtStyle, peopleCount: number, peopleClose
     return { model: 'sdxl', useLora: false };
   }
 
-  // OpenAI's routing logic: SDXL+LoRA first, Flux only when needed
+  // Refined routing logic based on testing feedback
   const needsFlux = peopleCount >= 3 || peopleCloseUp;
   
-  // ALWAYS SDXL for impressionist and oil_painting (texture fidelity critical)
-  if (styleKey === 'impressionist' || styleKey === 'oil_painting') {
+  // ALWAYS SDXL for impressionist (texture priority, human rendering less critical)
+  if (styleKey === 'impressionist') {
     return styleConfig.primary as ModelJob; // Always SDXL+LoRA
   }
   
@@ -112,8 +112,8 @@ export function buildStylePrompt(
 export function getRoutingReason(style: ArtStyle, peopleCount: number, peopleCloseUp: boolean, job: ModelJob): string {
   const styleKey = style.toLowerCase();
   
-  // Always SDXL for texture-critical styles
-  if (['impressionist', 'oil_painting'].includes(styleKey)) {
+  // Always SDXL for impressionist (texture priority)
+  if (styleKey === 'impressionist') {
     return `${style} always uses SDXL+LoRA for texture fidelity`;
   }
   

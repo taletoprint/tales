@@ -6,6 +6,7 @@
     },
     "oil_painting": {
       "primary": { "model": "sdxl", "useLora": true, "loraKey": "oil_paint" },
+      "ifManyPeople": { "model": "flux-schnell", "useLora": false },
       "fallbacks": [{ "model": "sdxl", "useLora": false }]
     },
     "watercolour": {
@@ -19,14 +20,12 @@
       "fallbacks": [{ "model": "sdxl", "useLora": false }]
     },
     "storybook": {
-      "primary": { "model": "sdxl", "useLora": true, "loraKey": "storybook" },
-      "ifManyPeople": { "model": "flux-schnell", "useLora": false },
-      "fallbacks": [{ "model": "sdxl", "useLora": false }]
+      "primary": { "model": "flux-schnell", "useLora": false },
+      "fallbacks": [{ "model": "sdxl", "useLora": true, "loraKey": "storybook" }]
     },
     "pencil_ink": {
-      "primary": { "model": "sdxl", "useLora": true, "loraKey": "ink_sketch" },
-      "ifManyPeople": { "model": "flux-schnell", "useLora": false },
-      "fallbacks": [{ "model": "sdxl", "useLora": false }]
+      "primary": { "model": "flux-schnell", "useLora": false },
+      "fallbacks": [{ "model": "sdxl", "useLora": true, "loraKey": "ink_sketch" }]
     }
   },
   "loras": {
@@ -111,8 +110,8 @@
       "withoutLora": "Whimsical storybook illustration of {subject} in {setting}, friendly characters, warm expressions, soft linework, gentle colours, cosy atmosphere, children's picture-book style with inviting personalities, figures small in frame."
     },
     "pencil_ink": {
-      "withLora": "Pen-and-ink sketch of {subject} in {setting}, fine linework, cross-hatching, paper grain, figures distant.",
-      "withoutLora": "Hand-drawn pencil and ink sketch of {subject} in {setting}, heavy cross-hatching, visible pen strokes, ink bleed on paper, uneven line weights, sketchbook texture, authentic drawing feel, raw sketching marks with paper grain, no detailed faces."
+      "withLora": "Pen-and-ink sketch of {subject} in {setting}, fine linework, cross-hatching, paper grain, black and white, minimal color, figures distant.",
+      "withoutLora": "Hand-drawn pencil and ink sketch of {subject} in {setting}, heavy cross-hatching, visible pen strokes, ink bleed on paper, uneven line weights, sketchbook texture, authentic drawing feel, raw sketching marks with paper grain, black and white, minimal color, no detailed faces."
     }
   }
 }
