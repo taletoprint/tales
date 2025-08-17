@@ -123,7 +123,7 @@ export class S3Storage {
         'image/jpeg',
         {
           previewId,
-          style: metadata.style,
+          style: metadata.requestedStyle,
           model: metadata.model,
           generatedAt: metadata.generatedAt,
         }
