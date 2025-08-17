@@ -6,10 +6,12 @@ import { ArtStyle, Aspect, PromptBundle } from './types';
 import { PromptRefiner } from '@taletoprint/ai-pipeline/src/shared/prompt-refiner';
 import { 
   chooseModelJob, 
+  chooseModelJobLegacy,
   getLoRAConfig, 
   getModelConfig, 
   buildStylePrompt, 
   getRoutingReason,
+  getRoutingReasonLegacy,
   type ModelJob,
   type LoRAConfig as StyleLoRAConfig
 } from './style-router';
@@ -76,9 +78,13 @@ export class SimpleAIGenerator {
   private routeModel(promptBundle: PromptBundle): { job: ModelJob; reason: string } {
     const { has_people, style } = promptBundle.meta;
     
-    // Use config-driven routing
-    const job = chooseModelJob(style, has_people);
-    const reason = getRoutingReason(style, has_people, job);
+    // Check if we have enhanced people detection data
+    const peopleCount = (promptBundle.meta as any).people_count ?? (has_people ? 1 : 0);
+    const peopleCloseUp = (promptBundle.meta as any).people_close_up ?? false;
+    
+    // Use new routing logic with enhanced people detection
+    const job = chooseModelJob(style, peopleCount, peopleCloseUp);
+    const reason = getRoutingReason(style, peopleCount, peopleCloseUp, job);
     
     return { job, reason };
   }
@@ -142,7 +148,10 @@ export class SimpleAIGenerator {
             meta: {
               ...baseBundle.meta,
               styleKeywords: refinedResult.style_keywords,
-              has_people: refinedResult.has_people
+              has_people: refinedResult.has_people,
+              people_count: refinedResult.people_count,
+              people_close_up: refinedResult.people_close_up,
+              people_rendering: refinedResult.people_rendering
             }
           };
           console.log(`[${previewId}] OpenAI enhanced prompt generated successfully`);

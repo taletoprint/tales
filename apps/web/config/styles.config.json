@@ -9,35 +9,37 @@
       "fallbacks": [{ "model": "sdxl", "useLora": false }]
     },
     "watercolour": {
-      "ifPeople": { "model": "flux-schnell", "useLora": false },
-      "ifNoPeople": { "model": "sdxl", "useLora": true, "loraKey": "watercolour" },
+      "primary": { "model": "sdxl", "useLora": true, "loraKey": "watercolour" },
+      "ifManyPeople": { "model": "flux-schnell", "useLora": false },
       "fallbacks": [{ "model": "sdxl", "useLora": false }]
     },
     "pastel": {
-      "ifPeople": { "model": "flux-schnell", "useLora": false },
-      "ifNoPeople": { "model": "sdxl", "useLora": true, "loraKey": "pastel" },
+      "primary": { "model": "sdxl", "useLora": true, "loraKey": "pastel" },
+      "ifManyPeople": { "model": "flux-schnell", "useLora": false },
       "fallbacks": [{ "model": "sdxl", "useLora": false }]
     },
     "storybook": {
-      "primary": { "model": "flux-schnell", "useLora": false },
-      "fallbacks": [{ "model": "sdxl", "useLora": true, "loraKey": "storybook" }]
+      "primary": { "model": "sdxl", "useLora": true, "loraKey": "storybook" },
+      "ifManyPeople": { "model": "flux-schnell", "useLora": false },
+      "fallbacks": [{ "model": "sdxl", "useLora": false }]
     },
     "pencil_ink": {
-      "primary": { "model": "flux-schnell", "useLora": false },
-      "fallbacks": [{ "model": "sdxl", "useLora": true, "loraKey": "ink_sketch" }]
+      "primary": { "model": "sdxl", "useLora": true, "loraKey": "ink_sketch" },
+      "ifManyPeople": { "model": "flux-schnell", "useLora": false },
+      "fallbacks": [{ "model": "sdxl", "useLora": false }]
     }
   },
   "loras": {
     "impressionist": { 
       "repo": "hf", 
       "url": "UmeAiRT/FLUX.1-dev-LoRA-Impressionism", 
-      "scale": 0.75,
+      "scale": 0.85,
       "trigger": "impressionist"
     },
     "oil_paint": { 
       "repo": "hf", 
       "url": "bingbangboom/flux_oilscape", 
-      "scale": 0.7,
+      "scale": 0.75,
       "trigger": "in the style of Oilstyle002"
     },
     "watercolour": { 
@@ -55,13 +57,13 @@
     "storybook": { 
       "repo": "hf", 
       "url": "lucataco/flux-childrens-storybook-illustration-lora", 
-      "scale": 0.6,
+      "scale": 0.7,
       "trigger": "storybook illustration"
     },
     "ink_sketch": { 
       "repo": "hf", 
       "url": "h1t/pencil_drawing_flux_lora", 
-      "scale": 0.7,
+      "scale": 0.75,
       "trigger": "p3nc1l style"
     }
   },
@@ -89,28 +91,28 @@
   },
   "prompts": {
     "impressionist": {
-      "withLora": "Impressionist painting of {subject} in {setting}, broken colour, dappled light, visible brushstrokes, lively movement.",
-      "withoutLora": "Impressionist painting of {subject} in {setting}, heavy visible brushstrokes, broken colour technique, paint texture, raw impressionist style with authentic painting marks, traditional plein air feel with bold brushwork."
+      "withLora": "Impressionist painting of {subject} in {setting}, broken colour, dappled light, visible brushstrokes, lively movement, figures small in frame.",
+      "withoutLora": "Impressionist painting of {subject} in {setting}, heavy visible brushstrokes, broken colour technique, paint texture, raw impressionist style with authentic painting marks, traditional plein air feel with bold brushwork, no faces in detail."
     },
     "oil_painting": {
-      "withLora": "Traditional oil painting of {subject} in {setting}, layered pigments, visible canvas texture, impasto highlights, warm gallery feel.",
-      "withoutLora": "Traditional oil painting of {subject} in {setting}, heavy impasto texture, visible canvas weave, layered paint buildup, authentic brushstroke marks, paint cracks, gallery lighting, rich pigment texture with classical depth."
+      "withLora": "Traditional oil painting of {subject} in {setting}, layered pigments, canvas weave, impasto highlights, warm gallery tone, figures distant.",
+      "withoutLora": "Traditional oil painting of {subject} in {setting}, heavy impasto texture, visible canvas weave, layered paint buildup, authentic brushstroke marks, paint cracks, gallery lighting, rich pigment texture with classical depth, figures small in frame."
     },
     "watercolour": {
-      "withLora": "Soft watercolour of {subject} in {setting}, translucent washes, gentle bleeding edges, light granulation, airy highlights.",
-      "withoutLora": "Authentic watercolour painting of {subject} in {setting}, heavy bleeding edges, visible paper grain, uneven pigment pools, raw watercolour texture, granulation, authentic painting artifacts, traditional medium feel."
+      "withLora": "Soft watercolour of {subject} in {setting}, translucent washes, bleeding edges, paper texture, airy highlights, people implied via silhouettes.",
+      "withoutLora": "Authentic watercolour painting of {subject} in {setting}, heavy bleeding edges, visible paper grain, uneven pigment pools, raw watercolour texture, granulation, authentic painting artifacts, traditional medium feel, no detailed faces."
     },
     "pastel": {
-      "withLora": "Chalk pastel artwork of {subject} in {setting}, powdery muted tones, visible strokes, soft blending, textured paper.",
-      "withoutLora": "Chalk pastel artwork of {subject} in {setting}, heavy chalk dust, powdery smudges, rough paper texture, uneven coverage, finger-blended areas, authentic pastel feel, dusty medium artifacts with textured paper grain."
+      "withLora": "Chalk pastel artwork of {subject} in {setting}, powdery muted tones, visible strokes, textured paper, no detailed faces.",
+      "withoutLora": "Chalk pastel artwork of {subject} in {setting}, heavy chalk dust, powdery smudges, rough paper texture, uneven coverage, finger-blended areas, authentic pastel feel, dusty medium artifacts with textured paper grain, figures distant."
     },
     "storybook": {
-      "withLora": "Whimsical storybook illustration of {subject} in {setting}, friendly expressions, simplified shapes, warm cosy palette.",
-      "withoutLora": "Whimsical storybook illustration of {subject} in {setting}, friendly characters, warm expressions, clear friendly faces, soft linework, gentle colours, cosy atmosphere, children's picture-book style with inviting personalities."
+      "withLora": "Whimsical storybook illustration of {subject} in {setting}, simplified shapes, cosy palette, expressions gentle not hyper-detailed.",
+      "withoutLora": "Whimsical storybook illustration of {subject} in {setting}, friendly characters, warm expressions, soft linework, gentle colours, cosy atmosphere, children's picture-book style with inviting personalities, figures small in frame."
     },
     "pencil_ink": {
-      "withLora": "Hand-drawn pen-and-ink sketch of {subject}, fine linework, cross-hatching, subtle graphite shading, sketchbook feel.",
-      "withoutLora": "Hand-drawn pencil and ink sketch of {subject} in {setting}, heavy cross-hatching, visible pen strokes, ink bleed on paper, uneven line weights, sketchbook texture, authentic drawing feel, raw sketching marks with paper grain."
+      "withLora": "Pen-and-ink sketch of {subject} in {setting}, fine linework, cross-hatching, paper grain, figures distant.",
+      "withoutLora": "Hand-drawn pencil and ink sketch of {subject} in {setting}, heavy cross-hatching, visible pen strokes, ink bleed on paper, uneven line weights, sketchbook texture, authentic drawing feel, raw sketching marks with paper grain, no detailed faces."
     }
   }
 }

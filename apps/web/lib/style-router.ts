@@ -22,9 +22,9 @@ export interface ModelConfig {
 }
 
 /**
- * Choose the best model and LoRA configuration for a given style and content
+ * Choose the best model and LoRA configuration using OpenAI's "SDXL+LoRA first" strategy
  */
-export function chooseModelJob(style: ArtStyle, hasPeople: boolean): ModelJob {
+export function chooseModelJob(style: ArtStyle, peopleCount: number, peopleCloseUp: boolean): ModelJob {
   const styleKey = style.toLowerCase();
   const styleConfig = stylesConfig.styles[styleKey as keyof typeof stylesConfig.styles] as any;
   
@@ -32,15 +32,20 @@ export function chooseModelJob(style: ArtStyle, hasPeople: boolean): ModelJob {
     return { model: 'sdxl', useLora: false };
   }
 
-  // Check for people-based routing
-  if ('ifPeople' in styleConfig || 'ifNoPeople' in styleConfig) {
-    const choice = hasPeople ? (styleConfig as any).ifPeople : (styleConfig as any).ifNoPeople;
-    if (choice) {
-      return choice as ModelJob;
-    }
+  // OpenAI's routing logic: SDXL+LoRA first, Flux only when needed
+  const needsFlux = peopleCount >= 3 || peopleCloseUp;
+  
+  // ALWAYS SDXL for impressionist and oil_painting (texture fidelity critical)
+  if (styleKey === 'impressionist' || styleKey === 'oil_painting') {
+    return styleConfig.primary as ModelJob; // Always SDXL+LoRA
+  }
+  
+  // For other styles, check if we need Flux for multiple people scenarios
+  if (needsFlux && 'ifManyPeople' in styleConfig) {
+    return styleConfig.ifManyPeople as ModelJob;
   }
 
-  // Use primary choice
+  // Default: Use SDXL+LoRA (primary choice)
   if (styleConfig.primary) {
     return styleConfig.primary as ModelJob;
   }
@@ -51,6 +56,16 @@ export function chooseModelJob(style: ArtStyle, hasPeople: boolean): ModelJob {
   }
 
   return { model: 'sdxl', useLora: false };
+}
+
+/**
+ * Legacy method for backward compatibility
+ */
+export function chooseModelJobLegacy(style: ArtStyle, hasPeople: boolean): ModelJob {
+  // Convert legacy boolean to new format
+  const peopleCount = hasPeople ? 1 : 0;
+  const peopleCloseUp = false; // Conservative default
+  return chooseModelJob(style, peopleCount, peopleCloseUp);
 }
 
 /**
@@ -92,27 +107,40 @@ export function buildStylePrompt(
 }
 
 /**
- * Get routing reason for logging
+ * Get routing reason for logging (new optimized logic)
  */
-export function getRoutingReason(style: ArtStyle, hasPeople: boolean, job: ModelJob): string {
+export function getRoutingReason(style: ArtStyle, peopleCount: number, peopleCloseUp: boolean, job: ModelJob): string {
   const styleKey = style.toLowerCase();
   
+  // Always SDXL for texture-critical styles
   if (['impressionist', 'oil_painting'].includes(styleKey)) {
-    return `${style} style needs texture → ${job.model.toUpperCase()}`;
+    return `${style} always uses SDXL+LoRA for texture fidelity`;
   }
   
-  if (['watercolour', 'pastel'].includes(styleKey)) {
-    if (hasPeople && job.model === 'flux-schnell') {
-      return `${style} with people → Flux for faces`;
+  // Flux only for multiple people or close-ups
+  if (job.model === 'flux-schnell') {
+    if (peopleCount >= 3) {
+      return `${peopleCount}+ people → Flux for multiple faces`;
     }
-    if (!hasPeople && job.model === 'sdxl') {
-      return `${style} without people → SDXL for texture`;
+    if (peopleCloseUp) {
+      return `close-up faces → Flux for detail`;
     }
+    return `people scenario → Flux fallback`;
   }
   
-  if (hasPeople && job.model === 'flux-schnell') {
-    return `people detected → Flux for faces`;
+  // SDXL+LoRA is now the preferred default
+  if (job.model === 'sdxl' && job.useLora) {
+    return `SDXL+LoRA for superior ${style} texture`;
   }
   
-  return `style optimization → ${job.model.toUpperCase()}`;
+  return `${style} optimization → ${job.model.toUpperCase()}`;
+}
+
+/**
+ * Legacy routing reason for backward compatibility
+ */
+export function getRoutingReasonLegacy(style: ArtStyle, hasPeople: boolean, job: ModelJob): string {
+  const peopleCount = hasPeople ? 1 : 0;
+  const peopleCloseUp = false;
+  return getRoutingReason(style, peopleCount, peopleCloseUp, job);
 }

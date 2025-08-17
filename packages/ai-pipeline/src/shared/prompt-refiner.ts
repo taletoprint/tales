@@ -12,6 +12,9 @@ export interface PromptRefinementResult {
   negative_prompt: string;
   style_keywords: string[];
   has_people: boolean;
+  people_count: number;
+  people_close_up: boolean;
+  people_rendering: 'none' | 'implied' | 'distant' | 'close_up';
 }
 
 export class PromptRefiner {
@@ -24,42 +27,46 @@ export class PromptRefiner {
   }
 
   async refinePrompt(request: PromptRefinementRequest): Promise<PromptRefinementResult> {
-    // First detect people to choose appropriate template
-    const has_people = this.detectPeopleInStory(request.story, request.style);
-    const stylePrompts = this.getStylePrompt(request.style, has_people);
-    
     const wrapper = this.getUniversalWrapper();
-    const modelInfo = has_people ? "Flux-Schnell (optimized for people/faces)" : "SDXL (optimized for artistic style)";
-    const systemPrompt = `You are an expert at creating prompts for AI art generation and analyzing story content. Transform user stories into detailed artistic prompts using the provided style template.
+    const systemPrompt = `You are an expert at creating prompts for AI art generation that prioritizes SDXL+LoRA for superior artistic quality. Transform user stories into detailed artistic prompts while minimizing explicit people unless they are the main subject.
 
-TARGET MODEL: ${modelInfo}
+STRATEGY: Make SDXL+LoRA the default by representing scenes through atmosphere/aftermath rather than explicit people.
+
+PEOPLE MINIMIZATION RULES:
+1. If people are not the emotional subject → IMPLY presence via artifacts:
+   - "two steaming teacups on a table" instead of "couple drinking tea"
+   - "footprints in wet sand" instead of "people walking on beach"
+   - "warm scarves draped on a bench" instead of "couple sitting together"
+
+2. When people must be shown → use distant/silhouette approaches:
+   - "figures seen from behind at a distance"
+   - "silhouettes reflected in a rainy window"
+   - "hands interlaced on a picnic blanket" (no faces)
+
+3. ONLY use close-up people for: explicit portraits, family photos, multiple people scenarios
+
+PEOPLE ANALYSIS:
+- people_count: Count explicit people (0, 1, 2, 3+)
+- people_close_up: true only if faces/expressions are the main subject
+- people_rendering: 'none'|'implied'|'distant'|'close_up'
+
+ROUTING LOGIC:
+- DEFAULT: SDXL+LoRA (superior artistic quality)
+- Use Flux ONLY when: people_count >= 3 OR people_close_up = true
+- ALWAYS SDXL: impressionist, oil_painting (texture fidelity critical)
 
 UNIVERSAL WRAPPER:
-Prefix (always add): ${wrapper.prefix}
-Suffix (always add): ${wrapper.suffix}
+Prefix: ${wrapper.prefix}
+Suffix: ${wrapper.suffix}
 
-STYLE TEMPLATE: ${request.style} (${has_people ? 'People-optimized' : 'Style-optimized'})
-${stylePrompts.template}
-
-INSTRUCTIONS:
-1. ANALYZE the story for people: Detect if the story mentions any humans (people, family members, "we/us", faces, hands, silhouettes, crowds, etc.)
-2. Start with the universal prefix, then use the template structure, replacing [main subject/action] and [setting] with content from the user's story
-3. Keep all style-specific details, colors, and atmosphere from the template
-4. End with the universal suffix
-5. Focus on positive descriptors only
-6. Ensure the prompt will generate high-quality print artwork suitable for framing
-
-PEOPLE DETECTION RULES:
-- has_people = true if story mentions: humans, family, people, "we", "us", "I", faces, hands, silhouettes, children, adults, names of people
-- has_people = true for STORYBOOK style (Flux handles this well) unless story clearly excludes people
-- has_people = false for stories about objects, landscapes, buildings, animals only (without people)
-- When in doubt, bias toward has_people = false (use SDXL by default)
-
-Respond with a JSON object containing:
-- refined_prompt: The complete prompt with prefix + template + suffix
-- negative_prompt: Leave empty string for Flux, can include for SDXL
-- style_keywords: Array of 3-5 key artistic terms for this style
-- has_people: Boolean indicating if the story involves people/humans`;
+Respond with JSON containing:
+- refined_prompt: Complete prompt optimized for SDXL+LoRA with minimal people
+- negative_prompt: Empty for Flux, can include for SDXL
+- style_keywords: Array of 3-5 artistic terms
+- has_people: Boolean (legacy compatibility)
+- people_count: Number of explicit people (0-3+)
+- people_close_up: Boolean (faces are main subject)
+- people_rendering: How people should be shown`;
 
     const userPrompt = `Transform this story into an artistic prompt:
 
@@ -218,15 +225,17 @@ Traditional plein air feel with bold brushwork.`,
   }
 
   private createFallbackPrompt(request: PromptRefinementRequest): PromptRefinementResult {
-    const has_people = this.detectPeopleInStory(request.story, request.style);
-    const styleInfo = this.getStylePrompt(request.style, has_people);
+    const peopleAnalysis = this.analyzeStoryForPeople(request.story, request.style);
     const wrapper = this.getUniversalWrapper();
     
     return {
-      refined_prompt: `${wrapper.prefix} A beautiful artistic scene inspired by: ${request.story}. ${styleInfo.template.split('\n')[0]} ${wrapper.suffix}`,
-      negative_prompt: "", // Empty for Flux, can be populated for SDXL
-      style_keywords: styleInfo.keywords,
-      has_people
+      refined_prompt: `${wrapper.prefix} A beautiful artistic scene inspired by: ${request.story}. Artistic style with authentic medium texture, figures distant if present. ${wrapper.suffix}`,
+      negative_prompt: "",
+      style_keywords: [request.style.toLowerCase(), 'artistic', 'authentic', 'texture', 'traditional'],
+      has_people: peopleAnalysis.has_people,
+      people_count: peopleAnalysis.people_count,
+      people_close_up: peopleAnalysis.people_close_up,
+      people_rendering: peopleAnalysis.people_rendering
     };
   }
 
@@ -247,43 +256,71 @@ Traditional plein air feel with bold brushwork.`,
     return content.trim();
   }
 
-  private detectPeopleInStory(story: string, style: ArtStyle): boolean {
+  private analyzeStoryForPeople(story: string, style: ArtStyle) {
     const lowerStory = story.toLowerCase();
     
     // People keywords - explicit mentions
-    const peopleKeywords = [
-      'people', 'person', 'family', 'mother', 'father', 'parent', 'child', 'children',
-      'grandma', 'grandpa', 'grandmother', 'grandfather', 'mum', 'dad', 'mom',
-      'sister', 'brother', 'uncle', 'aunt', 'cousin', 'friend', 'friends',
-      'we ', 'us ', 'our ', 'i ', 'my ', 'me ', 'myself',
+    const singlePersonKeywords = ['i ', 'me ', 'my ', 'myself', 'person'];
+    const multiplePersonKeywords = [
+      'family', 'we ', 'us ', 'our ', 'people', 'crowd', 'group', 'together',
+      'friends', 'children', 'wedding', 'birthday', 'celebration'
+    ];
+    const anyPersonKeywords = [
+      'mother', 'father', 'parent', 'child', 'grandma', 'grandpa', 'mum', 'dad', 'mom',
+      'sister', 'brother', 'uncle', 'aunt', 'cousin', 'friend',
       'face', 'faces', 'hands', 'smile', 'smiling', 'laughing', 'crying',
-      'silhouette', 'silhouettes', 'crowd', 'group', 'together',
-      'human', 'humans', 'man', 'woman', 'boy', 'girl', 'baby',
-      'wedding', 'birthday', 'anniversary', 'celebration'
+      'silhouette', 'silhouettes', 'human', 'humans', 'man', 'woman', 'boy', 'girl', 'baby'
     ];
     
-    // Check for people keywords
-    const hasPeopleKeywords = peopleKeywords.some(keyword => lowerStory.includes(keyword));
+    // Close-up keywords suggest faces are main subject
+    const closeUpKeywords = ['portrait', 'face', 'expression', 'smile', 'eyes', 'looking'];
     
-    // Style bias - STORYBOOK often includes people
-    const styleHasPeopleBias = style === 'STORYBOOK';
+    // Count people mentions
+    let people_count = 0;
+    const hasSingle = singlePersonKeywords.some(keyword => lowerStory.includes(keyword));
+    const hasMultiple = multiplePersonKeywords.some(keyword => lowerStory.includes(keyword));
+    const hasAny = anyPersonKeywords.some(keyword => lowerStory.includes(keyword));
+    const hasCloseUp = closeUpKeywords.some(keyword => lowerStory.includes(keyword));
     
-    // Animals-only keywords that suggest no people
-    const animalOnlyKeywords = ['cat', 'dog', 'bird', 'pet'];
-    const hasOnlyAnimals = animalOnlyKeywords.some(keyword => lowerStory.includes(keyword)) 
-                          && !hasPeopleKeywords;
-    
-    // Object/landscape keywords that suggest no people
-    const objectKeywords = ['flower', 'tree', 'building', 'house', 'landscape', 'garden'];
-    const hasOnlyObjects = objectKeywords.some(keyword => lowerStory.includes(keyword)) 
-                          && !hasPeopleKeywords;
-    
-    // Default to SDXL unless we're confident there are people
-    if (hasOnlyAnimals || hasOnlyObjects) {
-      return false;
+    if (hasMultiple) {
+      people_count = 3; // Assume multiple people
+    } else if (hasSingle || hasAny) {
+      people_count = 1;
     }
     
-    // Only return true if we have explicit people keywords OR it's storybook style
-    return hasPeopleKeywords || styleHasPeopleBias;
+    // Animals-only or objects-only suggest no people
+    const animalOnlyKeywords = ['cat', 'dog', 'bird', 'pet'];
+    const objectKeywords = ['flower', 'tree', 'building', 'house', 'landscape', 'garden'];
+    const hasOnlyAnimals = animalOnlyKeywords.some(keyword => lowerStory.includes(keyword)) && !hasAny && !hasSingle;
+    const hasOnlyObjects = objectKeywords.some(keyword => lowerStory.includes(keyword)) && !hasAny && !hasSingle;
+    
+    if (hasOnlyAnimals || hasOnlyObjects) {
+      people_count = 0;
+    }
+    
+    // Determine rendering approach
+    let people_rendering: 'none' | 'implied' | 'distant' | 'close_up' = 'none';
+    if (people_count === 0) {
+      people_rendering = 'none';
+    } else if (hasCloseUp || people_count >= 3) {
+      people_rendering = 'close_up';
+    } else if (people_count === 1) {
+      people_rendering = 'implied'; // Try to minimize via artifacts/silhouettes
+    } else {
+      people_rendering = 'distant';
+    }
+    
+    return {
+      has_people: people_count > 0,
+      people_count,
+      people_close_up: hasCloseUp || people_count >= 3,
+      people_rendering
+    };
+  }
+
+  private detectPeopleInStory(story: string, style: ArtStyle): boolean {
+    // Legacy method for compatibility
+    const analysis = this.analyzeStoryForPeople(story, style);
+    return analysis.has_people;
   }
 }
