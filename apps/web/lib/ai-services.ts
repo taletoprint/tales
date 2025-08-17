@@ -61,9 +61,14 @@ export class SimpleAIGenerator {
   }
 
   private routeModel(promptBundle: PromptBundle): 'flux-schnell' | 'sdxl' {
-    const { has_people } = promptBundle.meta;
+    const { has_people, style } = promptBundle.meta;
     
-    // Route people to Flux (better anatomy/faces), non-people to SDXL (better style fidelity)
+    // Special case: Always use SDXL for impressionist style (Flux can't capture the style well)
+    if (style === ArtStyle.IMPRESSIONIST) {
+      return 'sdxl';
+    }
+    
+    // For all other styles: Route people to Flux (better anatomy/faces), non-people to SDXL (better style fidelity)
     if (has_people) {
       return 'flux-schnell';
     } else {
@@ -142,9 +147,12 @@ export class SimpleAIGenerator {
         params: promptBundle.params
       });
 
-      // Step 2: Route to appropriate model based on people detection
+      // Step 2: Route to appropriate model based on style and people detection
       const selectedModel = this.routeModel(promptBundle);
-      console.log(`[${previewId}] Routing to ${selectedModel} model (has_people: ${promptBundle.meta.has_people})`);
+      const routingReason = promptBundle.meta.style === ArtStyle.IMPRESSIONIST 
+        ? 'impressionist style override' 
+        : `has_people: ${promptBundle.meta.has_people}`;
+      console.log(`[${previewId}] Routing to ${selectedModel} model (${routingReason})`);
       
       let originalImageUrl: string;
       if (selectedModel === 'flux-schnell') {
