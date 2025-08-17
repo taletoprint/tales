@@ -420,7 +420,7 @@ export class SimpleAIGenerator {
           await new Promise(resolve => setTimeout(resolve, (retrySeconds + 1) * 1000));
           
           // Retry the request once with new ID
-          return this.generateWithFluxSchnell(promptBundle, previewId + '_retry');
+          return this.generateWithFluxSchnell(promptBundle, job, previewId + '_retry');
         }
         
         throw new Error(`Replicate API error: ${response.status} - ${errorText}`);
@@ -503,7 +503,7 @@ export class SimpleAIGenerator {
           await new Promise(resolve => setTimeout(resolve, (retrySeconds + 1) * 1000));
           
           // Retry the request once with new ID
-          return this.generateWithSDXL(promptBundle, previewId + '_retry');
+          return this.generateWithSDXL(promptBundle, job, previewId + '_retry');
         }
         
         throw new Error(`Replicate SDXL API error: ${response.status} - ${errorText}`);
