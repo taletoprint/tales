@@ -127,8 +127,8 @@ export class MailerLiteService {
    */
   async testConnection(): Promise<boolean> {
     try {
-      // Try to get group info to test connection
-      const response = await this.client.groups.find(this.groupId);
+      // Try to get groups to test connection - use get method instead of find
+      const response = await (this.client.groups as any).get(this.groupId);
       return !!(response && response.data);
     } catch (error) {
       console.error('MailerLite connection test failed:', error);
