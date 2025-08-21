@@ -32,7 +32,7 @@ export class MailerLiteService {
       const response = await this.client.subscribers.find(email);
       
       if (response && response.data) {
-        const subscriber = response.data;
+        const subscriber = response.data as any;
         
         // Check if subscriber is in our specific group
         const groups = subscriber.groups || [];
