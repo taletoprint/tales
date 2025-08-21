@@ -40,12 +40,27 @@ export function saveDailyAttempts(attempts: DailyAttempts): void {
 
 /**
  * Reset daily attempts counter to 0 for today
- * Used after successful purchases to give users fresh previews
+ * Used after successful purchases or email signup to give users fresh previews
  */
 export function resetDailyAttempts(): void {
   const today = new Date().toDateString();
   const freshAttempts: DailyAttempts = { date: today, count: 0 };
   saveDailyAttempts(freshAttempts);
+}
+
+/**
+ * Grant bonus attempts without resetting existing count
+ * Used for email signup bonus previews
+ */
+export function grantBonusAttempts(bonusCount: number = 3): number {
+  const current = getDailyAttempts();
+  const newCount = Math.max(0, current.count - bonusCount);
+  const updatedAttempts: DailyAttempts = {
+    date: current.date,
+    count: newCount
+  };
+  saveDailyAttempts(updatedAttempts);
+  return updatedAttempts.count;
 }
 
 /**

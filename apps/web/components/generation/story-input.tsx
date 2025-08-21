@@ -11,13 +11,15 @@ interface StoryInputProps {
   maxFreeAttempts?: number;
   currentAttempts: number;
   hasPreview?: boolean;
+  onAttemptsReset?: () => void;
 }
 
 export const StoryInput: React.FC<StoryInputProps> = ({ 
   onPreview, 
   maxFreeAttempts = 3,
   currentAttempts,
-  hasPreview = false
+  hasPreview = false,
+  onAttemptsReset
 }) => {
   const [story, setStory] = useState('');
   const [style, setStyle] = useState<ArtStyle>(ArtStyle.WATERCOLOUR);
@@ -169,7 +171,17 @@ export const StoryInput: React.FC<StoryInputProps> = ({
         </div>
       </div>
       
-      {showEmailGate && <EmailGateModal onClose={() => setShowEmailGate(false)} />}
+      {showEmailGate && (
+        <EmailGateModal 
+          onClose={() => setShowEmailGate(false)}
+          onSuccess={() => {
+            // Reset attempts in parent component
+            if (onAttemptsReset) {
+              onAttemptsReset();
+            }
+          }}
+        />
+      )}
       {showUpgradePrompt && <UpgradePromptModal onClose={() => setShowUpgradePrompt(false)} />}
     </div>
   );
@@ -269,7 +281,94 @@ const AspectSelector: React.FC<AspectSelectorProps> = ({ value, onChange }) => {
   );
 };
 
-const EmailGateModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+interface EmailGateModalProps {
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+const EmailGateModal: React.FC<EmailGateModalProps> = ({ onClose, onSuccess }) => {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email.trim()) {
+      setError('Please enter your email address');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/email/capture', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.error === 'ALREADY_SUBSCRIBED') {
+          setError('This email is already signed up. Each email can only be used once.');
+        } else if (data.error === 'RATE_LIMITED') {
+          setError('Too many attempts. Please try again later.');
+        } else {
+          setError(data.message || 'Something went wrong. Please try again.');
+        }
+        return;
+      }
+
+      // Success!
+      setSuccess(true);
+      
+      // Reset user's preview counter if instructed by server
+      if (data.resetCounter) {
+        // Reset localStorage counter
+        const today = new Date().toDateString();
+        localStorage.setItem('taletoprint_daily_attempts', JSON.stringify({
+          date: today,
+          count: 0
+        }));
+      }
+
+      // Close modal and refresh parent component after brief delay
+      setTimeout(() => {
+        onSuccess();
+        onClose();
+      }, 2000);
+
+    } catch (err) {
+      setError('Network error. Please check your connection and try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+        <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl animate-slide-up">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-sage/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">✨</span>
+            </div>
+            <h3 className="text-xl font-serif font-semibold text-charcoal mb-3">Success!</h3>
+            <p className="text-sage mb-4">
+              Thank you for signing up! You now have 3 additional free previews.
+            </p>
+            <div className="animate-spin w-8 h-8 border-2 border-sage border-t-transparent rounded-full mx-auto"></div>
+            <p className="text-sm text-charcoal/60 mt-2">Refreshing...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
       <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl animate-slide-up">
@@ -277,21 +376,64 @@ const EmailGateModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <div className="w-16 h-16 bg-terracotta/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl">💌</span>
           </div>
-          <h3 className="text-xl font-serif font-semibold text-charcoal mb-3">Get More Free Previews</h3>
+          <h3 className="text-xl font-serif font-semibold text-charcoal mb-3">Get 3 More Free Previews</h3>
           <p className="text-charcoal/70 mb-6">
-            Sign up with your email to get 3 more free previews per day and be the first to know about new features!
+            Enter your email to get 3 additional free previews and be the first to know about new features!
           </p>
-          <div className="space-y-3">
-            <button className="w-full px-6 py-3 bg-terracotta text-cream rounded-xl hover:bg-charcoal transition-colors font-medium">
-              Sign Up for Free
-            </button>
-            <button
-              onClick={onClose}
-              className="w-full px-6 py-3 bg-warm-grey/20 text-charcoal rounded-xl hover:bg-warm-grey/30 transition-colors"
-            >
-              Maybe Later
-            </button>
-          </div>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email address"
+                className="w-full px-4 py-3 border-2 border-warm-grey/30 rounded-xl focus:border-terracotta focus:ring-0 text-charcoal placeholder-charcoal/50 transition-colors"
+                disabled={loading}
+                autoFocus
+              />
+            </div>
+            
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-center gap-2">
+                <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                {error}
+              </div>
+            )}
+            
+            <div className="space-y-3">
+              <button
+                type="submit"
+                disabled={loading || !email.trim()}
+                className="w-full px-6 py-3 bg-terracotta text-cream rounded-xl hover:bg-charcoal transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <svg className="animate-spin w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Signing up...
+                  </>
+                ) : (
+                  'Get Free Previews'
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={loading}
+                className="w-full px-6 py-3 bg-warm-grey/20 text-charcoal rounded-xl hover:bg-warm-grey/30 transition-colors disabled:opacity-50"
+              >
+                Maybe Later
+              </button>
+            </div>
+          </form>
+          
+          <p className="text-xs text-charcoal/50 mt-4">
+            We'll only send you updates about TaleToPrint. You can unsubscribe anytime.
+          </p>
         </div>
       </div>
     </div>

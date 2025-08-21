@@ -6,7 +6,7 @@ import { StoryInput } from '@/components/generation/story-input';
 import { PreviewDisplay } from '@/components/generation/preview-display';
 import { PreviewResult } from '@/lib/types';
 import Header from '@/components/navigation/header';
-import { getDailyAttempts, incrementDailyAttempts } from '@/lib/preview-counter';
+import { getDailyAttempts, incrementDailyAttempts, resetDailyAttempts } from '@/lib/preview-counter';
 
 export default function Home() {
   const [selectedPreview, setSelectedPreview] = useState<PreviewResult | null>(null);
@@ -91,6 +91,14 @@ export default function Home() {
   const handleSelectForPurchase = () => {
     // TODO: Implement checkout flow
     console.log('Starting checkout for preview:', selectedPreview?.id);
+  };
+
+  const handleAttemptsReset = () => {
+    // Reset the daily attempts counter after successful email signup
+    resetDailyAttempts();
+    // Update the local state to reflect the reset
+    setAttemptCount(0);
+    console.log('Daily attempts reset after email signup');
   };
   
   return (
@@ -213,6 +221,7 @@ export default function Home() {
             onPreview={handlePreview}
             currentAttempts={attemptCount}
             hasPreview={!!selectedPreview}
+            onAttemptsReset={handleAttemptsReset}
           />
           
           {allPreviews.length > 0 && (
