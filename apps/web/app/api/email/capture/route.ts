@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createMailerLiteService, isValidEmail, isSuspiciousEmail } from '@/lib/mailerlite-client';
+import { 
+  createMailerLiteClient, 
+  isValidEmail, 
+  isSuspiciousEmail 
+} from '@/lib/mailerlite.client';
+import { 
+  MailerLiteError, 
+  MailerLiteValidationError 
+} from '@/lib/mailerlite.types';
 import { resetDailyAttempts } from '@/lib/preview-counter';
 
 // Rate limiting for email submissions (prevent spam)
@@ -85,10 +93,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Initialize MailerLite service
-    let mailerLiteService;
+    // Initialize MailerLite client
+    let mailerLiteClient;
     try {
-      mailerLiteService = createMailerLiteService();
+      mailerLiteClient = createMailerLiteClient();
     } catch (error: any) {
       console.error('MailerLite configuration error:', error);
       return NextResponse.json(
@@ -101,9 +109,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if email already exists in MailerLite group
+    // Check if email already exists in MailerLite group and add if not
     try {
-      const subscriberInfo = await mailerLiteService.checkEmailExists(cleanEmail);
+      const subscriberInfo = await mailerLiteClient.checkEmailExists(cleanEmail);
       
       if (subscriberInfo.exists) {
         // Email already exists in group - don't give bonus previews again
@@ -117,20 +125,16 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Add new subscriber to MailerLite group
-      const added = await mailerLiteService.addSubscriberToGroup(cleanEmail, {
+      // Add new subscriber to MailerLite group with metadata
+      const subscriber = await mailerLiteClient.addSubscriberToGroup(cleanEmail, {
         source: 'free_previews_gate',
         signup_ip: ip,
         signup_date: new Date().toISOString(),
+        bonus_previews_granted: 3,
       });
 
-      if (!added) {
-        throw new Error('Failed to add subscriber to group');
-      }
-
       // Success! Reset the user's daily attempts to give them bonus previews
-      // Note: This is client-side reset, server-side rate limiting would need IP tracking
-      console.log(`Email capture successful: ${cleanEmail} added to MailerLite group`);
+      console.log(`Email capture successful: ${cleanEmail} (${subscriber.id}) added to MailerLite group`);
 
       return NextResponse.json({
         success: true,
@@ -142,13 +146,39 @@ export async function POST(request: NextRequest) {
     } catch (error: any) {
       console.error('MailerLite operation failed:', error);
       
-      // Check if it's a MailerLite API error
-      if (error.message && error.message.includes('MailerLite')) {
+      // Handle specific MailerLite errors
+      if (error instanceof MailerLiteError) {
+        // Rate limiting
+        if (error.status === 429) {
+          return NextResponse.json(
+            { 
+              success: false, 
+              error: 'RATE_LIMITED', 
+              message: 'Too many requests. Please try again later.' 
+            },
+            { status: 429 }
+          );
+        }
+        
+        // Other API errors
         return NextResponse.json(
           { 
             success: false, 
             error: 'SERVICE_ERROR', 
             message: 'Unable to process your signup right now. Please try again later.' 
+          },
+          { status: 503 }
+        );
+      }
+      
+      // Handle validation errors
+      if (error instanceof MailerLiteValidationError) {
+        console.error('MailerLite response validation failed:', error.zodError);
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'SERVICE_ERROR', 
+            message: 'Unexpected response from email service. Please try again.' 
           },
           { status: 503 }
         );
@@ -180,8 +210,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const mailerLiteService = createMailerLiteService();
-    const isConnected = await mailerLiteService.testConnection();
+    const mailerLiteClient = createMailerLiteClient();
+    const isConnected = await mailerLiteClient.testConnection();
     
     return NextResponse.json({
       status: isConnected ? 'healthy' : 'unhealthy',

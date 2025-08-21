@@ -12,7 +12,6 @@
     "@aws-sdk/client-s3": "^3.864.0",
     "@aws-sdk/s3-request-presigner": "^3.864.0",
     "@hookform/resolvers": "^5.2.0",
-    "@mailerlite/mailerlite-nodejs": "^1.4.1",
     "@taletoprint/ai-pipeline": "*",
     "@taletoprint/database": "*",
     "@taletoprint/rate-limiter": "*",
