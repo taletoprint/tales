@@ -1,4 +1,4 @@
-import { MailerLite } from '@mailerlite/mailerlite-nodejs';
+import MailerLite from '@mailerlite/mailerlite-nodejs';
 
 export interface MailerLiteConfig {
   apiKey: string;
