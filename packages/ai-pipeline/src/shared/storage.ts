@@ -226,7 +226,7 @@ export interface PreviewMetadata {
   openaiError?: string;
   
   // Model routing
-  model: 'flux-schnell' | 'sdxl';
+  model: 'flux-dev-lora' | 'flux-schnell' | 'sdxl';
   routingReason: string;
   
   // People detection
