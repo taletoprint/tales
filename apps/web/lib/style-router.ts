@@ -53,13 +53,13 @@ export function chooseModelJobLegacy(style: ArtStyle, hasPeople: boolean): Model
  * Get LoRA key for a given art style
  */
 export function getLoRAKeyForStyle(style: ArtStyle): string {
-  const mappings = {
-    'WATERCOLOUR': 'lora_watercolour_v2',
-    'OIL_PAINTING': 'lora_oil_v3', 
-    'PASTEL': 'lora_pastel_v2',
-    'PENCIL_INK': 'lora_ink_v1',
-    'STORYBOOK': 'lora_storybook_v3',
-    'IMPRESSIONIST': 'lora_impressionist_v2'
+  const mappings: Record<ArtStyle, string> = {
+    [ArtStyle.WATERCOLOUR]: 'lora_watercolour_v2',
+    [ArtStyle.OIL_PAINTING]: 'lora_oil_v3', 
+    [ArtStyle.PASTEL]: 'lora_pastel_v2',
+    [ArtStyle.PENCIL_INK]: 'lora_ink_v1',
+    [ArtStyle.STORYBOOK]: 'lora_storybook_v3',
+    [ArtStyle.IMPRESSIONIST]: 'lora_impressionist_v2'
   };
   return mappings[style] || 'lora_watercolour_v2';
 }
