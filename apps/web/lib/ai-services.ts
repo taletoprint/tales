@@ -5,7 +5,7 @@ import { buildPrompt } from './prompt-builder';
 import { ArtStyle, Aspect, PromptBundle } from './types';
 import { PromptRefiner } from '@taletoprint/ai-pipeline/src/shared/prompt-refiner';
 import { S3Storage, PreviewMetadata } from '@taletoprint/ai-pipeline/src/shared/storage';
-import { PrismaClient } from '@taletoprint/database';
+import { prisma } from './prisma';
 import { 
   chooseModelJob, 
   chooseModelJobLegacy,
@@ -770,8 +770,6 @@ export class SimpleAIGenerator {
     request: GenerationRequest, 
     generationTime: number
   ): Promise<void> {
-    const prisma = new PrismaClient();
-    
     try {
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
       
@@ -809,9 +807,7 @@ export class SimpleAIGenerator {
       
     } catch (error) {
       console.error(`[${result.id}] Failed to save preview to database:`, error);
-      throw error;
-    } finally {
-      await prisma.$disconnect();
+      // Don't throw - we don't want to break the main generation flow
     }
   }
 

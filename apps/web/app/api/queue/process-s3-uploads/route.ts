@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@taletoprint/database';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { PassThrough } from 'stream';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 const s3 = new S3Client({ 
   region: process.env.AWS_REGION || 'eu-north-1',
   credentials: {
