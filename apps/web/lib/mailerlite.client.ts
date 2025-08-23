@@ -3,9 +3,12 @@ import {
   MailerLiteValidationError,
   ZSubscriberResponse,
   ZCreateSubscriberResponse,
+  ZSubscriberListResponse,
+  normalizeSubscriber,
   type SubscriberInfo,
   type CreateSubscriberRequest,
-  type SubscriberParsed
+  type SubscriberParsed,
+  type SubscriberAPI
 } from './mailerlite.types';
 
 // Configuration interface
@@ -101,13 +104,14 @@ export class MailerLiteClient {
       // Validate response with Zod
       const parseResult = ZSubscriberResponse.safeParse(response);
       if (!parseResult.success) {
+        console.error('MailerLite validation error:', parseResult.error.format());
         throw new MailerLiteValidationError(
           'Invalid subscriber response from MailerLite',
           parseResult.error
         );
       }
 
-      const subscriber = parseResult.data.data;
+      const subscriber = normalizeSubscriber(parseResult.data.data);
       
       // Check if subscriber is in our specific group
       const groups = subscriber.groups || [];
@@ -149,24 +153,57 @@ export class MailerLiteClient {
     // Generate idempotency key to prevent duplicate subscriptions
     const idempotencyKey = `sub-${email}-${this.groupId}`;
     
-    const response = await this.makeRequest<unknown>('/subscribers', {
-      method: 'POST',
-      body: JSON.stringify(requestBody),
-      headers: {
-        'Idempotency-Key': idempotencyKey,
-      },
-    });
+    try {
+      const response = await this.makeRequest<unknown>('/subscribers', {
+        method: 'POST',
+        body: JSON.stringify(requestBody),
+        headers: {
+          'Idempotency-Key': idempotencyKey,
+        },
+      });
 
-    // Validate response with Zod
-    const parseResult = ZCreateSubscriberResponse.safeParse(response);
-    if (!parseResult.success) {
-      throw new MailerLiteValidationError(
-        'Invalid create subscriber response from MailerLite',
-        parseResult.error
-      );
+      // Validate response with Zod
+      const parseResult = ZCreateSubscriberResponse.safeParse(response);
+      if (!parseResult.success) {
+        console.error('MailerLite create validation error:', parseResult.error.format());
+        throw new MailerLiteValidationError(
+          'Invalid create subscriber response from MailerLite',
+          parseResult.error
+        );
+      }
+
+      return normalizeSubscriber(parseResult.data.data);
+      
+    } catch (error) {
+      // Handle 409 conflict - subscriber already exists
+      if (error instanceof MailerLiteError && error.status === 409) {
+        console.log(`Subscriber ${email} already exists, fetching existing record`);
+        
+        // Fallback: GET existing subscriber by email
+        const query = new URLSearchParams({ 'filter[email]': email });
+        const fallbackResponse = await this.makeRequest<unknown>(`/subscribers?${query.toString()}`, {
+          method: 'GET',
+        });
+        
+        const listParseResult = ZSubscriberListResponse.safeParse(fallbackResponse);
+        if (!listParseResult.success) {
+          console.error('MailerLite list validation error:', listParseResult.error.format());
+          throw new MailerLiteValidationError(
+            'Invalid subscriber list response from MailerLite',
+            listParseResult.error
+          );
+        }
+        
+        const existing = listParseResult.data.data[0];
+        if (!existing) {
+          throw new Error('Could not fetch existing subscriber after 409 conflict');
+        }
+        
+        return normalizeSubscriber(existing);
+      }
+      
+      throw error; // Re-throw other errors
     }
-
-    return parseResult.data.data;
   }
 
   /**
@@ -191,13 +228,14 @@ export class MailerLiteClient {
       
       const parseResult = ZSubscriberResponse.safeParse(response);
       if (!parseResult.success) {
+        console.error('MailerLite get subscriber validation error:', parseResult.error.format());
         throw new MailerLiteValidationError(
           'Invalid subscriber response from MailerLite',
           parseResult.error
         );
       }
 
-      return parseResult.data.data;
+      return normalizeSubscriber(parseResult.data.data);
     } catch (error) {
       if (error instanceof MailerLiteError && error.status === 404) {
         return null;
@@ -224,6 +262,7 @@ export class MailerLiteClient {
       // Validate response with Zod
       const parseResult = ZSubscriberResponse.safeParse(response);
       if (!parseResult.success) {
+        console.error('MailerLite update validation error:', parseResult.error.format());
         throw new MailerLiteValidationError(
           'Invalid update subscriber response from MailerLite',
           parseResult.error

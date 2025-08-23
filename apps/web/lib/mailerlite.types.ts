@@ -33,23 +33,43 @@ export interface CreateSubscriberRequest {
 // Zod schemas for runtime validation and type safety
 export const ZMailerLiteGroup = z.object({
   id: z.string(),
-  name: z.string(),
+  name: z.string().optional(),
 });
 
-export const ZMailerLiteSubscriber = z.object({
+// Raw MailerLite API response structure
+const ZSubscriberAPI = z.object({
   id: z.string(),
   email: z.string().email(),
   status: z.enum(['active', 'unsubscribed', 'junk', 'unconfirmed']),
-  date_created: z.string(),
+  // MailerLite uses created_at/subscribed_at; legacy date_created sometimes null
+  created_at: z.string().optional(),
+  subscribed_at: z.string().optional(),
+  date_created: z.union([z.string(), z.null()]).optional(),
   groups: z.array(ZMailerLiteGroup).optional(),
 });
 
 export const ZSubscriberResponse = z.object({
-  data: ZMailerLiteSubscriber,
+  data: ZSubscriberAPI,
 });
 
 export const ZCreateSubscriberResponse = z.object({
-  data: ZMailerLiteSubscriber,
+  data: ZSubscriberAPI,
+});
+
+export const ZSubscriberListResponse = z.object({
+  data: z.array(ZSubscriberAPI),
+});
+
+// Parsed types from Zod schemas
+export type SubscriberAPI = z.infer<typeof ZSubscriberAPI>;
+
+// Normalized subscriber after parsing MailerLite response
+export const ZMailerLiteSubscriber = z.object({
+  id: z.string(),
+  email: z.string().email(),
+  status: z.enum(['active', 'unsubscribed', 'junk', 'unconfirmed']),
+  date_created: z.string().optional(),
+  groups: z.array(ZMailerLiteGroup),
 });
 
 // Parsed types from Zod schemas
@@ -74,4 +94,23 @@ export class MailerLiteValidationError extends Error {
     super(message);
     this.name = 'MailerLiteValidationError';
   }
+}
+
+/**
+ * Normalize MailerLite API response to consistent format
+ */
+export function normalizeSubscriber(api: SubscriberAPI): SubscriberParsed {
+  // Prefer modern fields, fallback if needed
+  const date_created = 
+    api.created_at ??
+    api.subscribed_at ??
+    (typeof api.date_created === 'string' ? api.date_created : undefined);
+
+  return {
+    id: api.id,
+    email: api.email,
+    status: api.status,
+    date_created,
+    groups: api.groups ?? [],
+  };
 }
