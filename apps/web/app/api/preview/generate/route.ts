@@ -118,6 +118,8 @@ export async function POST(request: NextRequest) {
       story,
       style,
       aspect,
+      ipAddress: ip,
+      // userId: undefined (no user auth in preview generation)
     });
 
     // Convert to API format

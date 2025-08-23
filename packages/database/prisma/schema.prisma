@@ -24,28 +24,35 @@ model User {
 }
 
 model Preview {
-  id            String    @id @default(cuid())
-  createdAt     DateTime  @default(now())
-  expiresAt     DateTime  // 7 days from creation
+  id               String    @id @default(cuid())
+  createdAt        DateTime  @default(now())
+  expiresAt        DateTime  // 7 days from creation
   
   // User association
-  userId        String?
-  user          User?     @relation(fields: [userId], references: [id])
-  ipAddress     String    // For anonymous users
+  userId           String?
+  user             User?     @relation(fields: [userId], references: [id])
+  ipAddress        String    // For anonymous users
   
   // Content
-  story         String    @db.Text
-  style         String
-  prompt        String    @db.Text  // AI-refined prompt
-  imageUrl      String    // S3 URL
+  story            String    @db.Text
+  style            String
+  prompt           String    @db.Text  // AI-refined prompt
+  imageUrl         String    // Original URL (Replicate or S3)
+  
+  // S3 Upload Status
+  s3ImageUrl       String?   // Final S3 URL after queue processing
+  s3UploadStatus   String    @default("pending") // pending, completed, failed
+  s3UploadAttempts Int       @default(0)
   
   // Usage
-  selected      Boolean   @default(false)
-  order         Order?
+  selected         Boolean   @default(false)
+  order            Order?
+  s3UploadQueue    S3UploadQueue?
   
   @@index([userId])
   @@index([ipAddress, createdAt])
   @@index([expiresAt])
+  @@index([s3UploadStatus])
 }
 
 model Order {
@@ -102,6 +109,31 @@ model RateLimit {
   @@unique([identifier, window])
   @@index([identifier])
   @@index([window])
+}
+
+model S3UploadQueue {
+  id              String   @id @default(cuid())
+  previewId       String   @unique
+  imageUrl        String   // Replicate URL (expiring)
+  status          String   @default("pending") // pending|running|completed|failed|dead
+  attempts        Int      @default(0)
+  nextRunAt       DateTime @default(now())     // for exponential backoff scheduling
+  lastError       String?
+  createdAt       DateTime @default(now())
+  processedAt     DateTime?
+  
+  // S3 metadata for traceability
+  contentType     String?
+  contentLength   Int?
+  s3Key           String?  // object key for traceability
+  s3ETag          String?
+  
+  // Relations
+  preview         Preview  @relation(fields: [previewId], references: [id], onDelete: Cascade)
+  
+  @@index([status, nextRunAt]) // For efficient queue processing
+  @@index([previewId])
+  @@index([createdAt])
 }
 
 enum OrderStatus {

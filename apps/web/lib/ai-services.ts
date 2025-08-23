@@ -5,6 +5,7 @@ import { buildPrompt } from './prompt-builder';
 import { ArtStyle, Aspect, PromptBundle } from './types';
 import { PromptRefiner } from '@taletoprint/ai-pipeline/src/shared/prompt-refiner';
 import { S3Storage, PreviewMetadata } from '@taletoprint/ai-pipeline/src/shared/storage';
+import { PrismaClient } from '@taletoprint/database';
 import { 
   chooseModelJob, 
   chooseModelJobLegacy,
@@ -24,6 +25,8 @@ interface GenerationRequest {
   story: string;
   style: ArtStyle;
   aspect: Aspect;
+  ipAddress?: string;
+  userId?: string;
 }
 
 interface GenerationResult {
@@ -234,9 +237,9 @@ export class SimpleAIGenerator {
         }
       };
 
-      // Save preview to S3 for analysis (async, don't wait)
-      this.savePreviewToS3(result, promptBundle, job, reason, generationTime, request).catch(error => {
-        console.warn(`[${previewId}] Failed to save preview to S3:`, error);
+      // Save preview to database and queue for S3 upload (async, don't wait)  
+      this.savePreviewToDatabase(result, request, generationTime).catch(error => {
+        console.warn(`[${previewId}] Failed to save preview to database:`, error);
       });
 
       return result;
@@ -757,6 +760,59 @@ export class SimpleAIGenerator {
     }
 
     throw new Error(`Fetch failed after ${maxRetries} attempts. Last error: ${lastError?.message || 'Unknown error'}`);
+  }
+
+  /**
+   * Save preview to database and queue for S3 upload
+   */
+  private async savePreviewToDatabase(
+    result: GenerationResult,
+    request: GenerationRequest, 
+    generationTime: number
+  ): Promise<void> {
+    const prisma = new PrismaClient();
+    
+    try {
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+      
+      await prisma.$transaction(async (tx) => {
+        // Create preview record
+        await tx.preview.create({
+          data: {
+            id: result.id,
+            imageUrl: result.imageUrl, // Replicate URL
+            story: request.story,
+            style: request.style,
+            prompt: result.refinedPrompt || result.prompt,
+            expiresAt,
+            ipAddress: request.ipAddress || 'unknown',
+            userId: request.userId || null,
+            s3UploadStatus: 'pending',
+            s3UploadAttempts: 0
+          }
+        });
+        
+        // Add to S3 upload queue
+        await tx.s3UploadQueue.create({
+          data: {
+            previewId: result.id,
+            imageUrl: result.imageUrl,
+            status: 'pending',
+            attempts: 0,
+            nextRunAt: new Date(), // Process immediately
+            s3Key: `previews/${result.id}.jpg`
+          }
+        });
+      });
+      
+      console.log(`[${result.id}] Preview saved to database and queued for S3 upload`);
+      
+    } catch (error) {
+      console.error(`[${result.id}] Failed to save preview to database:`, error);
+      throw error;
+    } finally {
+      await prisma.$disconnect();
+    }
   }
 
 }

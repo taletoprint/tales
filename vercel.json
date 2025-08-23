@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/queue/process-s3-uploads",
+      "schedule": "* * * * *"
+    }
+  ]
+}
