@@ -76,20 +76,20 @@ function parseMemory(memory: string) {
   return { mainSubject, setting, mood, paletteHint, has_people, raw };
 }
 
-/** Map product aspect → working pixel size for SDXL - Real-ESRGAN compatible */
+/** Map product aspect → working pixel size optimized for print sizes with white borders */
 function aspectToSize(aspect: Aspect): { width: number; height: number } {
-  // Real-ESRGAN max: ~2M pixels (1448×1448 = 2,096,704 pixels)
-  // A3 ratio: 297×420mm = 0.707 aspect ratio
+  // Optimized for actual print sizes with 10mm white borders
+  // All dimensions keep under 2M pixels for Real-ESRGAN compatibility
   switch (aspect) {
-    case "A3_portrait": // 297x420 ratio - fits in Real-ESRGAN limits
-      return { width: 1024, height: 1448 }; // A3 portrait - 1,482,752 pixels (safe)
-    case "A3_landscape":
-      return { width: 1448, height: 1024 }; // A3 landscape - 1,482,752 pixels (safe)
-    case "A2_portrait": // larger preview
-      return { width: 1024, height: 1448 }; // Same as A3 portrait for now
-    case "square":
+    case "A3_portrait": // Maps to A4 portrait (210×297mm) with 10mm border
+      return { width: 1024, height: 1492 }; // Art area ratio: 190×277mm = 0.686
+    case "A3_landscape": // Maps to A3 landscape (297×420mm) with 10mm border  
+      return { width: 1484, height: 1024 }; // Art area ratio: 277×400mm = 0.692
+    case "A2_portrait": // Future expansion - same as A3_portrait for now
+      return { width: 1024, height: 1492 }; // Same as A4 portrait ratio
+    case "square": // Maps to square prints (8×8" or 10×10") with border
     default:
-      return { width: 1024, height: 1024 }; // Square - 1,048,576 pixels (safe)
+      return { width: 1024, height: 1024 }; // Square art area 1:1 ratio
   }
 }
 
