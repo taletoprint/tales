@@ -170,7 +170,7 @@ export class SimpleAIGenerator {
             params: {
               ...baseBundle.params,
               steps: refinedResult.parameters?.num_inference_steps || baseBundle.params.steps,
-              guidance: refinedResult.parameters?.guidance_scale || baseBundle.params.guidance,
+              cfg: refinedResult.parameters?.guidance_scale || baseBundle.params.cfg,
               width: refinedResult.parameters?.width || baseBundle.params.width,
               height: refinedResult.parameters?.height || baseBundle.params.height,
               seed: refinedResult.parameters?.seed || baseBundle.params.seed
