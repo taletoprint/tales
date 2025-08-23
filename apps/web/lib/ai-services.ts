@@ -604,24 +604,28 @@ export class SimpleAIGenerator {
       // Map dimensions to Flux parameters  
       const fluxDimensions = this.mapDimensionsToFlux(promptBundle.params.width, promptBundle.params.height);
       
-      // Prepare input parameters for Flux-Dev with LoRA
-      const inputParams = {
+      // Prepare input parameters for black-forest-labs/flux-dev-lora
+      const inputParams: any = {
         prompt: enhancedPrompt,
-        negative_prompt: negativePrompt,
-        lora_url: loraConfig.url,
+        lora_weights: loraConfig.url, // LoRA weights URL
         lora_scale: loraConfig.scale,
-        seed: promptBundle.params.seed,
+        width: promptBundle.params.width,
+        height: promptBundle.params.height,
         num_outputs: 1,
-        aspect_ratio: fluxDimensions.aspect_ratio,
-        megapixels: fluxDimensions.megapixels,
         num_inference_steps: 25, // New standardized steps
         guidance_scale: 3.5, // New standardized guidance
         output_format: "webp",
         output_quality: 80
       };
       
-      // Create prediction using Flux-Dev-LoRA model (placeholder - actual model version TBD)
-      const fluxDevLoraVersion = '5599ed30703defd1d160a25a63321b4dec97101d98b4674bcc56e41f62f35637'; // Placeholder
+      // Add seed if provided
+      if (promptBundle.params.seed) {
+        inputParams.seed = promptBundle.params.seed;
+      }
+      
+      // Create prediction using Flux-Dev-LoRA model
+      // Note: This will need to be updated with the actual version hash from Replicate
+      const fluxDevLoraVersion = 'black-forest-labs/flux-dev-lora:latest'; // Will be resolved to version hash
       
       const response = await this.fetchWithRetry('https://api.replicate.com/v1/predictions', {
         method: 'POST',

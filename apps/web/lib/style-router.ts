@@ -76,10 +76,10 @@ export function getLoRAConfig(loraKey: string): LoRAConfig | null {
  * Get model configuration
  */
 export function getModelConfig(model: 'flux-dev-lora' | 'flux-schnell' | 'sdxl'): ModelConfig {
-  // Default config for flux-dev-lora if not in config
+  // Default config for flux-dev-lora
   if (model === 'flux-dev-lora') {
     return {
-      version: 'flux-dev-lora', // This will be resolved to actual Replicate model
+      version: 'black-forest-labs/flux-dev-lora:latest', // Actual Replicate model
       params: {
         num_inference_steps: 25,
         guidance_scale: 3.5,
