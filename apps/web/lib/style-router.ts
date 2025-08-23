@@ -189,7 +189,7 @@ export function getRoutingReason(style: ArtStyle, peopleCount: number, peopleClo
     return `Fallback: SDXL${job.useLora ? '+LoRA' : ''} for ${style} (flux models unavailable)`;
   }
   
-  return `${style} → ${job.model.toUpperCase()}`;
+  return `${style} → ${(job.model as string).toUpperCase()}`;
 }
 
 /**
