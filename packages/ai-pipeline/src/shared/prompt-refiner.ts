@@ -8,13 +8,34 @@ export interface PromptRefinementRequest {
 }
 
 export interface PromptRefinementResult {
-  refined_prompt: string;
+  model: string;
+  style: string;
+  lora: {
+    id: string;
+    scale: number;
+  };
+  positive_prompt: string;
   negative_prompt: string;
-  style_keywords: string[];
-  has_people: boolean;
-  people_count: number;
-  people_close_up: boolean;
-  people_rendering: 'none' | 'implied' | 'distant' | 'close_up';
+  parameters: {
+    num_inference_steps: number;
+    guidance_scale: number;
+    width: number;
+    height: number;
+    seed: number | null;
+  };
+  safety: {
+    people_closeup: 'avoid' | 'allow';
+    ethnicity_handling: 'non_specific_unless_explicit';
+    nsfw: 'forbid';
+  };
+  notes: string;
+  // Legacy fields for compatibility
+  refined_prompt?: string;
+  style_keywords?: string[];
+  has_people?: boolean;
+  people_count?: number;
+  people_close_up?: boolean;
+  people_rendering?: 'none' | 'implied' | 'distant' | 'close_up';
 }
 
 export class PromptRefiner {
@@ -27,66 +48,61 @@ export class PromptRefiner {
   }
 
   async refinePrompt(request: PromptRefinementRequest): Promise<PromptRefinementResult> {
-    const wrapper = this.getUniversalWrapper();
-    const systemPrompt = `You are an expert at creating prompts for AI art generation that prioritizes SDXL+LoRA for superior artistic quality. Transform user stories into detailed artistic prompts while minimizing explicit people unless they are the main subject.
+    const systemPrompt = `You are the "TaleToPrint Refiner". Your job is to convert a short customer "tale" into a precise, style-aware image brief for an AI image model.
 
-STRATEGY: Make SDXL+LoRA the default by representing scenes through atmosphere/aftermath rather than explicit people.
+Rules:
+- British English.
+- Preserve ALL human elements and relationships in the tale (do not remove people).
+- Never invent personal attributes (names, ages, races/ethnicities, religions) unless explicitly given.
+- If ethnicity is not specified, DO NOT infer it. Use neutral, non-specific depiction (lightly stylised faces, no close-up facial detail unless requested).
+- Lean into composition, colour, lighting, mood, background detail, props, and environment.
+- Keep text-to-image friendly: concrete nouns, verbs, visual adjectives; avoid plot logic.
+- Respect the selected art style and translate it into clear medium cues (brushwork, texture, materials).
+- Safe, respectful, non-stereotyped depictions only.
 
-PEOPLE RENDERING STRATEGY:
-1. KEEP people when they ARE the main subject:
-   - Family gatherings: "family around table", "cooking together", "gathered for dinner"
-   - Group activities: "friends playing", "children laughing", "wedding celebration"
-   - Portraits and explicit people scenes
+Output strictly as compact JSON (no markdown) matching the schema.
 
-2. MINIMIZE only for incidental/background people:
-   - "walked through park" → "peaceful park path with footprints"
-   - "visited the beach" → "sunny beach scene with distant figures"
-   - Background activities where setting is primary
+Schema:
+{
+  "model": "flux-dev-lora",
+  "style": "watercolour|oil_painting|pastel|pencil_ink|storybook|impressionist",
+  "lora": { "id": "string", "scale": 1.0 },
+  "positive_prompt": "string",
+  "negative_prompt": "string",
+  "parameters": {
+    "num_inference_steps": 25,
+    "guidance_scale": 3.5,
+    "width": 1024,
+    "height": 1024,
+    "seed": "number | null"
+  },
+  "safety": {
+    "people_closeup": "avoid|allow",
+    "ethnicity_handling": "non_specific_unless_explicit",
+    "nsfw": "forbid"
+  },
+  "notes": "string"  // brief rationale for debugging
+}
 
-3. When showing people, optimize composition for the target model:
-   - SDXL: "figures distant", "group silhouettes", avoid detailed faces
-   - Flux: Can handle closer figures and clearer faces
+Style translation (append to the user brief as appropriate):
+- watercolour: "delicate watercolour, soft flowing washes, gentle bleeding edges, textured cotton paper, granulation"
+- oil_painting: "rich oil on canvas, visible brush strokes, impasto texture, layered glazing, warm natural palette"
+- pastel: "soft chalk pastel, dusty texture, muted tones, visible pastel strokes on toned paper"
+- pencil_ink: "fine pencil and ink linework, cross-hatching, hand-drawn contour lines, minimal wash, sketchbook feel"
+- storybook: "whimsical picture-book illustration, playful shapes, simplified forms, warm palette, gentle vignetting"
+- impressionist: "classic impressionist brushwork, broken colour, dappled light, atmospheric perspective, suggestion over detail"
 
-4. Pet quantity preservation:
-   - "our dog" → "single dog", "the cat" → "one cat"
-   - "our dogs" → "two dogs", "three cats" → "three cats"
-   - Preserve specific quantities to prevent AI adding multiple animals
+Ethnicity & faces:
+- If ethnicity unspecified → "non-specific features, lightly stylised faces, medium distance composition". Do not specify skin colour or ethnicity.
+- If explicitly stated by the user, reflect it respectfully and literally.
+- Prefer compositions that convey the scene without extreme facial close-ups unless requested.
 
-PEOPLE ANALYSIS:
-- people_count: Count explicit people (0, 1, 2, 3+)
-- people_close_up: true only if faces/expressions are the main subject
-- people_rendering: 'none'|'implied'|'distant'|'close_up'
+Negative prompt defaults:
+"text, watermark, signature, logo, extra fingers, distorted hands, disfigured faces, multiple heads, heavy photo-bokeh, harsh HDR, neon glow, plastic skin"`;
 
-ROUTING LOGIC:
-- DEFAULT: SDXL+LoRA (superior artistic quality)
-- Use Flux ONLY when: people_count >= 3 OR people_close_up = true
-- ALWAYS SDXL: impressionist, oil_painting (texture fidelity critical)
+    const userPrompt = `Tale: "${request.story}"
 
-UNIVERSAL WRAPPER:
-Prefix: ${wrapper.prefix}
-Suffix: ${wrapper.suffix}
-
-PROMPT COMPILATION RULES:
-- Structure: [Key Subject] in [Setting]; [Medium] with [3-4 max style adjectives]
-- Keep it concise: Flux ignores long lists, SDXL prefers focused prompts
-- Front-load important nouns: "Girl on swing under oak; spring meadow; pastel on textured paper"
-- Avoid comma soup: Use short clauses separated by semicolons
-- Medium-specific keywords only: Let LoRA handle the heavy lifting
-
-Respond with JSON containing:
-- refined_prompt: Compiled prompt with optimal structure for target model
-- negative_prompt: Empty for Flux, can include for SDXL
-- style_keywords: Array of 3-5 artistic terms
-- has_people: Boolean (legacy compatibility)
-- people_count: Number of explicit people (0-3+)
-- people_close_up: Boolean (faces are main subject)
-- people_rendering: How people should be shown`;
-
-    const userPrompt = `Transform this story into an artistic prompt:
-
-"${request.story}"
-
-Style: ${request.style}`;
+Style: ${request.style.toLowerCase()}`;
 
     try {
       const response = await this.openai.chat.completions.create({
@@ -96,7 +112,8 @@ Style: ${request.style}`;
           { role: 'user', content: userPrompt }
         ],
         temperature: 0.7,
-        max_tokens: 500,
+        max_tokens: 800,
+        response_format: { type: 'json_object' }
       });
 
       const content = response.choices[0]?.message?.content;
@@ -104,21 +121,16 @@ Style: ${request.style}`;
         throw new Error('No response from OpenAI');
       }
 
-      // Clean and parse the JSON response (handle markdown code blocks)
-      const cleanedContent = this.extractJsonFromResponse(content);
-      const result = JSON.parse(cleanedContent) as PromptRefinementResult;
+      // Parse the JSON response
+      const result = JSON.parse(content) as PromptRefinementResult;
       
-      // Add universal wrapper to refined prompt
-      const wrapper = this.getUniversalWrapper();
-      if (!result.refined_prompt.startsWith(wrapper.prefix)) {
-        result.refined_prompt = `${wrapper.prefix} ${result.refined_prompt}`;
-      }
-      if (!result.refined_prompt.endsWith(wrapper.suffix)) {
-        result.refined_prompt = `${result.refined_prompt} ${wrapper.suffix}`;
-      }
-      
-      // Flux doesn't use negative prompts effectively, so keep empty
-      result.negative_prompt = "";
+      // Add legacy fields for backward compatibility
+      result.refined_prompt = result.positive_prompt;
+      result.style_keywords = this.extractStyleKeywords(result.positive_prompt, request.style);
+      result.has_people = result.safety.people_closeup === 'allow';
+      result.people_count = result.has_people ? 1 : 0;
+      result.people_close_up = result.safety.people_closeup === 'allow';
+      result.people_rendering = result.has_people ? 'close_up' : 'none';
 
       return result;
     } catch (error: any) {
@@ -240,11 +252,32 @@ Traditional plein air feel with bold brushwork.`,
 
   private createFallbackPrompt(request: PromptRefinementRequest): PromptRefinementResult {
     const peopleAnalysis = this.analyzeStoryForPeople(request.story, request.style);
-    const wrapper = this.getUniversalWrapper();
+    const loraMapping = this.getLoRAMapping(request.style);
+    const styleTranslation = this.getStyleTranslation(request.style);
+    
+    const positivePrompt = `A beautiful artistic scene inspired by: ${request.story}. ${styleTranslation}`;
     
     return {
-      refined_prompt: `${wrapper.prefix} A beautiful artistic scene inspired by: ${request.story}. Artistic style with authentic medium texture, figures distant if present. ${wrapper.suffix}`,
-      negative_prompt: "",
+      model: "flux-dev-lora",
+      style: request.style.toLowerCase(),
+      lora: loraMapping,
+      positive_prompt: positivePrompt,
+      negative_prompt: "text, watermark, signature, logo, extra fingers, distorted hands, disfigured faces, multiple heads, heavy photo-bokeh, harsh HDR, neon glow, plastic skin",
+      parameters: {
+        num_inference_steps: 25,
+        guidance_scale: 3.5,
+        width: 1024,
+        height: 1024,
+        seed: null
+      },
+      safety: {
+        people_closeup: peopleAnalysis.people_close_up ? 'allow' : 'avoid',
+        ethnicity_handling: 'non_specific_unless_explicit',
+        nsfw: 'forbid'
+      },
+      notes: "Fallback prompt generation used due to OpenAI API failure",
+      // Legacy fields
+      refined_prompt: positivePrompt,
       style_keywords: [request.style.toLowerCase(), 'artistic', 'authentic', 'texture', 'traditional'],
       has_people: peopleAnalysis.has_people,
       people_count: peopleAnalysis.people_count,
@@ -338,5 +371,42 @@ Traditional plein air feel with bold brushwork.`,
     // Legacy method for compatibility
     const analysis = this.analyzeStoryForPeople(story, style);
     return analysis.has_people;
+  }
+
+  private getLoRAMapping(style: ArtStyle): { id: string; scale: number } {
+    const mappings = {
+      'WATERCOLOUR': { id: 'lora_watercolour_v2', scale: 1.0 },
+      'OIL_PAINTING': { id: 'lora_oil_v3', scale: 1.0 },
+      'PASTEL': { id: 'lora_pastel_v2', scale: 1.0 },
+      'PENCIL_INK': { id: 'lora_ink_v1', scale: 0.9 },
+      'STORYBOOK': { id: 'lora_storybook_v3', scale: 1.1 },
+      'IMPRESSIONIST': { id: 'lora_impressionist_v2', scale: 1.0 }
+    };
+    return mappings[style] || { id: 'lora_watercolour_v2', scale: 1.0 };
+  }
+
+  private getStyleTranslation(style: ArtStyle): string {
+    const translations = {
+      'WATERCOLOUR': 'delicate watercolour, soft flowing washes, gentle bleeding edges, textured cotton paper, granulation',
+      'OIL_PAINTING': 'rich oil on canvas, visible brush strokes, impasto texture, layered glazing, warm natural palette',
+      'PASTEL': 'soft chalk pastel, dusty texture, muted tones, visible pastel strokes on toned paper',
+      'PENCIL_INK': 'fine pencil and ink linework, cross-hatching, hand-drawn contour lines, minimal wash, sketchbook feel',
+      'STORYBOOK': 'whimsical picture-book illustration, playful shapes, simplified forms, warm palette, gentle vignetting',
+      'IMPRESSIONIST': 'classic impressionist brushwork, broken colour, dappled light, atmospheric perspective, suggestion over detail'
+    };
+    return translations[style] || translations['WATERCOLOUR'];
+  }
+
+  private extractStyleKeywords(prompt: string, style: ArtStyle): string[] {
+    const baseKeywords = [style.toLowerCase().replace('_', ' ')];
+    const styleSpecific = {
+      'WATERCOLOUR': ['watercolour', 'washes', 'bleeding', 'paper'],
+      'OIL_PAINTING': ['oil', 'canvas', 'impasto', 'glazing'],
+      'PASTEL': ['pastel', 'dusty', 'chalk', 'soft'],
+      'PENCIL_INK': ['pencil', 'ink', 'linework', 'sketch'],
+      'STORYBOOK': ['storybook', 'whimsical', 'illustration', 'playful'],
+      'IMPRESSIONIST': ['impressionist', 'brushwork', 'atmospheric', 'dappled']
+    };
+    return [...baseKeywords, ...(styleSpecific[style] || [])];
   }
 }

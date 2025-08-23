@@ -9,7 +9,8 @@ import { prisma } from './prisma';
 import { 
   chooseModelJob, 
   chooseModelJobLegacy,
-  getLoRAConfig, 
+  getLoRAConfig,
+  getLoRAKeyForStyle, 
   getModelConfig, 
   buildStylePrompt, 
   getRoutingReason,
@@ -103,7 +104,7 @@ export class SimpleAIGenerator {
     const peopleCount = (promptBundle.meta as any).people_count ?? (has_people ? 1 : 0);
     const peopleCloseUp = (promptBundle.meta as any).people_close_up ?? false;
     
-    // Use new routing logic with enhanced people detection
+    // Use new routing logic with flux-dev-lora as primary
     const job = chooseModelJob(style, peopleCount, peopleCloseUp);
     const reason = getRoutingReason(style, peopleCount, peopleCloseUp, job);
     
@@ -160,19 +161,27 @@ export class SimpleAIGenerator {
             style: this.mapArtStyleToPromptRefiner(request.style)
           });
           
-          // Create a PromptBundle from the refined result
+          // Create a PromptBundle from the refined result (backward compatibility)
           const baseBundle = buildPrompt(request.story, request.style, request.aspect);
           promptBundle = {
             ...baseBundle,
-            positive: refinedResult.refined_prompt,
-            negative: refinedResult.negative_prompt,
+            positive: refinedResult.positive_prompt || refinedResult.refined_prompt || baseBundle.positive,
+            negative: refinedResult.negative_prompt || baseBundle.negative,
+            params: {
+              ...baseBundle.params,
+              steps: refinedResult.parameters?.num_inference_steps || baseBundle.params.steps,
+              guidance: refinedResult.parameters?.guidance_scale || baseBundle.params.guidance,
+              width: refinedResult.parameters?.width || baseBundle.params.width,
+              height: refinedResult.parameters?.height || baseBundle.params.height,
+              seed: refinedResult.parameters?.seed || baseBundle.params.seed
+            },
             meta: {
               ...baseBundle.meta,
-              styleKeywords: refinedResult.style_keywords,
-              has_people: refinedResult.has_people,
-              people_count: refinedResult.people_count,
-              people_close_up: refinedResult.people_close_up,
-              people_rendering: refinedResult.people_rendering
+              styleKeywords: refinedResult.style_keywords || [request.style],
+              has_people: refinedResult.has_people ?? baseBundle.meta.has_people,
+              people_count: refinedResult.people_count ?? (refinedResult.has_people ? 1 : 0),
+              people_close_up: refinedResult.people_close_up ?? false,
+              people_rendering: refinedResult.people_rendering || 'none'
             }
           };
           console.log(`[${previewId}] OpenAI enhanced prompt generated successfully`);
@@ -196,7 +205,10 @@ export class SimpleAIGenerator {
       console.log(`[${previewId}] Routing to ${job.model} model (${reason})`);
       
       let originalImageUrl: string;
-      if (job.model === 'flux-schnell') {
+      if (job.model === 'flux-dev-lora') {
+        originalImageUrl = await this.generateWithFluxDevLora(promptBundle, job, previewId);
+        console.log(`[${previewId}] Flux-Dev-LoRA image generated successfully`);
+      } else if (job.model === 'flux-schnell') {
         originalImageUrl = await this.generateWithFluxSchnell(promptBundle, job, previewId);
         console.log(`[${previewId}] Flux-Schnell image generated successfully`);
       } else {
@@ -571,6 +583,94 @@ export class SimpleAIGenerator {
     }
   }
 
+  private async generateWithFluxDevLora(promptBundle: PromptBundle, job: ModelJob, previewId: string): Promise<string> {
+    try {
+      console.log(`[${previewId}] Starting Flux-Dev-LoRA generation via Replicate...`);
+      
+      // Get LoRA configuration
+      const loraKey = job.loraKey || getLoRAKeyForStyle(promptBundle.meta.style);
+      const loraConfig = getLoRAConfig(loraKey);
+      
+      if (!loraConfig) {
+        console.warn(`[${previewId}] No LoRA config found for ${loraKey}, falling back to Flux-Schnell`);
+        return this.generateWithFluxSchnell(promptBundle, job, previewId);
+      }
+      
+      const enhancedPrompt = this.enhancePromptWithLoRA(promptBundle.positive, loraConfig);
+      const negativePrompt = getNegativePrompt(promptBundle.meta.style, 'flux-dev-lora');
+      
+      console.log(`[${previewId}] Using LoRA: ${loraConfig.url} (scale: ${loraConfig.scale})`);
+      
+      // Map dimensions to Flux parameters  
+      const fluxDimensions = this.mapDimensionsToFlux(promptBundle.params.width, promptBundle.params.height);
+      
+      // Prepare input parameters for Flux-Dev with LoRA
+      const inputParams = {
+        prompt: enhancedPrompt,
+        negative_prompt: negativePrompt,
+        lora_url: loraConfig.url,
+        lora_scale: loraConfig.scale,
+        seed: promptBundle.params.seed,
+        num_outputs: 1,
+        aspect_ratio: fluxDimensions.aspect_ratio,
+        megapixels: fluxDimensions.megapixels,
+        num_inference_steps: 25, // New standardized steps
+        guidance_scale: 3.5, // New standardized guidance
+        output_format: "webp",
+        output_quality: 80
+      };
+      
+      // Create prediction using Flux-Dev-LoRA model (placeholder - actual model version TBD)
+      const fluxDevLoraVersion = '5599ed30703defd1d160a25a63321b4dec97101d98b4674bcc56e41f62f35637'; // Placeholder
+      
+      const response = await this.fetchWithRetry('https://api.replicate.com/v1/predictions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${this.replicateToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          version: fluxDevLoraVersion,
+          input: inputParams
+        }),
+      }, previewId, 3);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[${previewId}] Flux-Dev-LoRA API error ${response.status}:`, errorText);
+        
+        if (response.status === 402) {
+          throw new Error('Replicate account has insufficient credits. Please add credits to your Replicate account.');
+        }
+        
+        if (response.status === 429) {
+          const retryAfter = response.headers.get('retry-after') || '3';
+          const retrySeconds = parseInt(retryAfter);
+          console.log(`[${previewId}] Rate limited, retrying in ${retrySeconds} seconds...`);
+          
+          await new Promise(resolve => setTimeout(resolve, (retrySeconds + 1) * 1000));
+          return this.generateWithFluxDevLora(promptBundle, job, previewId + '_retry');
+        }
+        
+        // Fallback to Flux-Schnell on API errors
+        console.warn(`[${previewId}] Flux-Dev-LoRA failed, falling back to Flux-Schnell`);
+        return this.generateWithFluxSchnell(promptBundle, { ...job, model: 'flux-schnell' }, previewId);
+      }
+
+      const prediction = await response.json();
+      console.log(`[${previewId}] Flux-Dev-LoRA prediction created: ${prediction.id}`);
+
+      const imageUrl = await this.waitForReplicateCompletion(prediction.id, previewId);
+      return imageUrl;
+
+    } catch (error) {
+      console.error(`[${previewId}] Flux-Dev-LoRA generation failed:`, error);
+      
+      // Fallback to Flux-Schnell
+      console.warn(`[${previewId}] Falling back to Flux-Schnell due to Flux-Dev-LoRA error`);
+      return this.generateWithFluxSchnell(promptBundle, { ...job, model: 'flux-schnell' }, previewId);
+    }
+  }
 
   private async waitForReplicateCompletion(predictionId: string, previewId: string, maxWaitTime: number = 120000): Promise<string> {
     const pollInterval = 3000; // 3 seconds

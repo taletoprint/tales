@@ -2,7 +2,7 @@ import { ArtStyle } from './types';
 import stylesConfig from '../config/styles.config.json';
 
 export interface ModelJob {
-  model: 'flux-schnell' | 'sdxl';
+  model: 'flux-dev-lora' | 'flux-schnell' | 'sdxl';
   useLora: boolean;
   loraKey?: string;
 }
@@ -22,40 +22,21 @@ export interface ModelConfig {
 }
 
 /**
- * Choose the best model and LoRA configuration using OpenAI's "SDXL+LoRA first" strategy
+ * Choose the best model and LoRA configuration using Flux-Dev-LoRA as primary
  */
 export function chooseModelJob(style: ArtStyle, peopleCount: number, peopleCloseUp: boolean): ModelJob {
   const styleKey = style.toLowerCase();
-  const styleConfig = stylesConfig.styles[styleKey as keyof typeof stylesConfig.styles] as any;
+  const loraKey = getLoRAKeyForStyle(style);
   
-  if (!styleConfig) {
-    return { model: 'sdxl', useLora: false };
-  }
-
-  // Refined routing logic based on testing feedback
-  const needsFlux = peopleCount >= 3 || peopleCloseUp;
+  // Primary model: flux-dev-lora with style-specific LoRA
+  const primaryJob: ModelJob = {
+    model: 'flux-dev-lora',
+    useLora: true,
+    loraKey: loraKey
+  };
   
-  // ALWAYS SDXL for impressionist (texture priority, human rendering less critical)
-  if (styleKey === 'impressionist') {
-    return styleConfig.primary as ModelJob; // Always SDXL+LoRA
-  }
-  
-  // For other styles, check if we need Flux for multiple people scenarios
-  if (needsFlux && 'ifManyPeople' in styleConfig) {
-    return styleConfig.ifManyPeople as ModelJob;
-  }
-
-  // Default: Use SDXL+LoRA (primary choice)
-  if (styleConfig.primary) {
-    return styleConfig.primary as ModelJob;
-  }
-
-  // Fall back to first fallback
-  if (styleConfig.fallbacks && styleConfig.fallbacks.length > 0) {
-    return styleConfig.fallbacks[0] as ModelJob;
-  }
-
-  return { model: 'sdxl', useLora: false };
+  // Fallback to SDXL+LoRA if flux-dev-lora fails
+  return primaryJob;
 }
 
 /**
@@ -69,6 +50,21 @@ export function chooseModelJobLegacy(style: ArtStyle, hasPeople: boolean): Model
 }
 
 /**
+ * Get LoRA key for a given art style
+ */
+export function getLoRAKeyForStyle(style: ArtStyle): string {
+  const mappings = {
+    'WATERCOLOUR': 'lora_watercolour_v2',
+    'OIL_PAINTING': 'lora_oil_v3', 
+    'PASTEL': 'lora_pastel_v2',
+    'PENCIL_INK': 'lora_ink_v1',
+    'STORYBOOK': 'lora_storybook_v3',
+    'IMPRESSIONIST': 'lora_impressionist_v2'
+  };
+  return mappings[style] || 'lora_watercolour_v2';
+}
+
+/**
  * Get LoRA configuration for a given LoRA key
  */
 export function getLoRAConfig(loraKey: string): LoRAConfig | null {
@@ -79,23 +75,38 @@ export function getLoRAConfig(loraKey: string): LoRAConfig | null {
 /**
  * Get model configuration
  */
-export function getModelConfig(model: 'flux-schnell' | 'sdxl'): ModelConfig {
-  return stylesConfig.models[model];
+export function getModelConfig(model: 'flux-dev-lora' | 'flux-schnell' | 'sdxl'): ModelConfig {
+  // Default config for flux-dev-lora if not in config
+  if (model === 'flux-dev-lora') {
+    return {
+      version: 'flux-dev-lora', // This will be resolved to actual Replicate model
+      params: {
+        num_inference_steps: 25,
+        guidance_scale: 3.5,
+        output_format: 'webp',
+        output_quality: 80
+      },
+      supportsLora: true,
+      costTier: 'premium'
+    };
+  }
+  return stylesConfig.models[model] || stylesConfig.models['flux-schnell'];
 }
 
 /**
  * Get negative prompt for style and model
  */
-export function getNegativePrompt(style: ArtStyle, model: 'flux-schnell' | 'sdxl'): string {
+export function getNegativePrompt(style: ArtStyle, model: 'flux-dev-lora' | 'flux-schnell' | 'sdxl'): string {
+  // Flux models (including flux-dev-lora) use minimal negative prompts
+  if (model === 'flux-dev-lora' || model === 'flux-schnell') {
+    return "text, watermark, signature, logo, extra fingers, distorted hands, disfigured faces, multiple heads, heavy photo-bokeh, harsh HDR, neon glow, plastic skin";
+  }
+  
   const negatives = (stylesConfig as any).negativePrompts;
   if (!negatives) return "";
   
-  if (model === 'flux-schnell') {
-    return negatives.flux || "";
-  } else {
-    const styleKey = style.toLowerCase();
-    return negatives.sdxl?.[styleKey] || "";
-  }
+  const styleKey = style.toLowerCase();
+  return negatives.sdxl?.[styleKey] || "";
 }
 
 /**
@@ -163,33 +174,22 @@ export function buildStylePrompt(
 }
 
 /**
- * Get routing reason for logging (new optimized logic)
+ * Get routing reason for logging (flux-dev-lora primary)
  */
 export function getRoutingReason(style: ArtStyle, peopleCount: number, peopleCloseUp: boolean, job: ModelJob): string {
-  const styleKey = style.toLowerCase();
-  
-  // Always SDXL for impressionist (texture priority)
-  if (styleKey === 'impressionist') {
-    return `${style} always uses SDXL+LoRA for texture fidelity`;
+  if (job.model === 'flux-dev-lora') {
+    return `Primary model: Flux-Dev with ${style} LoRA for optimal quality and consistency`;
   }
   
-  // Flux only for multiple people or close-ups
   if (job.model === 'flux-schnell') {
-    if (peopleCount >= 3) {
-      return `${peopleCount}+ people → Flux for multiple faces`;
-    }
-    if (peopleCloseUp) {
-      return `close-up faces → Flux for detail`;
-    }
-    return `people scenario → Flux fallback`;
+    return `Fallback: Flux-Schnell for ${style} (flux-dev-lora unavailable)`;
   }
   
-  // SDXL+LoRA is now the preferred default
-  if (job.model === 'sdxl' && job.useLora) {
-    return `SDXL+LoRA for superior ${style} texture`;
+  if (job.model === 'sdxl') {
+    return `Fallback: SDXL${job.useLora ? '+LoRA' : ''} for ${style} (flux models unavailable)`;
   }
   
-  return `${style} optimization → ${job.model.toUpperCase()}`;
+  return `${style} → ${job.model.toUpperCase()}`;
 }
 
 /**
