@@ -235,6 +235,6 @@ export function choosePrintSize(aspect: Aspect, preferredSize?: PrintSize): Prin
   if (preferredSize) return preferredSize;
   
   // Default logic: squares and portraits default to A4, landscapes to A3
-  if (aspect === 'square' || aspect === 'A3_portrait') return 'A4';
+  if (aspect === 'square' || aspect === 'portrait') return 'A4';
   return 'A3';
 }

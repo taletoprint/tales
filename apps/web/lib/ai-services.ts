@@ -309,18 +309,15 @@ export class SimpleAIGenerator {
   }
 
   private getHDDimensions(aspect: Aspect): { width: number; height: number } {
-    // Print dimensions optimized for actual print sizes with white borders - Real-ESRGAN ×4 upscaling
+    // Standard HD dimensions - Real-ESRGAN ×4 upscaling from generation size
     switch (aspect) {
-      case "A3_landscape": // A3 landscape (297×420mm) with border
-        return { width: 5936, height: 4096 }; // 1484×1024 → ×4 = 5936×4096
-      case "A3_portrait": // A4 portrait (210×297mm) with border  
-        return { width: 4096, height: 5968 }; // 1024×1492 → ×4 = 4096×5968
-      case "A2_portrait": // Future expansion - same as A4 portrait
-        return { width: 4096, height: 5968 }; // Same as A4 portrait for now
-      case "square": // Square prints with border
-        return { width: 4096, height: 4096 }; // 1024×1024 → ×4 = 4096×4096
+      case "landscape": // 3:2 landscape ratio
+        return { width: 6144, height: 4096 }; // 1536×1024 → ×4
+      case "portrait": // 2:3 portrait ratio  
+        return { width: 4096, height: 6144 }; // 1024×1536 → ×4
+      case "square": // 1:1 square ratio
       default:
-        return { width: 4096, height: 5968 };
+        return { width: 4096, height: 4096 }; // 1024×1024 → ×4
     }
   }
 
@@ -382,23 +379,17 @@ export class SimpleAIGenerator {
 
 
   private mapDimensionsToFlux(width: number, height: number): { aspect_ratio: string; megapixels: string } {
-    // Map print-optimized dimensions to valid Flux aspect ratios
+    // Map standard dimensions to valid Flux aspect ratios
     const aspectRatio = width / height;
     
     if (Math.abs(aspectRatio - 1.0) < 0.1) {
       // Square: 1024x1024
       return { aspect_ratio: "1:1", megapixels: "1" };
     } else if (aspectRatio > 1) {
-      // Landscape - A3 landscape (1484x1024 ≈ 1.45)
-      if (Math.abs(aspectRatio - 1.45) < 0.15) {
-        // Map to 3:2 (1.5) as closest valid Flux ratio
-        return { aspect_ratio: "3:2", megapixels: "1" };
-      }
-      // Default landscape
-      return { aspect_ratio: "4:3", megapixels: "1" };
+      // Landscape - 3:2 ratio (1536x1024 = 1.5)
+      return { aspect_ratio: "3:2", megapixels: "1" };
     } else {
-      // Portrait - A4 portrait (1024x1492 ≈ 0.686)
-      // Map to 2:3 (0.667) as closest valid Flux ratio
+      // Portrait - 2:3 ratio (1024x1536 = 0.667)
       return { aspect_ratio: "2:3", megapixels: "1" };
     }
   }

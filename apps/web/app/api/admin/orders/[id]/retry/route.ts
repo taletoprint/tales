@@ -134,7 +134,7 @@ export async function POST(
       imageUrl: previewUrl,
       prompt: story || 'Custom artwork',
       refinedPrompt: refinedPrompt || story || 'Custom artwork',
-      aspect: order.size as any || 'A3_landscape',
+      aspect: order.size as any || 'landscape',
       style: style as any || 'watercolour',
       timestamp: Date.now(),
       isPreview: false,

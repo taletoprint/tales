@@ -23,7 +23,7 @@ export const StoryInput: React.FC<StoryInputProps> = ({
 }) => {
   const [story, setStory] = useState('');
   const [style, setStyle] = useState<ArtStyle>(ArtStyle.WATERCOLOUR);
-  const [aspect, setAspect] = useState<Aspect>("A3_portrait"); // Default to portrait for prints
+  const [aspect, setAspect] = useState<Aspect>("portrait"); // Default to portrait for prints
   const [loading, setLoading] = useState(false);
   const [showEmailGate, setShowEmailGate] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
@@ -239,13 +239,13 @@ interface AspectSelectorProps {
 const AspectSelector: React.FC<AspectSelectorProps> = ({ value, onChange }) => {
   const aspects = [
     { 
-      value: "A3_landscape" as Aspect, 
+      value: "landscape" as Aspect, 
       label: 'Landscape', 
       description: 'Wide format', 
       aspect: 'w-8 h-6'
     },
     { 
-      value: "A3_portrait" as Aspect, 
+      value: "portrait" as Aspect, 
       label: 'Portrait', 
       description: 'Tall format', 
       aspect: 'w-6 h-8'

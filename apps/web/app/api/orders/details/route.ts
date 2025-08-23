@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
       },
       artworkDetails: {
         style: session.metadata?.style || 'watercolour',
-        aspect: session.metadata?.aspect || 'A3_landscape',
+        aspect: session.metadata?.aspect || 'landscape',
         story: session.metadata?.story || 'Custom artwork',
         imageUrl: session.metadata?.previewUrl || '',
         printSize: session.metadata?.printSize || 'A3',

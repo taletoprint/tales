@@ -66,9 +66,8 @@ export const PreviewDisplay: React.FC<PreviewDisplayProps> = ({
         {/* Preview Image */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-warm-grey/10 self-start">
           <div className={`relative ${
-            (preview as any).aspect === 'A3_landscape' ? 'aspect-[1448/1024]' : // A3 landscape (1448×1024)
-            (preview as any).aspect === 'A3_portrait' ? 'aspect-[1024/1448]' :   // A3 portrait (1024×1448)
-            (preview as any).aspect === 'A2_portrait' ? 'aspect-[1024/1448]' :   // A2 portrait (same as A3)
+            (preview as any).aspect === 'landscape' ? 'aspect-[1448/1024]' : // A3 landscape (1448×1024)
+            (preview as any).aspect === 'portrait' ? 'aspect-[1024/1448]' :   // A3 portrait (1024×1448)
             'aspect-square' // Square (1024×1024)
           }`}>
             {preview.imageUrl ? (

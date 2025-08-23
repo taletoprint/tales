@@ -330,7 +330,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       imageUrl: previewUrl,
       prompt: story || 'Custom artwork',
       refinedPrompt: refinedPrompt || story || 'Custom artwork',
-      aspect: aspect as any || 'A3_landscape',
+      aspect: aspect as any || 'landscape',
       style: style as any || 'watercolour',
       timestamp: Date.now(),
       isPreview: false,

@@ -4,7 +4,7 @@ export enum ImageOrientation {
   SQUARE = 'SQUARE'
 }
 
-export type Aspect = "A3_portrait" | "A3_landscape" | "A2_portrait" | "square";
+export type Aspect = "portrait" | "landscape" | "square";
 
 export interface PreviewResult {
   id: string;

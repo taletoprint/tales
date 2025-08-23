@@ -58,7 +58,7 @@ export async function POST(
       imageUrl: metadata?.previewUrl || '',
       prompt: metadata?.story || 'Custom artwork',
       refinedPrompt: metadata?.refinedPrompt || metadata?.story || 'Custom artwork',
-      aspect: metadata?.aspect || 'A3_landscape',
+      aspect: metadata?.aspect || 'landscape',
       style: metadata?.style || 'watercolour',
       timestamp: Date.now(),
       isPreview: false,

@@ -76,20 +76,18 @@ function parseMemory(memory: string) {
   return { mainSubject, setting, mood, paletteHint, has_people, raw };
 }
 
-/** Map product aspect → working pixel size optimized for print sizes with white borders */
+/** Map aspect to standard generation sizes - upscaling handles final print dimensions */
 function aspectToSize(aspect: Aspect): { width: number; height: number } {
-  // Optimized for actual print sizes with 10mm white borders
-  // All dimensions keep under 2M pixels for Real-ESRGAN compatibility
+  // Standard ratios optimized for quality and Real-ESRGAN compatibility
+  // Final print size (A4/A3) determined by customer choice, not generation aspect
   switch (aspect) {
-    case "A3_portrait": // Maps to A4 portrait (210×297mm) with 10mm border
-      return { width: 1024, height: 1492 }; // Art area ratio: 190×277mm = 0.686
-    case "A3_landscape": // Maps to A3 landscape (297×420mm) with 10mm border  
-      return { width: 1484, height: 1024 }; // Art area ratio: 277×400mm = 0.692
-    case "A2_portrait": // Future expansion - same as A3_portrait for now
-      return { width: 1024, height: 1492 }; // Same as A4 portrait ratio
-    case "square": // Maps to square prints (8×8" or 10×10") with border
+    case "portrait": // Standard portrait ratio (2:3 ≈ 0.67)
+      return { width: 1024, height: 1536 }; // Clean 2:3 ratio, <2M pixels
+    case "landscape": // Standard landscape ratio (3:2 ≈ 1.5)  
+      return { width: 1536, height: 1024 }; // Clean 3:2 ratio, <2M pixels
+    case "square": // Perfect square ratio (1:1)
     default:
-      return { width: 1024, height: 1024 }; // Square art area 1:1 ratio
+      return { width: 1024, height: 1024 }; // Perfect square, 1M pixels
   }
 }
 

@@ -32,8 +32,8 @@ export const SizeSelector: React.FC<SizeSelectorProps> = ({ value, onChange, asp
   };
 
   const orientations = [
-    { value: 'A3_portrait' as Aspect, label: 'Portrait', shape: 'portrait' },
-    { value: 'A3_landscape' as Aspect, label: 'Landscape', shape: 'landscape' },
+    { value: 'portrait' as Aspect, label: 'Portrait', shape: 'portrait' },
+    { value: 'landscape' as Aspect, label: 'Landscape', shape: 'landscape' },
     { value: 'square' as Aspect, label: 'Square', shape: 'square' },
   ];
 

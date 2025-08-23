@@ -14,7 +14,7 @@ class RateLimitError extends Error {
 const requestSchema = z.object({
   story: z.string().min(20).max(500),
   style: z.nativeEnum(ArtStyle),
-  aspect: z.enum(["A3_portrait", "A3_landscape", "A2_portrait", "square"]),
+  aspect: z.enum(["portrait", "landscape", "square"]),
   printSize: z.enum(["A4", "A3"]).optional().default("A3"),
 });
 
