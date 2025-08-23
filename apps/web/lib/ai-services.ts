@@ -48,7 +48,7 @@ interface GenerationResult {
       width: number;
       height: number;
     };
-    model: 'flux-schnell' | 'sdxl';
+    model: 'flux-dev-lora' | 'flux-schnell' | 'sdxl';
     has_people: boolean;
   };
 }
