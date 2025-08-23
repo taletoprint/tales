@@ -205,6 +205,41 @@ export class MailerLiteClient {
       throw error;
     }
   }
+
+  /**
+   * Update subscriber with custom fields
+   */
+  async updateSubscriberFields(email: string, fields: Record<string, any>): Promise<boolean> {
+    try {
+      const requestBody = {
+        email,
+        fields,
+      };
+
+      const response = await this.makeRequest<unknown>(`/subscribers/${encodeURIComponent(email)}`, {
+        method: 'PUT',
+        body: JSON.stringify(requestBody),
+      });
+
+      // Validate response with Zod
+      const parseResult = ZSubscriberResponse.safeParse(response);
+      if (!parseResult.success) {
+        throw new MailerLiteValidationError(
+          'Invalid update subscriber response from MailerLite',
+          parseResult.error
+        );
+      }
+
+      return true;
+    } catch (error) {
+      console.error('MailerLite API error updating subscriber:', error);
+      throw new MailerLiteError(
+        0,
+        'UpdateError',
+        `Failed to update subscriber in MailerLite: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
 }
 
 // Factory function to create MailerLite client with environment variables

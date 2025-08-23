@@ -5,6 +5,7 @@ import { PrismaClient } from '@taletoprint/database';
 import { getProductSpec, PrintSize } from '@/lib/prodigi-client';
 import { PrintFileGenerator } from '@/lib/print-file-generator';
 import { S3PrintAssetUploader } from '@/lib/s3-uploader';
+import { addCustomerToMailerLite } from '@/lib/customer-mailerlite';
 
 // Initialize Stripe and Prisma - Fixed for deployment
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -394,6 +395,41 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     });
 
     console.log(`[WEBHOOK] Order ${orderId} processed successfully and is awaiting manual approval`);
+    
+    // Add customer to MailerLite customers group
+    try {
+      const customerEmail = customer?.email || session.customer_email;
+      if (customerEmail) {
+        console.log(`[WEBHOOK] Adding customer ${customerEmail} to MailerLite...`);
+        
+        const mailerLiteResult = await addCustomerToMailerLite({
+          email: customerEmail,
+          customerName: shipping.name,
+          orderMetadata: {
+            orderId,
+            orderDate: new Date().toISOString(),
+            totalAmount: (session.amount_total || 0) / 100, // Convert from cents
+            currency: session.currency || 'gbp',
+            printSize: printSize || 'A3',
+            artStyle: style || 'watercolour',
+            shippingCountry: shipping.address.country,
+            shippingCity: shipping.address.city,
+            firstOrder: true, // We'll update this logic later if needed
+          },
+        });
+        
+        if (mailerLiteResult.success) {
+          console.log(`[WEBHOOK] Successfully added customer to MailerLite`);
+        } else {
+          console.warn(`[WEBHOOK] Failed to add customer to MailerLite: ${mailerLiteResult.error}`);
+        }
+      } else {
+        console.warn(`[WEBHOOK] No customer email found for MailerLite integration`);
+      }
+    } catch (mailerLiteError) {
+      // Don't fail the webhook if MailerLite fails
+      console.error(`[WEBHOOK] MailerLite integration error:`, mailerLiteError);
+    }
     
     // TODO: Send notification to admin about new order requiring approval
 
