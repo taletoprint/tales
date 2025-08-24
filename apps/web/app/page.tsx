@@ -7,6 +7,7 @@ import { PreviewDisplay } from '@/components/generation/preview-display';
 import { PreviewResult } from '@/lib/types';
 import Header from '@/components/navigation/header';
 import { getDailyAttempts, incrementDailyAttempts, resetDailyAttempts } from '@/lib/preview-counter';
+import { SchemaMarkup } from '@/components/seo/schema-markup';
 
 export default function Home() {
   const [selectedPreview, setSelectedPreview] = useState<PreviewResult | null>(null);
@@ -103,6 +104,7 @@ export default function Home() {
   
   return (
     <div className="min-h-screen bg-cream">
+      <SchemaMarkup />
       {/* Header */}
       <Header />
       
@@ -149,12 +151,16 @@ export default function Home() {
         <div className="max-w-5xl mx-auto">
           {/* Main Hero Content */}
           <div className="text-center mb-12">
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-semibold text-charcoal mb-4 leading-tight">
-              Turn your story into 
-              <span className="text-terracotta"> beautiful art</span>
-            </h2>
-            <p className="text-lg sm:text-xl text-charcoal/80 mb-8 max-w-2xl mx-auto">
-              Transform your treasured memories into stunning prints in just 3 steps
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-semibold text-charcoal mb-4 leading-tight">
+              Turn Your Memories Into Art Prints
+            </h1>
+            <p className="text-lg sm:text-xl text-charcoal/80 mb-6 max-w-3xl mx-auto">
+              TaleToPrint transforms your most cherished memories into beautiful, frame-ready artwork. 
+              Simply share your story, choose from watercolour, oil painting, pastel, impressionist, 
+              or storybook styles, and receive a one-of-a-kind personalised art print — shipped worldwide.
+            </p>
+            <p className="text-md text-charcoal/70 mb-8 max-w-2xl mx-auto">
+              Perfect for unique gifts, custom wall art, or preserving family memories in stunning visual form.
             </p>
           </div>
 
@@ -205,15 +211,71 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Art Styles Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-serif font-semibold text-charcoal mb-4">
+              Choose Your Perfect Art Style
+            </h2>
+            <p className="text-lg text-charcoal/80 max-w-2xl mx-auto">
+              From classic watercolour prints to modern storybook illustrations, find the perfect style 
+              for your personalised gift or custom wall art
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                style: "Watercolour Art Prints",
+                description: "Soft, flowing watercolour paintings perfect for family memories and romantic moments",
+                features: ["Gentle washes", "Dreamy atmosphere", "Classic artistry"]
+              },
+              {
+                style: "Oil Painting Prints", 
+                description: "Rich, textured oil paintings ideal for portraits and dramatic scenes",
+                features: ["Deep colours", "Timeless elegance", "Museum quality"]
+              },
+              {
+                style: "Storybook Illustrations",
+                description: "Whimsical storybook art perfect for children's memories and nursery decor",
+                features: ["Playful style", "Warm characters", "Gift-ready"]
+              }
+            ].map((item, index) => (
+              <div key={index} className="bg-cream rounded-xl p-6">
+                <h3 className="text-xl font-serif font-semibold text-charcoal mb-3">
+                  {item.style}
+                </h3>
+                <p className="text-charcoal/70 mb-4">{item.description}</p>
+                <ul className="space-y-1">
+                  {item.features.map((feature, idx) => (
+                    <li key={idx} className="text-sm text-sage flex items-center gap-2">
+                      <span className="text-terracotta">✓</span> {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+          
+          <div className="text-center mt-8">
+            <p className="text-charcoal/70">
+              Also available: <strong>Pastel Art</strong>, <strong>Impressionist Paintings</strong>, 
+              and <strong>Pencil & Ink Sketches</strong> — perfect for every story and occasion
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Main Form Section */}
       <section id="create" className="py-20 bg-cream">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h3 className="text-3xl sm:text-4xl font-serif font-semibold text-charcoal mb-4">
-              Create your artwork
-            </h3>
+            <h2 className="text-3xl sm:text-4xl font-serif font-semibold text-charcoal mb-4">
+              Create Your Custom Story Artwork
+            </h2>
             <p className="text-lg text-charcoal/80">
-              Tell us your story and watch it come to life
+              Tell us your story and watch it transform into a bespoke gift print
             </p>
           </div>
           
@@ -253,7 +315,7 @@ export default function Home() {
                         <div className="aspect-square">
                           <img 
                             src={preview.imageUrl} 
-                            alt={preview.story ? `Preview: ${preview.story.substring(0, 50)}...` : `Preview ${index + 1}`}
+                            alt={`${preview.style.replace('_', ' ')} art print preview${preview.story ? ` - ${preview.story.substring(0, 50)}...` : ''} - personalised gift print`}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -292,7 +354,9 @@ export default function Home() {
             <div className="md:col-span-2">
               <h4 className="text-xl font-serif font-semibold mb-4">TaleToPrint</h4>
               <p className="text-cream/80 mb-6">
-                Transforming your most treasured stories into beautiful art prints.
+                Transforming your most treasured memories into beautiful personalised art prints. 
+                Create custom story artwork, unique gift prints, and bespoke wall art from your 
+                cherished moments. UK printed, worldwide shipping.
               </p>
               <div className="flex items-center gap-4">
                 {/* Trust badges */}
