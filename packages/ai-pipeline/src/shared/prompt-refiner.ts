@@ -144,7 +144,7 @@ Style: ${request.style.toLowerCase()}`;
       }
       
       // Fallback to basic prompt generation
-      return this.createFallbackPrompt(request);
+      return this.createFallbackPrompt(request, dimensions);
     }
   }
 
@@ -252,7 +252,7 @@ Traditional plein air feel with bold brushwork.`,
     return templates[style];
   }
 
-  private createFallbackPrompt(request: PromptRefinementRequest): PromptRefinementResult {
+  private createFallbackPrompt(request: PromptRefinementRequest, dimensions?: {width: number, height: number}): PromptRefinementResult {
     const peopleAnalysis = this.analyzeStoryForPeople(request.story, request.style);
     const loraMapping = this.getLoRAMapping(request.style);
     const styleTranslation = this.getStyleTranslation(request.style);
@@ -268,8 +268,8 @@ Traditional plein air feel with bold brushwork.`,
       parameters: {
         num_inference_steps: 25,
         guidance_scale: 3.5,
-        width: 1024,
-        height: 1024,
+        width: dimensions?.width || 1024,
+        height: dimensions?.height || 1024,
         seed: null
       },
       safety: {
