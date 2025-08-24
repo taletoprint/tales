@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { useState } from 'react';
+import { ArtStyle } from '@/lib/types';
 
 interface ExampleArtworkProps {
   src: string;
@@ -8,6 +9,7 @@ interface ExampleArtworkProps {
   priority?: boolean;
   className?: string;
   showStyleLabel?: boolean;
+  showHoverOverlay?: boolean;
   onClick?: () => void;
 }
 
@@ -18,6 +20,7 @@ export function ExampleArtwork({
   priority = false,
   className = '',
   showStyleLabel = true,
+  showHoverOverlay = false,
   onClick
 }: ExampleArtworkProps) {
   const [isLoading, setIsLoading] = useState(true);
@@ -75,11 +78,13 @@ export function ExampleArtwork({
         )}
         
         {/* Hover overlay with "View Style" */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <span className="bg-white text-charcoal px-4 py-2 rounded-lg font-medium text-sm shadow-lg">
-            View Style
-          </span>
-        </div>
+        {showHoverOverlay && (
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <span className="bg-white text-charcoal px-4 py-2 rounded-lg font-medium text-sm shadow-lg">
+              View Style
+            </span>
+          </div>
+        )}
       </div>
       
       {/* Bottom gradient overlay for better text visibility */}
@@ -145,14 +150,37 @@ export function HeroArtworkShowcase({ className = '' }: { className?: string }) 
           priority={index < 2} // Priority load first 2 images
           className="h-32 sm:h-40"
           showStyleLabel={false} // Cleaner look for hero
+          showHoverOverlay={false} // No hover overlay for hero
         />
       ))}
     </div>
   );
 }
 
+// Map example artwork styles to ArtStyle enum
+const styleMapping: { [key: string]: ArtStyle } = {
+  watercolour: ArtStyle.WATERCOLOUR,
+  oil: ArtStyle.OIL_PAINTING,
+  impressionist: ArtStyle.IMPRESSIONIST,
+  storybook: ArtStyle.STORYBOOK,
+  pastel: ArtStyle.PASTEL,
+  pencil: ArtStyle.PENCIL_INK,
+};
+
 // Component for full gallery section
 export function ExampleGallery({ className = '' }: { className?: string }) {
+  const handleStyleClick = (style: string) => {
+    const artStyle = styleMapping[style];
+    if (artStyle) {
+      // Set the selected style in localStorage for the StoryInput component to pick up
+      localStorage.setItem('taletoprint_selected_style', artStyle);
+      // Dispatch a custom event to notify the StoryInput component
+      window.dispatchEvent(new CustomEvent('styleSelected', { detail: artStyle }));
+    }
+    // Scroll to creation form
+    document.getElementById('create')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 ${className}`}>
       {EXAMPLE_ARTWORKS.map((artwork, index) => (
@@ -163,10 +191,8 @@ export function ExampleGallery({ className = '' }: { className?: string }) {
           style={artwork.style}
           priority={false} // Lazy load gallery images
           showStyleLabel={true}
-          onClick={() => {
-            // Scroll to creation form
-            document.getElementById('create')?.scrollIntoView({ behavior: 'smooth' });
-          }}
+          showHoverOverlay={true} // Show hover overlay for gallery
+          onClick={() => handleStyleClick(artwork.style)}
         />
       ))}
     </div>

@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PreviewResult, ArtStyle, Aspect } from '@/lib/types';
 import { PrintSize } from '@/lib/prodigi-client';
 import SizeSelector from './size-selector';
 import { ArtStyleIcon } from '@/components/ui/art-style-icon';
+import { ProgressIndicator } from '@/components/ui/progress-indicator';
 
 interface StoryInputProps {
   onPreview: (preview: PreviewResult) => void;
@@ -28,6 +29,28 @@ export const StoryInput: React.FC<StoryInputProps> = ({
   const [showEmailGate, setShowEmailGate] = useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Listen for style selection from example gallery
+  useEffect(() => {
+    const handleStyleSelection = (event: CustomEvent) => {
+      const selectedStyle = event.detail as ArtStyle;
+      setStyle(selectedStyle);
+    };
+
+    // Check localStorage for pre-selected style on mount
+    const savedStyle = localStorage.getItem('taletoprint_selected_style');
+    if (savedStyle && Object.values(ArtStyle).includes(savedStyle as ArtStyle)) {
+      setStyle(savedStyle as ArtStyle);
+      localStorage.removeItem('taletoprint_selected_style'); // Clear after use
+    }
+
+    // Add event listener for runtime style changes
+    window.addEventListener('styleSelected', handleStyleSelection as EventListener);
+
+    return () => {
+      window.removeEventListener('styleSelected', handleStyleSelection as EventListener);
+    };
+  }, []);
   
   const handleGeneratePreview = async () => {
     if (currentAttempts >= maxFreeAttempts) {
@@ -137,19 +160,19 @@ export const StoryInput: React.FC<StoryInputProps> = ({
                   : 'bg-terracotta text-cream hover:bg-charcoal'
               }`}
             >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  Creating your artwork...
-                </span>
-              ) : hasPreview ? (
-                'Create New Preview'
-              ) : (
-                'Create Preview'
-              )}
+              {!loading && (hasPreview ? 'Create New Preview' : 'Create Preview')}
             </button>
+            
+            {/* Progress indicator when loading */}
+            {loading && (
+              <div className="mt-6 p-6 bg-cream/50 rounded-xl border border-warm-grey/20">
+                <ProgressIndicator 
+                  artStyle={style} 
+                  isActive={loading}
+                  className="max-w-md mx-auto"
+                />
+              </div>
+            )}
             
             {story.length < 20 && (
               <p className="mt-3 text-sm text-charcoal/60 text-center">
