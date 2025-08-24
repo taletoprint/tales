@@ -157,7 +157,7 @@ export class PreviewGenerator {
         imageUrl: imageUpload.url,
         thumbnailUrl: thumbnailUpload.url,
         prompt: request.story,
-        refinedPrompt: promptRefinement.refined_prompt,
+        refinedPrompt: promptText,
         style: request.style,
         orientation: request.orientation,
         timestamp: Date.now(),
