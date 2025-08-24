@@ -43,9 +43,9 @@
     },
     "watercolour": { 
       "repo": "hf", 
-      "url": "jtorregrosa/watercolour-lora-flux", 
+      "url": "https://huggingface.co/SebastianBodza/flux_lora_aquarel_watercolor/resolve/main/lora.safetensors", 
       "scale": 0.8,
-      "trigger": "W4T3RC0L0UR style"
+      "trigger": "AQUACOLTOK"
     },
     "pastel": { 
       "repo": "hf", 
