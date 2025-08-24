@@ -603,12 +603,26 @@ export class SimpleAIGenerator {
       const fluxDimensions = this.mapDimensionsToFlux(promptBundle.params.width, promptBundle.params.height);
       
       // Prepare input parameters for flux-dev-lora
+      // Flux-dev-lora has max dimension of 1440, adjust if needed
+      const maxDimension = 1440;
+      let width = promptBundle.params.width;
+      let height = promptBundle.params.height;
+      
+      // Scale down if either dimension exceeds max
+      if (width > maxDimension || height > maxDimension) {
+        const scale = Math.min(maxDimension / width, maxDimension / height);
+        width = Math.round((width * scale) / 32) * 32; // Round to nearest 32
+        height = Math.round((height * scale) / 32) * 32; // Round to nearest 32
+        console.log(`[${previewId}] Scaled dimensions from ${promptBundle.params.width}×${promptBundle.params.height} to ${width}×${height} (max: ${maxDimension})`);
+      }
+      
       const inputParams: any = {
         prompt: enhancedPrompt,
         lora_weights: loraConfig.url, // LoRA URL as string
         lora_scale: loraConfig.scale, // LoRA scale as number
-        width: promptBundle.params.width,
-        height: promptBundle.params.height,
+        aspect_ratio: "custom", // Required when using explicit width/height
+        width: width,
+        height: height,
         num_outputs: 1,
         guidance: 3.5, // Flux prefers lower CFG
         go_fast: true // Fuse LoRA weights for speed
