@@ -616,13 +616,30 @@ export class SimpleAIGenerator {
         console.log(`[${previewId}] Scaled dimensions from ${promptBundle.params.width}×${promptBundle.params.height} to ${width}×${height} (max: ${maxDimension})`);
       }
       
+      // Map dimensions to valid aspect ratios
+      const getAspectRatio = (w: number, h: number): string => {
+        const ratio = w / h;
+        if (Math.abs(ratio - 1) < 0.1) return "1:1"; // Square
+        if (Math.abs(ratio - 16/9) < 0.1) return "16:9"; // Landscape
+        if (Math.abs(ratio - 9/16) < 0.1) return "9:16"; // Portrait
+        if (Math.abs(ratio - 3/2) < 0.1) return "3:2"; // Landscape
+        if (Math.abs(ratio - 2/3) < 0.1) return "2:3"; // Portrait
+        if (Math.abs(ratio - 4/3) < 0.1) return "4:3"; // Landscape
+        if (Math.abs(ratio - 3/4) < 0.1) return "3:4"; // Portrait
+        if (Math.abs(ratio - 4/5) < 0.1) return "4:5"; // Portrait
+        if (Math.abs(ratio - 5/4) < 0.1) return "5:4"; // Landscape
+        // Default to closest common ratio
+        return ratio > 1 ? "3:2" : "2:3";
+      };
+      
+      const aspectRatio = getAspectRatio(width, height);
+      console.log(`[${previewId}] Using aspect ratio: ${aspectRatio} for ${width}×${height}`);
+      
       const inputParams: any = {
         prompt: enhancedPrompt,
         lora_weights: loraConfig.url, // LoRA URL as string
         lora_scale: loraConfig.scale, // LoRA scale as number
-        aspect_ratio: "custom", // Required when using explicit width/height
-        width: width,
-        height: height,
+        aspect_ratio: aspectRatio, // Use valid aspect ratio
         num_outputs: 1,
         guidance: 3.5, // Flux prefers lower CFG
         go_fast: true // Fuse LoRA weights for speed

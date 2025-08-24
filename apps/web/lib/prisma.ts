@@ -19,7 +19,7 @@ const prismaClientOptions = {
   ...(process.env.NODE_ENV === 'production' && {
     datasources: {
       db: {
-        url: process.env.DATABASE_URL + '?connection_limit=10&pool_timeout=20',
+        url: process.env.DATABASE_URL + '?connection_limit=20&pool_timeout=60&connect_timeout=60',
       },
     },
   }),
