@@ -607,7 +607,8 @@ export class SimpleAIGenerator {
         prompt: enhancedPrompt,
         lora_weights: loraConfig.url, // LoRA URL as string
         lora_scale: loraConfig.scale, // LoRA scale as number
-        aspect_ratio: fluxDimensions.aspect_ratio, // Use aspect_ratio instead of width/height
+        width: promptBundle.params.width,
+        height: promptBundle.params.height,
         num_outputs: 1,
         guidance: 3.5, // Flux prefers lower CFG
         go_fast: true // Fuse LoRA weights for speed
