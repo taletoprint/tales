@@ -606,8 +606,8 @@ export class SimpleAIGenerator {
       const inputParams: any = {
         prompt: enhancedPrompt,
         negative_prompt: negativePrompt,
-        lora_weights: [loraConfig.url], // Array of LoRA URLs
-        lora_scales: [loraConfig.scale], // Array of scales
+        lora_weights: loraConfig.url, // LoRA URL as string
+        lora_scale: loraConfig.scale, // LoRA scale as number
         width: promptBundle.params.width,
         height: promptBundle.params.height,
         num_outputs: 1,
