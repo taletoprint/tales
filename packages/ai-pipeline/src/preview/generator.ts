@@ -165,7 +165,7 @@ export class PreviewGenerator {
         metadata: {
           generationTime,
           cost: totalCost,
-          styleKeywords: promptRefinement.style_keywords,
+          styleKeywords: promptRefinement.style_keywords || [request.style],
           dimensions
         }
       };
