@@ -605,17 +605,12 @@ export class SimpleAIGenerator {
       // Prepare input parameters for flux-dev-lora
       const inputParams: any = {
         prompt: enhancedPrompt,
-        negative_prompt: negativePrompt,
         lora_weights: loraConfig.url, // LoRA URL as string
         lora_scale: loraConfig.scale, // LoRA scale as number
-        width: promptBundle.params.width,
-        height: promptBundle.params.height,
+        aspect_ratio: fluxDimensions.aspect_ratio, // Use aspect_ratio instead of width/height
         num_outputs: 1,
-        steps: 26, // Optimal for flux-dev-lora
         guidance: 3.5, // Flux prefers lower CFG
-        go_fast: true, // Fuse LoRA weights for speed
-        output_format: "webp",
-        output_quality: 80
+        go_fast: true // Fuse LoRA weights for speed
       };
       
       // Add seed if provided
