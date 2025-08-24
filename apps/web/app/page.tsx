@@ -8,6 +8,7 @@ import { PreviewResult } from '@/lib/types';
 import Header from '@/components/navigation/header';
 import { getDailyAttempts, incrementDailyAttempts, resetDailyAttempts } from '@/lib/preview-counter';
 import { SchemaMarkup } from '@/components/seo/schema-markup';
+import { HeroArtworkShowcase, ExampleGallery } from '@/components/ui/example-artwork';
 
 export default function Home() {
   const [selectedPreview, setSelectedPreview] = useState<PreviewResult | null>(null);
@@ -146,73 +147,175 @@ export default function Home() {
         </div>
       )}
 
-      {/* Hero Section with Integrated How It Works */}
-      <section id="how-it-works" className="pt-8 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-cream to-white">
-        <div className="max-w-5xl mx-auto">
-          {/* Main Hero Content */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-semibold text-charcoal mb-4 leading-tight">
-              Turn Your Memories Into Art Prints
-            </h1>
-            <p className="text-lg sm:text-xl text-charcoal/80 mb-6 max-w-3xl mx-auto">
-              TaleToPrint transforms your most cherished memories into beautiful, frame-ready artwork. 
-              Simply share your story, choose from watercolour, oil painting, pastel, impressionist, 
-              or storybook styles, and receive a one-of-a-kind personalised art print — shipped worldwide.
-            </p>
-            <p className="text-md text-charcoal/70 mb-8 max-w-2xl mx-auto">
-              Perfect for unique gifts, custom wall art, or preserving family memories in stunning visual form.
-            </p>
-          </div>
+      {/* Compact Hero Section with Visual Showcase */}
+      <section className="pt-8 pb-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-cream to-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-8 items-center">
+            {/* Left: Compact text content */}
+            <div className="text-center lg:text-left">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-semibold text-charcoal mb-4 leading-tight">
+                Turn Your Memories Into Art Prints
+              </h1>
+              <p className="text-lg text-charcoal/80 mb-6">
+                Transform your stories into beautiful, frame-ready artwork. Choose from watercolour, oil painting, 
+                and more — shipped worldwide in 48 hours.
+              </p>
+              
+              {/* Trust indicators */}
+              <div className="flex flex-wrap justify-center lg:justify-start items-center gap-4 mb-6 text-sm text-sage">
+                <span className="flex items-center gap-1">🇬🇧 UK printed</span>
+                <span className="flex items-center gap-1">🔒 Secure checkout</span>
+                <span className="flex items-center gap-1">✅ Money-back guarantee</span>
+              </div>
 
-          {/* Compact How It Works Flow */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
-            <div className="grid md:grid-cols-3 gap-6 text-center">
-              {[
-                { icon: "✍️", title: "Tell your story", desc: "Share your memory" },
-                { icon: "🎨", title: "AI creates art", desc: "Choose your style" }, 
-                { icon: "📦", title: "Premium print", desc: "Delivered in 48h" }
-              ].map((step, index) => (
-                <div key={index} className="flex flex-col items-center">
-                  <div className="w-12 h-12 bg-terracotta/10 rounded-full flex items-center justify-center mb-3">
-                    <span className="text-xl">{step.icon}</span>
-                  </div>
-                  <h4 className="font-serif font-semibold text-charcoal mb-1">{step.title}</h4>
-                  <p className="text-sm text-charcoal/70">{step.desc}</p>
-                  {index < 2 && (
-                    <div className="hidden md:block absolute transform translate-x-12 mt-6">
-                      <svg className="w-6 h-6 text-sage" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Trust indicators & CTA */}
-          <div className="text-center">
-            <div className="flex flex-wrap justify-center items-center gap-4 mb-6 text-sm text-sage">
-              <span className="flex items-center gap-1">🇬🇧 UK printed</span>
-              <span className="flex items-center gap-1">🔒 Secure checkout</span>
-              <span className="flex items-center gap-1">✅ Money-back guarantee</span>
+              {/* Primary CTA */}
+              <a
+                href="#create"
+                className="inline-flex items-center px-6 py-3 text-lg font-medium text-cream bg-terracotta rounded-xl hover:bg-charcoal transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl"
+              >
+                Create Your Artwork
+                <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+              </a>
             </div>
 
-            <a
-              href="#create"
-              className="inline-flex items-center px-8 py-4 text-lg font-medium text-cream bg-terracotta rounded-xl hover:bg-charcoal transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl"
-            >
-              Start creating your artwork
-              <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
-            </a>
+            {/* Right: Visual showcase */}
+            <div className="lg:pl-8">
+              <HeroArtworkShowcase className="max-w-md mx-auto lg:mx-0" />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Art Styles Section */}
-      <section className="py-16 bg-white">
+      {/* Main Form Section - Moved Up */}
+      <section id="create" className="py-16 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl sm:text-4xl font-serif font-semibold text-charcoal mb-4">
+              Create Your Custom Story Artwork
+            </h2>
+            <p className="text-lg text-charcoal/80">
+              Tell us your story and watch it transform into a bespoke gift print
+            </p>
+          </div>
+          
+          <StoryInput 
+            onPreview={handlePreview}
+            currentAttempts={attemptCount}
+            hasPreview={!!selectedPreview}
+            onAttemptsReset={handleAttemptsReset}
+          />
+          
+          {allPreviews.length > 0 && (
+            <div ref={previewSectionRef} className="mt-16 animate-fade-in">
+              {/* Selected Preview Display */}
+              {selectedPreview && (
+                <PreviewDisplay 
+                  preview={selectedPreview}
+                  onSelectForPurchase={handleSelectForPurchase}
+                />
+              )}
+              
+              {/* Preview Gallery - Below the main preview */}
+              {allPreviews.length > 1 && (
+                <div className="mt-12 pt-12 border-t border-warm-grey/20">
+                  <h4 className="text-lg font-serif font-semibold text-charcoal mb-4">Other versions you've created</h4>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+                    {allPreviews.map((preview, index) => (
+                      <div 
+                        key={preview.id} 
+                        className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${ 
+                          selectedPreview?.id === preview.id 
+                            ? 'border-terracotta ring-2 ring-terracotta ring-offset-2' 
+                            : 'border-transparent hover:border-warm-grey/30'
+                        }`}
+                        onClick={() => setSelectedPreview(preview)}
+                        title={preview.story ? `"${preview.story}"` : `Preview ${index + 1}`}
+                      >
+                        <div className="aspect-square">
+                          <img 
+                            src={preview.imageUrl} 
+                            alt={`${preview.style.replace('_', ' ')} art print preview${preview.story ? ` - ${preview.story.substring(0, 50)}...` : ''} - personalised gift print`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        {selectedPreview?.id === preview.id && (
+                          <div className="absolute top-1 right-1 bg-terracotta text-cream rounded-full p-0.5">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setAllPreviews([]);
+                      setSelectedPreview(null);
+                      localStorage.removeItem('taletoprint_previews');
+                      // Note: We DON'T reset attemptCount - daily limit persists
+                    }}
+                    className="mt-4 text-sm text-charcoal/60 hover:text-charcoal transition-colors"
+                  >
+                    Clear all previews
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Example Gallery Section */}
+      <section className="py-16 bg-cream">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-serif font-semibold text-charcoal mb-4">
+              See What Others Have Created
+            </h2>
+            <p className="text-lg text-charcoal/80 max-w-2xl mx-auto">
+              From family memories to romantic moments, discover the beautiful artwork styles available
+            </p>
+          </div>
+          
+          <ExampleGallery />
+          
+          <div className="text-center mt-8">
+            <p className="text-charcoal/70 text-sm">
+              Click any example to start creating your own personalised artwork
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Compact How It Works */}
+      <section className="py-12 bg-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-serif font-semibold text-charcoal mb-2">How It Works</h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6 text-center">
+            {[
+              { icon: "✍️", title: "Tell your story", desc: "Share your cherished memory in your own words" },
+              { icon: "🎨", title: "AI creates art", desc: "Choose from 6 beautiful artistic styles" }, 
+              { icon: "📦", title: "Premium print", desc: "UK printed and delivered worldwide in 48h" }
+            ].map((step, index) => (
+              <div key={index} className="flex flex-col items-center">
+                <div className="w-16 h-16 bg-terracotta/10 rounded-full flex items-center justify-center mb-4">
+                  <span className="text-2xl">{step.icon}</span>
+                </div>
+                <h3 className="font-serif font-semibold text-charcoal mb-2 text-lg">{step.title}</h3>
+                <p className="text-charcoal/70 text-sm">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Art Styles Details - Moved Down for SEO */}
+      <section className="py-16 bg-white border-t border-warm-grey/10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-serif font-semibold text-charcoal mb-4">
@@ -264,86 +367,6 @@ export default function Home() {
               and <strong>Pencil & Ink Sketches</strong> — perfect for every story and occasion
             </p>
           </div>
-        </div>
-      </section>
-
-      {/* Main Form Section */}
-      <section id="create" className="py-20 bg-cream">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-serif font-semibold text-charcoal mb-4">
-              Create Your Custom Story Artwork
-            </h2>
-            <p className="text-lg text-charcoal/80">
-              Tell us your story and watch it transform into a bespoke gift print
-            </p>
-          </div>
-          
-          <StoryInput 
-            onPreview={handlePreview}
-            currentAttempts={attemptCount}
-            hasPreview={!!selectedPreview}
-            onAttemptsReset={handleAttemptsReset}
-          />
-          
-          {allPreviews.length > 0 && (
-            <div ref={previewSectionRef} className="mt-16 animate-fade-in">
-              {/* Selected Preview Display */}
-              {selectedPreview && (
-                <PreviewDisplay 
-                  preview={selectedPreview}
-                  onSelectForPurchase={handleSelectForPurchase}
-                />
-              )}
-              
-              {/* Preview Gallery - Below the main preview */}
-              {allPreviews.length > 1 && (
-                <div className="mt-12 pt-12 border-t border-warm-grey/20">
-                  <h4 className="text-lg font-serif font-semibold text-charcoal mb-4">Other versions you've created</h4>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-                    {allPreviews.map((preview, index) => (
-                      <div 
-                        key={preview.id} 
-                        className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
-                          selectedPreview?.id === preview.id 
-                            ? 'border-terracotta ring-2 ring-terracotta ring-offset-2' 
-                            : 'border-transparent hover:border-warm-grey/30'
-                        }`}
-                        onClick={() => setSelectedPreview(preview)}
-                        title={preview.story ? `"${preview.story}"` : `Preview ${index + 1}`}
-                      >
-                        <div className="aspect-square">
-                          <img 
-                            src={preview.imageUrl} 
-                            alt={`${preview.style.replace('_', ' ')} art print preview${preview.story ? ` - ${preview.story.substring(0, 50)}...` : ''} - personalised gift print`}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        {selectedPreview?.id === preview.id && (
-                          <div className="absolute top-1 right-1 bg-terracotta text-cream rounded-full p-0.5">
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <button 
-                    onClick={() => {
-                      setAllPreviews([]);
-                      setSelectedPreview(null);
-                      localStorage.removeItem('taletoprint_previews');
-                      // Note: We DON'T reset attemptCount - daily limit persists
-                    }}
-                    className="mt-4 text-sm text-charcoal/60 hover:text-charcoal transition-colors"
-                  >
-                    Clear all previews
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </section>
 
