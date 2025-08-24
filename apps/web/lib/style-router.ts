@@ -54,14 +54,14 @@ export function chooseModelJobLegacy(style: ArtStyle, hasPeople: boolean): Model
  */
 export function getLoRAKeyForStyle(style: ArtStyle): string {
   const mappings: Record<ArtStyle, string> = {
-    [ArtStyle.WATERCOLOUR]: 'lora_watercolour_v2',
-    [ArtStyle.OIL_PAINTING]: 'lora_oil_v3', 
-    [ArtStyle.PASTEL]: 'lora_pastel_v2',
-    [ArtStyle.PENCIL_INK]: 'lora_ink_v1',
-    [ArtStyle.STORYBOOK]: 'lora_storybook_v3',
-    [ArtStyle.IMPRESSIONIST]: 'lora_impressionist_v2'
+    [ArtStyle.WATERCOLOUR]: 'watercolour',
+    [ArtStyle.OIL_PAINTING]: 'oil_paint', 
+    [ArtStyle.PASTEL]: 'pastel',
+    [ArtStyle.PENCIL_INK]: 'ink_sketch',
+    [ArtStyle.STORYBOOK]: 'storybook',
+    [ArtStyle.IMPRESSIONIST]: 'impressionist'
   };
-  return mappings[style] || 'lora_watercolour_v2';
+  return mappings[style] || 'watercolour';
 }
 
 /**

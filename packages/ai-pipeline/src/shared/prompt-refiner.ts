@@ -47,7 +47,9 @@ export class PromptRefiner {
     });
   }
 
-  async refinePrompt(request: PromptRefinementRequest): Promise<PromptRefinementResult> {
+  async refinePrompt(request: PromptRefinementRequest, dimensions?: {width: number, height: number}): Promise<PromptRefinementResult> {
+    const defaultDimensions = dimensions || { width: 1024, height: 1024 };
+    
     const systemPrompt = `You are the "TaleToPrint Refiner". Your job is to convert a short customer "tale" into a precise, style-aware image brief for an AI image model.
 
 Rules:
@@ -72,8 +74,8 @@ Schema:
   "parameters": {
     "num_inference_steps": 25,
     "guidance_scale": 3.5,
-    "width": 1024,
-    "height": 1024,
+    "width": ${defaultDimensions.width},
+    "height": ${defaultDimensions.height},
     "seed": "number | null"
   },
   "safety": {

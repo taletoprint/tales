@@ -156,13 +156,18 @@ export class SimpleAIGenerator {
       if (this.useOpenAI) {
         try {
           console.log(`[${previewId}] Using OpenAI prompt enhancement...`);
+          // Get base dimensions first
+          const baseBundle = buildPrompt(request.story, request.style, request.aspect);
+          
           const refinedResult = await this.promptRefiner.refinePrompt({
             story: request.story,
             style: this.mapArtStyleToPromptRefiner(request.style)
+          }, {
+            width: baseBundle.params.width,
+            height: baseBundle.params.height
           });
           
           // Create a PromptBundle from the refined result (backward compatibility)
-          const baseBundle = buildPrompt(request.story, request.style, request.aspect);
           promptBundle = {
             ...baseBundle,
             positive: refinedResult.positive_prompt || refinedResult.refined_prompt || baseBundle.positive,
