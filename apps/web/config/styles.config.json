@@ -31,37 +31,37 @@
   "loras": {
     "impressionist": { 
       "repo": "hf", 
-      "url": "UmeAiRT/FLUX.1-dev-LoRA-Impressionism", 
+      "url": "https://huggingface.co/UmeAiRT/FLUX.1-dev-LoRA-Impressionism/resolve/main/pytorch_lora_weights.safetensors", 
       "scale": 0.85,
       "trigger": "impressionist"
     },
     "oil_paint": { 
       "repo": "hf", 
-      "url": "bingbangboom/flux_oilscape", 
+      "url": "https://huggingface.co/bingbangboom/flux_oilscape/resolve/main/flux_oilscape.safetensors", 
       "scale": 0.75,
       "trigger": "in the style of Oilstyle002"
     },
     "watercolour": { 
       "repo": "hf", 
-      "url": "jtorregrosa/watercolour-lora-flux", 
+      "url": "https://huggingface.co/jtorregrosa/watercolour-lora-flux/resolve/main/watercolour.safetensors", 
       "scale": 0.8,
       "trigger": "W4T3RC0L0UR style"
     },
     "pastel": { 
       "repo": "hf", 
-      "url": "alvdansen/flux-koda", 
+      "url": "https://huggingface.co/alvdansen/flux-koda/resolve/main/flux_koda.safetensors", 
       "scale": 0.8,
       "trigger": "flmft style"
     },
     "storybook": { 
       "repo": "hf", 
-      "url": "lucataco/flux-childrens-storybook-illustration-lora", 
+      "url": "https://huggingface.co/lucataco/flux-childrens-storybook-illustration-lora/resolve/main/pytorch_lora_weights.safetensors", 
       "scale": 0.7,
       "trigger": "storybook illustration"
     },
     "ink_sketch": { 
       "repo": "hf", 
-      "url": "h1t/pencil_drawing_flux_lora", 
+      "url": "https://huggingface.co/h1t/pencil_drawing_flux_lora/resolve/main/pytorch_lora_weights.safetensors", 
       "scale": 0.75,
       "trigger": "p3nc1l style"
     }

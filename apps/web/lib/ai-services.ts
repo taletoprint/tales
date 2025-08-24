@@ -59,6 +59,7 @@ export class SimpleAIGenerator {
   private promptRefiner: PromptRefiner;
   private useOpenAI: boolean;
   private s3Storage: S3Storage | null;
+  private fluxDevLoraVersion: string = '495498c347af810c9cafabbe931c33b3acca5667033b6d84f4975ccc01d23b96'; // Default version
   
   constructor(openaiApiKey: string, replicateToken: string, useOpenAI: boolean = true) {
     // Sanitize API key to remove any potential line breaks or whitespace
@@ -601,19 +602,20 @@ export class SimpleAIGenerator {
       // Map dimensions to Flux parameters  
       const fluxDimensions = this.mapDimensionsToFlux(promptBundle.params.width, promptBundle.params.height);
       
-      // Prepare input parameters for flux-dev with LoRA
+      // Prepare input parameters for flux-dev-lora
       const inputParams: any = {
         prompt: enhancedPrompt,
-        hf_lora: loraConfig.url, // Hugging Face LoRA URL
-        lora_scale: loraConfig.scale,
+        negative_prompt: negativePrompt,
+        lora_weights: [loraConfig.url], // Array of LoRA URLs
+        lora_scales: [loraConfig.scale], // Array of scales
         width: promptBundle.params.width,
         height: promptBundle.params.height,
         num_outputs: 1,
-        num_inference_steps: 25, // New standardized steps
-        guidance_scale: 3.5, // New standardized guidance
+        steps: 26, // Optimal for flux-dev-lora
+        guidance: 3.5, // Flux prefers lower CFG
+        go_fast: true, // Fuse LoRA weights for speed
         output_format: "webp",
-        output_quality: 80,
-        disable_safety_checker: false
+        output_quality: 80
       };
       
       // Add seed if provided
@@ -621,9 +623,7 @@ export class SimpleAIGenerator {
         inputParams.seed = promptBundle.params.seed;
       }
       
-      // Create prediction using Flux-Dev model with LoRA support
-      // Using the flux-dev model that supports LoRA weights
-      const fluxDevLoraVersion = '612251e21b66fcd6d94a7bc4b2555ed1e6dbf9dd282e8cf587880a1d73178ff5'; // black-forest-labs/flux-dev with LoRA support
+      // Create prediction using Flux-Dev-LoRA model
       
       const response = await this.fetchWithRetry('https://api.replicate.com/v1/predictions', {
         method: 'POST',
@@ -632,7 +632,7 @@ export class SimpleAIGenerator {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          version: fluxDevLoraVersion,
+          version: this.fluxDevLoraVersion,
           input: inputParams
         }),
       }, previewId, 3);

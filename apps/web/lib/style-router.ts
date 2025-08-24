@@ -79,12 +79,13 @@ export function getModelConfig(model: 'flux-dev-lora' | 'flux-schnell' | 'sdxl')
   // Default config for flux-dev-lora
   if (model === 'flux-dev-lora') {
     return {
-      version: 'black-forest-labs/flux-dev-lora:latest', // Actual Replicate model
+      version: '495498c347af810c9cafabbe931c33b3acca5667033b6d84f4975ccc01d23b96',
       params: {
-        num_inference_steps: 25,
-        guidance_scale: 3.5,
+        steps: 26,
+        guidance: 3.5,
         output_format: 'webp',
-        output_quality: 80
+        output_quality: 80,
+        go_fast: true
       },
       supportsLora: true,
       costTier: 'premium'
