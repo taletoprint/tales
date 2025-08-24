@@ -371,7 +371,7 @@ export class SimpleAIGenerator {
       console.log(`[${printId}] Real-ESRGAN prediction created: ${prediction.id}`);
 
       // Poll for completion
-      const upscaledUrl = await this.waitForReplicateCompletion(prediction.id, printId, 120000); // 2 minute timeout
+      const upscaledUrl = await this.waitForReplicateCompletion(prediction.id, printId, 'Real-ESRGAN', 120000); // 2 minute timeout
       console.log(`[${printId}] Real-ESRGAN upscaling completed successfully`);
       console.log(`[${printId}] Upscaled URL:`, upscaledUrl); // Debug log
       
@@ -483,7 +483,7 @@ export class SimpleAIGenerator {
       console.log(`[${previewId}] Flux-Schnell prediction created: ${prediction.id}`);
 
       // Poll for completion
-      const imageUrl = await this.waitForReplicateCompletion(prediction.id, previewId);
+      const imageUrl = await this.waitForReplicateCompletion(prediction.id, previewId, 'Flux-Schnell');
       return imageUrl;
 
     } catch (error) {
@@ -572,7 +572,7 @@ export class SimpleAIGenerator {
       console.log(`[${previewId}] SDXL prediction created: ${prediction.id}`);
 
       // Poll for completion
-      const imageUrl = await this.waitForReplicateCompletion(prediction.id, previewId);
+      const imageUrl = await this.waitForReplicateCompletion(prediction.id, previewId, 'SDXL');
       return imageUrl;
 
     } catch (error) {
@@ -658,7 +658,7 @@ export class SimpleAIGenerator {
       const prediction = await response.json();
       console.log(`[${previewId}] Flux-Dev-LoRA prediction created: ${prediction.id}`);
 
-      const imageUrl = await this.waitForReplicateCompletion(prediction.id, previewId);
+      const imageUrl = await this.waitForReplicateCompletion(prediction.id, previewId, 'Flux-Dev-LoRA', 300000); // 5 minute timeout for LoRA
       return imageUrl;
 
     } catch (error) {
@@ -670,7 +670,7 @@ export class SimpleAIGenerator {
     }
   }
 
-  private async waitForReplicateCompletion(predictionId: string, previewId: string, maxWaitTime: number = 120000): Promise<string> {
+  private async waitForReplicateCompletion(predictionId: string, previewId: string, modelName: string = 'Model', maxWaitTime: number = 300000): Promise<string> {
     const pollInterval = 3000; // 3 seconds
     const startTime = Date.now();
 
@@ -687,7 +687,7 @@ export class SimpleAIGenerator {
         }
 
         const prediction = await response.json();
-        console.log(`[${previewId}] SDXL status: ${prediction.status}`);
+        console.log(`[${previewId}] ${modelName} status: ${prediction.status}`);
 
         if (prediction.status === 'succeeded') {
           console.log(`[${previewId}] Prediction output:`, prediction.output);
@@ -704,22 +704,22 @@ export class SimpleAIGenerator {
         }
 
         if (prediction.status === 'failed') {
-          throw new Error(`SDXL generation failed: ${prediction.error || 'Unknown error'}`);
+          throw new Error(`${modelName} generation failed: ${prediction.error || 'Unknown error'}`);
         }
 
         if (prediction.status === 'canceled') {
-          throw new Error('SDXL generation was canceled');
+          throw new Error(`${modelName} generation was canceled`);
         }
 
         // Still processing, wait before next poll
         await new Promise(resolve => setTimeout(resolve, pollInterval));
       } catch (error) {
-        console.error(`[${previewId}] Error polling SDXL status:`, error);
+        console.error(`[${previewId}] Error polling ${modelName} status:`, error);
         throw error;
       }
     }
 
-    throw new Error(`SDXL generation timed out after ${maxWaitTime / 1000} seconds`);
+    throw new Error(`${modelName} generation timed out after ${maxWaitTime / 1000} seconds`);
   }
 
   private async savePreviewToS3(
