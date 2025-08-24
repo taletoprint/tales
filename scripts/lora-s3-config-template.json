@@ -1,0 +1,40 @@
+{
+  "loras": {
+    "impressionist": { 
+      "repo": "s3", 
+      "url": "https://taletoprint-loras.s3.eu-north-1.amazonaws.com/loras/impressionist.safetensors", 
+      "scale": 0.85,
+      "trigger": "impressionist painting, visible brushstrokes"
+    },
+    "oil_paint": { 
+      "repo": "s3", 
+      "url": "https://taletoprint-loras.s3.eu-north-1.amazonaws.com/loras/oil-painting.safetensors", 
+      "scale": 0.75,
+      "trigger": "oil painting style, thick paint texture"
+    },
+    "watercolour": { 
+      "repo": "s3", 
+      "url": "https://taletoprint-loras.s3.eu-north-1.amazonaws.com/loras/watercolour.safetensors", 
+      "scale": 0.8,
+      "trigger": "watercolor painting, soft washes"
+    },
+    "pastel": { 
+      "repo": "s3", 
+      "url": "https://taletoprint-loras.s3.eu-north-1.amazonaws.com/loras/pastel.safetensors", 
+      "scale": 0.8,
+      "trigger": "pastel artwork, soft chalky texture"
+    },
+    "storybook": { 
+      "repo": "s3", 
+      "url": "https://taletoprint-loras.s3.eu-north-1.amazonaws.com/loras/storybook.safetensors", 
+      "scale": 0.7,
+      "trigger": "storybook illustration, whimsical style"
+    },
+    "ink_sketch": { 
+      "repo": "s3", 
+      "url": "https://taletoprint-loras.s3.eu-north-1.amazonaws.com/loras/pencil-ink.safetensors", 
+      "scale": 0.75,
+      "trigger": "hand drawn sketch, ink and pencil"
+    }
+  }
+}

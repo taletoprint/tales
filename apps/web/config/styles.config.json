@@ -30,40 +30,40 @@
   },
   "loras": {
     "impressionist": { 
-      "repo": "hf", 
-      "url": "https://huggingface.co/UmeAiRT/FLUX.1-dev-LoRA-Impressionism/resolve/main/ume_classic_impressionist.safetensors", 
+      "repo": "s3", 
+      "url": "https://taletoprint-uploads.s3.eu-north-1.amazonaws.com/loras/impressionist.safetensors", 
       "scale": 0.85,
-      "trigger": "impressionist"
+      "trigger": "impressionist painting, visible brushstrokes"
     },
     "oil_paint": { 
-      "repo": "hf", 
-      "url": "https://huggingface.co/bingbangboom/flux_oilscape/resolve/main/flux_Oilstyle.safetensors", 
+      "repo": "s3", 
+      "url": "https://taletoprint-uploads.s3.eu-north-1.amazonaws.com/loras/oil-painting.safetensors", 
       "scale": 0.75,
-      "trigger": "in the style of Oilstyle002"
+      "trigger": "oil painting style, thick paint texture"
     },
     "watercolour": { 
-      "repo": "hf", 
-      "url": "https://huggingface.co/SebastianBodza/flux_lora_aquarel_watercolor/resolve/main/lora.safetensors", 
+      "repo": "s3", 
+      "url": "https://taletoprint-uploads.s3.eu-north-1.amazonaws.com/loras/watercolour.safetensors", 
       "scale": 0.8,
-      "trigger": "AQUACOLTOK"
+      "trigger": "watercolor painting, soft washes"
     },
     "pastel": { 
-      "repo": "hf", 
-      "url": "https://huggingface.co/alvdansen/flux-koda/resolve/main/araminta_k_flux_koda.safetensors", 
+      "repo": "s3", 
+      "url": "https://taletoprint-uploads.s3.eu-north-1.amazonaws.com/loras/pastel.safetensors", 
       "scale": 0.8,
-      "trigger": "flmft style"
+      "trigger": "pastel artwork, soft chalky texture"
     },
     "storybook": { 
-      "repo": "hf", 
-      "url": "https://huggingface.co/Shakker-Labs/FLUX.1-dev-LoRA-Children-Simple-Sketch/resolve/main/FLUX-dev-lora-children-simple-sketch.safetensors", 
+      "repo": "s3", 
+      "url": "https://taletoprint-uploads.s3.eu-north-1.amazonaws.com/loras/storybook.safetensors", 
       "scale": 0.7,
-      "trigger": "sketched style"
+      "trigger": "storybook illustration, whimsical style"
     },
     "ink_sketch": { 
-      "repo": "hf", 
-      "url": "https://huggingface.co/strangerzonehf/Flux-Sketch-Flat-LoRA/resolve/main/Sketch-Flat.safetensors", 
+      "repo": "s3", 
+      "url": "https://taletoprint-uploads.s3.eu-north-1.amazonaws.com/loras/pencil-ink.safetensors", 
       "scale": 0.75,
-      "trigger": "Sketch Flat"
+      "trigger": "hand drawn sketch, ink and pencil"
     }
   },
   "models": {

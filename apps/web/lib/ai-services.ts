@@ -1,6 +1,8 @@
 // Simplified AI services for direct use in the web app
 import OpenAI from 'openai';
 import sharp from 'sharp';
+import fs from 'fs';
+import path from 'path';
 import { buildPrompt } from './prompt-builder';
 import { ArtStyle, Aspect, PromptBundle } from './types';
 import { PromptRefiner } from '@taletoprint/ai-pipeline/src/shared/prompt-refiner';
@@ -371,7 +373,7 @@ export class SimpleAIGenerator {
     printId: string
   ): Promise<string> {
     try {
-      console.log(`[${printId}] Starting print standardization to ${printSpec.width}×${printSpec.height}...`);
+      console.log(`[${printId}] Starting Sharp-based print standardization to ${printSpec.width}×${printSpec.height}...`);
       
       const processingMode = this.getStyleProcessingMode(style);
       console.log(`[${printId}] Using ${processingMode} mode for ${style} style`);
@@ -383,60 +385,85 @@ export class SimpleAIGenerator {
       
       console.log(`[${printId}] Content area: ${innerWidth}×${innerHeight} within ${printSpec.width}×${printSpec.height}`);
       
-      // Create ImageMagick prediction for print standardization
-      const response = await this.fetchWithRetry('https://api.replicate.com/v1/predictions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Token ${this.replicateToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          // TODO: Find correct ImageMagick model on Replicate
-          // For now, we'll implement client-side standardization or use Sharp
-          version: 'placeholder-imagemagick-model', // Need to research actual model
-          input: {
-            image: upscaledImageUrl,
-            command: this.buildImageMagickCommand(processingMode, innerWidth, innerHeight, printSpec)
-          }
-        }),
-      }, printId, 3);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`[${printId}] ImageMagick API error ${response.status}:`, errorText);
-        throw new Error(`ImageMagick API error: ${response.status} - ${errorText}`);
+      // Download the upscaled image
+      const imageResponse = await fetch(upscaledImageUrl);
+      if (!imageResponse.ok) {
+        throw new Error(`Failed to download upscaled image: ${imageResponse.status}`);
       }
       
-      const prediction = await response.json();
-      console.log(`[${printId}] Print standardization prediction created: ${prediction.id}`);
+      const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
+      console.log(`[${printId}] Downloaded upscaled image (${imageBuffer.length} bytes)`);
       
-      const standardizedUrl = await this.waitForReplicateCompletion(prediction.id, printId, 'ImageMagick', 120000);
+      // Process with Sharp
+      let sharpInstance = sharp(imageBuffer)
+        .withMetadata({ density: 300 }); // Set print DPI
+      
+      if (processingMode === 'cover') {
+        // Cover mode: resize to fill content area, crop if necessary
+        sharpInstance = sharpInstance
+          .resize(innerWidth, innerHeight, {
+            fit: 'cover',
+            position: 'center'
+          });
+      } else {
+        // Pad mode: resize to fit content area, maintain aspect ratio
+        sharpInstance = sharpInstance
+          .resize(innerWidth, innerHeight, {
+            fit: 'inside',
+            position: 'center'
+          });
+      }
+      
+      // Add white border to reach final print dimensions
+      const processedBuffer = await sharpInstance
+        .extend({
+          top: Math.round((printSpec.height - innerHeight) / 2),
+          bottom: Math.round((printSpec.height - innerHeight) / 2),
+          left: Math.round((printSpec.width - innerWidth) / 2),
+          right: Math.round((printSpec.width - innerWidth) / 2),
+          background: { r: 255, g: 255, b: 255, alpha: 1 }
+        })
+        .jpeg({ quality: 95, progressive: true })
+        .toBuffer();
+      
+      console.log(`[${printId}] Sharp processing completed (${processedBuffer.length} bytes)`);
+      
+      // Upload the processed image
+      const standardizedUrl = await this.uploadProcessedImage(processedBuffer, printId);
       console.log(`[${printId}] Print standardization completed successfully`);
       
       return standardizedUrl;
       
     } catch (error) {
-      console.error(`[${printId}] Print standardization failed:`, error);
-      // TODO: Implement when ImageMagick model is available
+      console.error(`[${printId}] Sharp-based print standardization failed:`, error);
       throw error;
     }
   }
   
-  private buildImageMagickCommand(
-    mode: 'cover' | 'pad',
-    innerWidth: number,
-    innerHeight: number,
-    printSpec: { width: number; height: number }
-  ): string {
-    // Build ImageMagick command based on processing mode
-    const baseCommand = '-colorspace sRGB -units PixelsPerInch -density 300';
-    
-    if (mode === 'cover') {
-      // Cover mode: resize to fill, center crop, then add border
-      return `${baseCommand} -resize ${innerWidth}x${innerHeight}^ -gravity center -extent ${innerWidth}x${innerHeight} -background white -gravity center -extent ${printSpec.width}x${printSpec.height} -strip`;
-    } else {
-      // Pad mode: resize to fit, center, then add border  
-      return `${baseCommand} -resize ${innerWidth}x${innerHeight} -gravity center -extent ${innerWidth}x${innerHeight} -background white -gravity center -extent ${printSpec.width}x${printSpec.height} -strip`;
+  private async uploadProcessedImage(imageBuffer: Buffer, printId: string): Promise<string> {
+    try {
+      if (!this.s3Storage) {
+        throw new Error('S3 storage not available for print standardization');
+      }
+      
+      // Generate filename for processed print image
+      const filename = `print-standardized-${printId}-${Date.now()}.jpg`;
+      const key = `prints/standardized/${filename}`;
+      
+      console.log(`[${printId}] Uploading standardized print image to S3: ${key}`);
+      
+      const uploadResult = await this.s3Storage.uploadImage(
+        imageBuffer,
+        key,
+        'image/jpeg'
+      );
+      
+      console.log(`[${printId}] Standardized print image uploaded successfully`);
+      return uploadResult.url;
+      
+    } catch (error) {
+      console.error(`[${printId}] Failed to upload standardized print image:`, error);
+      throw error;
     }
   }
   
@@ -1050,9 +1077,7 @@ export class SimpleAIGenerator {
             prompt: result.refinedPrompt || result.prompt,
             expiresAt,
             ipAddress: request.ipAddress || 'unknown',
-            userId: request.userId || null,
-            s3UploadStatus: 'pending',
-            s3UploadAttempts: 0
+            userId: request.userId || null
           }
         });
         
