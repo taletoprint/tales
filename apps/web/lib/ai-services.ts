@@ -601,10 +601,10 @@ export class SimpleAIGenerator {
       // Map dimensions to Flux parameters  
       const fluxDimensions = this.mapDimensionsToFlux(promptBundle.params.width, promptBundle.params.height);
       
-      // Prepare input parameters for black-forest-labs/flux-dev-lora
+      // Prepare input parameters for flux-dev with LoRA
       const inputParams: any = {
         prompt: enhancedPrompt,
-        lora_weights: loraConfig.url, // LoRA weights URL
+        hf_lora: loraConfig.url, // Hugging Face LoRA URL
         lora_scale: loraConfig.scale,
         width: promptBundle.params.width,
         height: promptBundle.params.height,
@@ -612,7 +612,8 @@ export class SimpleAIGenerator {
         num_inference_steps: 25, // New standardized steps
         guidance_scale: 3.5, // New standardized guidance
         output_format: "webp",
-        output_quality: 80
+        output_quality: 80,
+        disable_safety_checker: false
       };
       
       // Add seed if provided
@@ -620,9 +621,9 @@ export class SimpleAIGenerator {
         inputParams.seed = promptBundle.params.seed;
       }
       
-      // Create prediction using Flux-Dev-LoRA model
-      // Note: This will need to be updated with the actual version hash from Replicate
-      const fluxDevLoraVersion = 'black-forest-labs/flux-dev-lora:latest'; // Will be resolved to version hash
+      // Create prediction using Flux-Dev model with LoRA support
+      // Using the flux-dev model that supports LoRA weights
+      const fluxDevLoraVersion = '612251e21b66fcd6d94a7bc4b2555ed1e6dbf9dd282e8cf587880a1d73178ff5'; // black-forest-labs/flux-dev with LoRA support
       
       const response = await this.fetchWithRetry('https://api.replicate.com/v1/predictions', {
         method: 'POST',
