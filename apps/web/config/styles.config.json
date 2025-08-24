@@ -54,16 +54,16 @@
       "trigger": "flmft style"
     },
     "storybook": { 
-      "repo": "replicate", 
-      "url": "https://replicate.com/lucataco/flux-childrens-storybook-illustration-lora", 
+      "repo": "hf", 
+      "url": "https://huggingface.co/Shakker-Labs/FLUX.1-dev-LoRA-Children-Simple-Sketch/resolve/main/FLUX-dev-lora-children-simple-sketch.safetensors", 
       "scale": 0.7,
-      "trigger": "storybook illustration"
+      "trigger": "sketched style"
     },
     "ink_sketch": { 
-      "repo": "replicate", 
-      "url": "https://replicate.com/h1t/pencil_drawing_flux_lora", 
+      "repo": "hf", 
+      "url": "https://huggingface.co/strangerzonehf/Flux-Sketch-Flat-LoRA/resolve/main/Sketch-Flat.safetensors", 
       "scale": 0.75,
-      "trigger": "p3nc1l style"
+      "trigger": "Sketch Flat"
     }
   },
   "models": {
