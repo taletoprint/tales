@@ -100,12 +100,13 @@ export class PreviewGenerator {
       );
       await this.costLimiter.recordCost('openai_chat', promptCost);
 
-      console.log(`[Preview ${previewId}] Refined prompt: ${promptRefinement.refined_prompt}`);
+      const promptText = promptRefinement.positive_prompt || promptRefinement.refined_prompt || '';
+      console.log(`[Preview ${previewId}] Refined prompt: ${promptText}`);
 
       // Step 2: Generate image with Stability AI
       console.log(`[Preview ${previewId}] Generating image with Stability AI...`);
       const imageBuffer = await this.stabilityAI.generateImage({
-        prompt: promptRefinement.refined_prompt,
+        prompt: promptText,
         negative_prompt: promptRefinement.negative_prompt,
         width: dimensions.width,
         height: dimensions.height,
