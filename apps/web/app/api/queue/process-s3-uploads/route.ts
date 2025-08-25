@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { PassThrough } from 'stream';
 import { prisma } from '@/lib/prisma';
+import { PreviewMetadata } from '@taletoprint/ai-pipeline/src/shared/storage';
 const s3 = new S3Client({ 
   region: process.env.AWS_REGION || 'eu-north-1',
   credentials: {
@@ -20,6 +21,12 @@ interface QueueJob {
   attempts: number;
   contentType?: string | null;
   s3Key?: string | null;
+  preview?: {
+    story: string;
+    style: string;
+    prompt: string;
+    createdAt: Date;
+  };
 }
 
 /**
@@ -29,6 +36,64 @@ interface QueueJob {
 function nextDelayMs(attempts: number): number {
   const schedule = [60e3, 5*60e3, 15*60e3, 3600e3, 6*3600e3, 24*3600e3];
   return schedule[Math.min(attempts, schedule.length - 1)];
+}
+
+/**
+ * Upload metadata file to S3
+ */
+async function uploadMetadataToS3(job: QueueJob): Promise<string> {
+  if (!job.preview) {
+    throw new Error('Preview metadata is required');
+  }
+
+  const timestamp = job.preview.createdAt.toISOString().split('T')[0]; // YYYY-MM-DD
+  const metadataKey = `previews/${timestamp}/${job.previewId}_metadata.json`;
+
+  // Create metadata object matching the expected format
+  const metadata: PreviewMetadata = {
+    previewId: job.previewId,
+    generatedAt: job.preview.createdAt.toISOString(),
+    originalStory: job.preview.story,
+    requestedStyle: job.preview.style,
+    requestedAspect: 'portrait', // Default - we could enhance this later
+    refinedPrompt: job.preview.prompt,
+    negativePrompt: '', // Not stored currently
+    openaiEnhanced: true, // Assume true for recent previews
+    model: 'flux-dev-lora', // Default for recent previews
+    routingReason: 'Style-based routing',
+    hasPeople: false, // Could be enhanced
+    loraUsed: true, // Assume true for flux-dev-lora
+    modelVersion: 'latest',
+    steps: 28,
+    seed: Math.floor(Math.random() * 1000000),
+    dimensions: { width: 1024, height: 1024 }, // Default
+    generationTimeMs: 15000, // Approximate
+    estimatedCost: 0.055,
+    phase: 'production',
+    replicateUrl: job.imageUrl,
+    styleKeywords: [job.preview.style]
+  };
+
+  const metadataBuffer = Buffer.from(JSON.stringify(metadata, null, 2), 'utf8');
+  
+  const putCommand = new PutObjectCommand({
+    Bucket: process.env.AWS_S3_BUCKET!,
+    Key: metadataKey,
+    Body: metadataBuffer,
+    ContentType: 'application/json',
+    ACL: 'private',
+    Metadata: {
+      previewId: job.previewId,
+      type: 'metadata',
+      uploadedAt: new Date().toISOString()
+    },
+    ServerSideEncryption: 'AES256'
+  });
+
+  await s3.send(putCommand);
+  console.log(`[S3Queue] Metadata uploaded: ${metadataKey}`);
+  
+  return metadataKey;
 }
 
 /**
@@ -55,10 +120,11 @@ async function streamToS3(job: QueueJob): Promise<{ s3Key: string; etag: string;
       throw new Error('No response body received');
     }
 
-    // Determine content type and S3 key
+    // Determine content type and S3 key with date-based folder
     const contentType = response.headers.get('content-type') || 'image/jpeg';
     const extension = contentType.includes('png') ? 'png' : 'jpg';
-    const s3Key = job.s3Key || `previews/${job.previewId}.${extension}`;
+    const timestamp = job.preview?.createdAt ? job.preview.createdAt.toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+    const s3Key = job.s3Key || `previews/${timestamp}/${job.previewId}.${extension}`;
 
     // Convert ReadableStream to Node.js stream
     const nodeStream = response.body as unknown as NodeJS.ReadableStream;
@@ -119,6 +185,16 @@ async function processJob(job: QueueJob): Promise<void> {
   try {
     const { s3Key, etag, contentType } = await streamToS3(job);
     const s3ImageUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${s3Key}`;
+    
+    // Upload metadata file for gallery
+    let metadataKey: string | null = null;
+    try {
+      metadataKey = await uploadMetadataToS3(job);
+      console.log(`[S3Queue] Metadata uploaded for preview ${job.previewId}: ${metadataKey}`);
+    } catch (metadataError) {
+      console.warn(`[S3Queue] Failed to upload metadata for ${job.previewId}:`, metadataError);
+      // Continue with image upload even if metadata fails
+    }
     
     // Update both tables atomically
     await prisma.$transaction([
@@ -196,11 +272,11 @@ async function processJob(job: QueueJob): Promise<void> {
 async function getPendingJobs(limit: number): Promise<QueueJob[]> {
   const jobs = await prisma.$queryRaw<QueueJob[]>`
     WITH jobs AS (
-      SELECT id, "previewId", "imageUrl", attempts, "contentType", "s3Key"
-      FROM "S3UploadQueue"
-      WHERE status = 'pending'
-        AND "nextRunAt" <= now()
-      ORDER BY "createdAt"
+      SELECT q.id, q."previewId", q."imageUrl", q.attempts, q."contentType", q."s3Key"
+      FROM "S3UploadQueue" q
+      WHERE q.status = 'pending'
+        AND q."nextRunAt" <= now()
+      ORDER BY q."createdAt"
       FOR UPDATE SKIP LOCKED
       LIMIT ${limit}
     )
@@ -211,7 +287,24 @@ async function getPendingJobs(limit: number): Promise<QueueJob[]> {
     RETURNING q.id, q."previewId", q."imageUrl", q.attempts, q."contentType", q."s3Key";
   `;
   
-  return jobs;
+  // Fetch preview data for each job
+  const jobsWithPreview = await Promise.all(
+    jobs.map(async (job) => {
+      try {
+        const preview = await prisma.preview.findUnique({
+          where: { id: job.previewId },
+          select: { story: true, style: true, prompt: true, createdAt: true }
+        });
+        
+        return { ...job, preview };
+      } catch (error) {
+        console.warn(`Failed to fetch preview data for ${job.previewId}:`, error);
+        return job;
+      }
+    })
+  );
+  
+  return jobsWithPreview;
 }
 
 export async function POST(request: NextRequest) {
