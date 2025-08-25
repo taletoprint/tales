@@ -26,7 +26,7 @@ interface QueueJob {
     style: string;
     prompt: string;
     createdAt: Date;
-  };
+  } | null;
 }
 
 /**
