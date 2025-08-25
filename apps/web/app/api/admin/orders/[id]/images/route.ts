@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/admin-auth';
-import { PrismaClient } from '@taletoprint/database';
+import { prisma } from '@/lib/prisma';
 import { S3ImageResolver } from '@/lib/s3-image-resolver';
-
-const prisma = new PrismaClient();
 
 export async function GET(
   request: NextRequest,

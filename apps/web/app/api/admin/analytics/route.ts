@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAdminAuth } from '@/lib/admin-auth';
-import { PrismaClient } from '@taletoprint/database';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 async function handleAnalyticsGet(request: NextRequest) {
   try {

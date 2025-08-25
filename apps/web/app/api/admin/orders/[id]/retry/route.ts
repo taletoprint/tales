@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/admin-auth';
-import { PrismaClient } from '@taletoprint/database';
+import { prisma } from '@/lib/prisma';
 import { SimpleAIGenerator } from '@/lib/ai-services';
 import { PrintFileGenerator } from '@/lib/print-file-generator';
 import { S3PrintAssetUploader } from '@/lib/s3-uploader';
-
-const prisma = new PrismaClient();
 
 export async function POST(
   request: NextRequest,
